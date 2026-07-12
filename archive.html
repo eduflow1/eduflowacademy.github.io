@@ -65,6 +65,15 @@
   .gate-card input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font-size:1rem;font-family:inherit;margin-bottom:14px;background:#FAFBFB;text-align:center;letter-spacing:.06em;font-weight:700;box-sizing:border-box;}
   .error-msg{color:var(--danger);font-size:0.85rem;margin:-6px 0 14px;display:none;}
 
+  .pwd-field{position:relative;}
+  .pwd-field input{padding-right:44px;}
+  .pwd-toggle{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-size:1.05rem;padding:6px 8px;
+    line-height:1;border-radius:8px;
+  }
+  .pwd-toggle:hover{background:#F0F3F2;}
+
   .single-report{display:none;max-width:700px;margin:0 auto;background:var(--card);border-radius:var(--radius);padding:26px;}
   .single-report .report-header{display:flex;align-items:center;gap:16px;margin-bottom:6px;}
   .single-report .report-logo{width:60px;height:60px;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.1);flex:none;}
@@ -90,7 +99,10 @@
     <h2>Espace enseignants</h2>
     <p class="gate-lead">Cette section est reservee au personnel de Edu Flow Academy. Merci de saisir le code d'acces enseignant.</p>
     <label for="staffCodeInput">Code enseignant</label>
-    <input type="text" id="staffCodeInput" placeholder="Ex. : STAFF-XXXXXX" autocomplete="off">
+    <div class="pwd-field">
+      <input type="password" id="staffCodeInput" placeholder="Ex. : STAFF-XXXXXX" autocomplete="off">
+      <button type="button" class="pwd-toggle" id="staffCodeToggle" aria-label="Afficher/masquer le code">👁️</button>
+    </div>
     <div class="error-msg" id="staffGateError">Code incorrect. Merci de reessayer.</div>
     <button class="btn-primary" id="staffGateBtn">Valider</button>
   </div>
@@ -183,6 +195,13 @@ function tryUnlockStaff(){
 }
 document.getElementById('staffGateBtn').addEventListener('click', tryUnlockStaff);
 document.getElementById('staffCodeInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlockStaff(); });
+document.getElementById('staffCodeToggle').addEventListener('click', ()=>{
+  const input = document.getElementById('staffCodeInput');
+  const btn = document.getElementById('staffCodeToggle');
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.textContent = showing ? '👁️' : '🙈';
+});
 
 let sortKey = 'date';
 let sortDir = -1;

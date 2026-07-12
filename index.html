@@ -66,7 +66,7 @@
   .lead{color:#7A7B7D;font-size:0.94rem;margin-bottom:22px;line-height:1.5;}
 
   label{display:block;font-weight:600;font-size:0.85rem;margin-bottom:6px;color:var(--ink);}
-  input[type=text],input[type=number]{
+  input[type=text],input[type=number],input[type=password]{
     width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);
     font-size:1rem;font-family:'Inter',sans-serif;margin-bottom:18px;background:#FAFBFB;
     transition:border-color .15s;
@@ -130,6 +130,15 @@
   .top-menu{display:flex;gap:18px;justify-content:center;margin:0 0 18px;font-size:0.85rem;}
   .top-menu a{color:#7A7B7D;text-decoration:none;font-weight:600;padding:6px 4px;}
   .top-menu a:hover{color:var(--blue-dark);}
+
+  .pwd-field{position:relative;}
+  .pwd-field input{padding-right:44px;}
+  .pwd-toggle{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-size:1.05rem;padding:6px 8px;
+    line-height:1;border-radius:8px;
+  }
+  .pwd-toggle:hover{background:#F0F3F2;}
 </style>
 </head>
 <body>
@@ -141,7 +150,10 @@
       <h2>Acces reserve</h2>
       <p class="gate-lead">Cette plateforme est reservee aux eleves et au personnel de Edu Flow Academy. Merci de saisir le code d'acces fourni par l'academie.</p>
       <label for="gateCodeInput">Code d'acces</label>
-      <input type="text" id="gateCodeInput" placeholder="Ex. : EFA-XXXXXX" autocomplete="off">
+      <div class="pwd-field">
+        <input type="password" id="gateCodeInput" placeholder="Ex. : EFA-XXXXXX" autocomplete="off">
+        <button type="button" class="pwd-toggle" id="gateCodeToggle" aria-label="Afficher/masquer le code">👁️</button>
+      </div>
       <div class="error-msg" id="gateError">Code incorrect. Merci de reessayer.</div>
       <button class="btn-primary" id="gateBtn">Valider</button>
 
@@ -240,6 +252,13 @@ function tryUnlockPlatform(){
 }
 document.getElementById('gateBtn').addEventListener('click', tryUnlockPlatform);
 document.getElementById('gateCodeInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlockPlatform(); });
+document.getElementById('gateCodeToggle').addEventListener('click', ()=>{
+  const input = document.getElementById('gateCodeInput');
+  const btn = document.getElementById('gateCodeToggle');
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.textContent = showing ? '👁️' : '🙈';
+});
 
 let selectedSubject = null;
 document.getElementById('subjectGrid').addEventListener('click', (e)=>{
