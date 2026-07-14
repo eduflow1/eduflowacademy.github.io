@@ -35,7 +35,7 @@
     padding:28px 16px 60px;
   }
   h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
-  .wrap{width:100%;max-width:640px;}
+  .wrap{width:100%;max-width:1400px;}
 
   .topbar{display:flex;align-items:center;gap:14px;width:100%;margin-bottom:8px;}
   .logo-wrap{width:56px;height:56px;border-radius:16px;overflow:hidden;flex:none;box-shadow:0 4px 14px rgba(0,0,0,0.08);}
@@ -59,6 +59,9 @@
     box-shadow:0 10px 34px rgba(30,50,60,0.08);
     border:1px solid var(--line);
     margin-top:24px;
+    max-width:680px;
+    margin-left:auto;
+    margin-right:auto;
   }
   .card + .card{margin-top:18px;}
 
@@ -81,7 +84,8 @@
   }
   .subject-opt:hover{border-color:var(--blue);}
   .subject-opt.selected{border-color:var(--blue);background:rgba(63,174,221,0.08);}
-  .subject-opt .flag{font-size:1.8rem;display:block;margin-bottom:6px;}
+  .subject-opt .flag{display:flex;justify-content:center;margin-bottom:8px;}
+  .subject-opt .flag svg{width:42px;height:28px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.2);display:block;}
   .subject-opt .label{font-weight:700;font-family:'Quicksand',sans-serif;font-size:1.02rem;}
 
   .info-box{
@@ -151,7 +155,7 @@
       <p class="gate-lead">Cette plateforme est reservee aux eleves et au personnel de Edu Flow Academy. Merci de saisir le code d'acces fourni par l'academie.</p>
       <label for="gateCodeInput">Code d'acces</label>
       <div class="pwd-field">
-        <input type="password" id="gateCodeInput" placeholder="Ex. : EFA-XXXXXX" autocomplete="off">
+        <input type="password" id="gateCodeInput" placeholder="Ex. : EFA-XXXXXX" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore="true" data-form-type="other">
         <button type="button" class="pwd-toggle" id="gateCodeToggle" aria-label="Afficher/masquer le code">👁️</button>
       </div>
       <div class="error-msg" id="gateError">Code incorrect. Merci de reessayer.</div>
@@ -159,6 +163,7 @@
 
       <div class="gate-divider">ou</div>
       <a href="archive.html" class="btn-staff">👩‍🏫 Espace enseignants / Staff access</a>
+      <div class="admin-link"><a href="login.html">🔑 Connexion Personnel / Admin</a></div>
     </div>
   </div>
 
@@ -204,18 +209,18 @@
       <label>Quelle langue souhaitez-vous evaluer ?</label>
       <div class="subject-grid" id="subjectGrid">
         <div class="subject-opt" data-subject="fr">
-          <span class="flag">🇫🇷</span>
+          <span class="flag"><svg viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="2" fill="#0055A4"/><rect x="1" width="1" height="2" fill="#FFFFFF"/><rect x="2" width="1" height="2" fill="#EF4135"/></svg></span>
           <span class="label">Francais</span>
         </div>
         <div class="subject-opt" data-subject="en">
-          <span class="flag">🇬🇧</span>
+          <span class="flag"><svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="30" fill="#00247d"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#cf142b" stroke-width="2"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#cf142b" stroke-width="6"/></svg></span>
           <span class="label">English</span>
         </div>
       </div>
       <div class="error-msg" id="errSubject">Merci de choisir une langue.</div>
 
       <div class="info-box">
-        <strong>Comment ca marche :</strong> les eleves de <strong>14 ans ou moins</strong> recoivent automatiquement notre test <strong>Junior</strong>, plus court et adapte aux plus jeunes. Les eleves de <strong>15 ans et plus</strong> recoivent le test <strong>complet (100 questions)</strong>, du niveau A1 a B1/B2.
+        <strong>Comment ca marche :</strong> les eleves de <strong>12 ans ou moins</strong> recoivent automatiquement notre test <strong>Junior</strong>, plus court et adapte aux plus jeunes. Les eleves de <strong>13 ans et plus</strong> recoivent le test <strong>complet (100 questions)</strong>, du niveau A1 a B1/B2.
       </div>
 
       <button class="btn-primary" id="btnGo">Commencer le test 🚀</button>
@@ -223,6 +228,7 @@
 
     <div class="card" style="margin-top:18px;text-align:center;">
       <a href="archive.html" class="btn-staff">👩‍🏫 Espace enseignants / Staff access</a>
+      <div class="admin-link"><a href="login.html">🔑 Connexion Personnel / Admin</a></div>
     </div>
 
     <footer class="mini">Edu Flow Academy — Plateforme d'evaluation linguistique</footer>
@@ -291,7 +297,7 @@ document.getElementById('btnGo').addEventListener('click', ()=>{
   const student = { name: name, age: age, subject: selectedSubject, timestamp: new Date().toISOString() };
   try{ localStorage.setItem('eduflow_current_student', JSON.stringify(student)); }catch(e){}
 
-  const isJunior = age <= 14;
+  const isJunior = age <= 12;
   let target;
   if(selectedSubject === 'fr'){
     target = isJunior ? 'test-fr-junior.html' : 'test-fr-full.html';

@@ -16,7 +16,7 @@
     padding:28px 16px 60px; min-height:100vh;
   }
   h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
-  .wrap{max-width:1000px;margin:0 auto;}
+  .wrap{max-width:1600px;margin:0 auto;}
   .topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
   .logo-wrap{width:52px;height:52px;border-radius:14px;overflow:hidden;flex:none;box-shadow:0 4px 14px rgba(0,0,0,0.08);}
   .logo-wrap img{width:100%;height:100%;object-fit:cover;}
@@ -74,7 +74,8 @@
   }
   .pwd-toggle:hover{background:#F0F3F2;}
 
-  .single-report{display:none;max-width:700px;margin:0 auto;background:var(--card);border-radius:var(--radius);padding:26px;}
+  .single-report{display:none;}
+  .single-report .report-page{max-width:700px;margin:0 auto 40px;background:var(--card);border-radius:var(--radius);padding:26px;}
   .single-report .report-header{display:flex;align-items:center;gap:16px;margin-bottom:6px;}
   .single-report .report-logo{width:60px;height:60px;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.1);flex:none;}
   .single-report .report-logo img{width:100%;height:100%;object-fit:cover;}
@@ -88,6 +89,8 @@
     .no-print, .gate-screen{display:none !important;}
     body.printing-single > *:not(#singleReport){display:none !important;}
     body.printing-single #singleReport{display:block !important;}
+    .single-report .report-page{page-break-after:always;margin-bottom:0;box-shadow:none;}
+    .single-report .report-page:last-child{page-break-after:auto;}
   }
 </style>
 </head>
@@ -100,7 +103,7 @@
     <p class="gate-lead">Cette section est reservee au personnel de Edu Flow Academy. Merci de saisir le code d'acces enseignant.</p>
     <label for="staffCodeInput">Code enseignant</label>
     <div class="pwd-field">
-      <input type="password" id="staffCodeInput" placeholder="Ex. : STAFF-XXXXXX" autocomplete="off">
+      <input type="password" id="staffCodeInput" placeholder="Ex. : STAFF-XXXXXX" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore="true" data-form-type="other">
       <button type="button" class="pwd-toggle" id="staffCodeToggle" aria-label="Afficher/masquer le code">👁️</button>
     </div>
     <div class="error-msg" id="staffGateError">Code incorrect. Merci de reessayer.</div>
@@ -120,7 +123,8 @@
 
   <div class="card">
     <h2>Tableau de bord des resultats</h2>
-    <p class="lead">Historique de tous les tests passes sur cet appareil / ce navigateur. Les resultats sont enregistres automatiquement a la fin de chaque test.</p>
+    <p class="lead">Historique de tous les tests passes par tous les eleves, sur tous les appareils. Les resultats sont enregistres automatiquement a la fin de chaque test.</p>
+    <p class="lead no-print" id="syncStatus" style="margin-top:-12px;font-size:0.82rem;">🔄 Synchronisation en cours…</p>
     <div class="stat-grid" id="statGrid"></div>
   </div>
 
@@ -138,7 +142,9 @@
         <option value="Complet (100 questions)">Complet (100 questions)</option>
       </select>
       <div class="spacer"></div>
-      <button class="btn-ghost no-print" id="printAllBtn">🖨️ Imprimer / Enregistrer la liste</button>
+      <button class="btn-ghost no-print" id="refreshBtn">🔄 Actualiser</button>
+      <button class="btn-ghost no-print" id="printAllBtn">🖨️ Imprimer la liste</button>
+      <button class="btn-ghost no-print" id="printReportsBtn">🖨️ Imprimer tous les rapports</button>
       <button class="btn-ghost" id="exportBtn">⬇ Exporter en CSV</button>
       <button class="btn-danger" id="clearBtn">🗑 Effacer l'historique</button>
     </div>
@@ -173,12 +179,41 @@
 
 <script>
 const STAFF_CODE = 'STAFF-F6WSAR';
+const SUPABASE_URL = 'https://capbydzmhgllequsdhtp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcGJ5ZHptaGdsbGVxdXNkaHRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODY5NDEsImV4cCI6MjA5OTQ2Mjk0MX0.g53p79GmpEOCPf_wEYFsPW5-cFOQuJLAcGmtLNaxKw0';
+
+let remoteResults = null;
+let remoteLoadFailed = false;
+
+async function loadArchiveFromSupabase(){
+  const statusEl = document.getElementById('syncStatus');
+  if(statusEl) statusEl.textContent = '🔄 Synchronisation en cours…';
+  try{
+    const res = await fetch(SUPABASE_URL + '/rest/v1/results?select=*&order=created_at.desc', {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = await res.json();
+    remoteResults = rows.map(r => ({
+      name: r.name, age: r.age, objective: r.objective, subject: r.subject,
+      testType: r.test_type, level: r.level, scorePct: r.score_pct, skills: r.skills,
+      date: r.created_at
+    }));
+    remoteLoadFailed = false;
+    if(statusEl) statusEl.textContent = '✅ Donnees partagees a jour (toutes les eleves, tous les appareils)';
+  }catch(e){
+    remoteResults = null;
+    remoteLoadFailed = true;
+    if(statusEl) statusEl.textContent = '⚠️ Impossible de charger les donnees partagees — affichage des donnees locales uniquement.';
+  }
+  render();
+}
 
 function showArchive(){
   document.getElementById('staffGate').style.display = 'none';
   document.getElementById('archiveContent').style.display = 'block';
 }
-if(sessionStorage.getItem('eduflow_staff_unlocked') === '1'){ showArchive(); }
+if(sessionStorage.getItem('eduflow_staff_unlocked') === '1'){ showArchive(); loadArchiveFromSupabase(); }
 
 function tryUnlockStaff(){
   const input = document.getElementById('staffCodeInput');
@@ -188,7 +223,7 @@ function tryUnlockStaff(){
     try{ sessionStorage.setItem('eduflow_staff_unlocked', '1'); }catch(e){}
     err.style.display = 'none';
     showArchive();
-    render();
+    loadArchiveFromSupabase();
   } else {
     err.style.display = 'block';
   }
@@ -208,6 +243,7 @@ let sortDir = -1;
 let currentRows = [];
 
 function loadArchive(){
+  if(remoteResults) return remoteResults;
   try{ return JSON.parse(localStorage.getItem('eduflow_archive') || '[]'); }catch(e){ return []; }
 }
 
@@ -286,15 +322,14 @@ document.querySelectorAll('th[data-key]').forEach(th=>{
 document.getElementById('searchBox').addEventListener('input', render);
 document.getElementById('subjectFilter').addEventListener('change', render);
 document.getElementById('typeFilter').addEventListener('change', render);
+document.getElementById('refreshBtn').addEventListener('click', loadArchiveFromSupabase);
 
 document.getElementById('printAllBtn').addEventListener('click', ()=>{
   document.body.classList.remove('printing-single');
   window.print();
 });
 
-function printSingleReport(idx){
-  const r = currentRows[idx];
-  if(!r) return;
+function reportPageHTML(r){
   const skills = r.skills || {};
   const skillRows = Object.keys(skills).map(k => `
     <div class="bar-row">
@@ -303,34 +338,55 @@ function printSingleReport(idx){
       <div class="bar-pct">${skills[k]}%</div>
     </div>
   `).join('');
-  document.getElementById('singleReport').innerHTML = `
-    <div class="report-header">
-      <div class="report-logo"><img id="singleReportLogo" alt="Edu Flow Academy"></div>
-      <div>
-        <div class="brand-name">Edu Flow Academy</div>
-        <div class="brand-sub">Rapport de resultats — Archive</div>
+  return `
+    <div class="report-page">
+      <div class="report-header">
+        <div class="report-logo"><img class="report-logo-img" alt="Edu Flow Academy"></div>
+        <div>
+          <div class="brand-name">Edu Flow Academy</div>
+          <div class="brand-sub">Rapport de resultats — Archive</div>
+        </div>
       </div>
+      <div class="stat-grid" style="margin-top:20px;">
+        <div class="stat-card"><div class="num">${r.name || '—'}</div><div class="lbl">Etudiant(e)</div></div>
+        <div class="stat-card"><div class="num">${r.age || '—'} ans</div><div class="lbl">Age</div></div>
+        <div class="stat-card"><div class="num" style="font-size:1.05rem;">${r.subject || '—'}</div><div class="lbl">Langue</div></div>
+        <div class="stat-card"><div class="num" style="font-size:1.05rem;">${r.testType || '—'}</div><div class="lbl">Type de test</div></div>
+        <div class="stat-card"><div class="num">${r.scorePct != null ? r.scorePct + '%' : '—'}</div><div class="lbl">Score global</div></div>
+      </div>
+      <div style="text-align:center;margin:18px 0;">
+        <div style="font-size:0.85rem;color:#7A7B7D;">Niveau estime</div>
+        <div class="level-badge" style="display:inline-block;font-family:'Quicksand',sans-serif;font-weight:700;font-size:2.2rem;padding:10px 26px;border-radius:16px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--green));margin:10px 0;">${r.level || '—'}</div>
+      </div>
+      ${skillRows ? `<h3 style="font-size:1rem;margin:20px 0 12px;">Detail par competence</h3>${skillRows}` : ''}
+      <div style="font-size:0.78rem;color:#9A9B9C;margin-top:14px;">Date du test : ${fmtDate(r.date)} — Objectif : ${r.objective || '—'}</div>
     </div>
-    <div class="stat-grid" style="margin-top:20px;">
-      <div class="stat-card"><div class="num">${r.name || '—'}</div><div class="lbl">Etudiant(e)</div></div>
-      <div class="stat-card"><div class="num">${r.age || '—'} ans</div><div class="lbl">Age</div></div>
-      <div class="stat-card"><div class="num" style="font-size:1.05rem;">${r.subject || '—'}</div><div class="lbl">Langue</div></div>
-      <div class="stat-card"><div class="num" style="font-size:1.05rem;">${r.testType || '—'}</div><div class="lbl">Type de test</div></div>
-      <div class="stat-card"><div class="num">${r.scorePct != null ? r.scorePct + '%' : '—'}</div><div class="lbl">Score global</div></div>
-    </div>
-    <div style="text-align:center;margin:18px 0;">
-      <div style="font-size:0.85rem;color:#7A7B7D;">Niveau estime</div>
-      <div class="level-badge" style="display:inline-block;font-family:'Quicksand',sans-serif;font-weight:700;font-size:2.2rem;padding:10px 26px;border-radius:16px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--green));margin:10px 0;">${r.level || '—'}</div>
-    </div>
-    ${skillRows ? `<h3 style="font-size:1rem;margin:20px 0 12px;">Detail par competence</h3>${skillRows}` : ''}
-    <div style="font-size:0.78rem;color:#9A9B9C;margin-top:14px;">Date du test : ${fmtDate(r.date)} — Objectif : ${r.objective || '—'}</div>
   `;
-  const logoImg = document.getElementById('singleReportLogo');
+}
+
+function syncReportLogos(){
   const mainLogo = document.querySelector('.logo-wrap img');
-  if(logoImg && mainLogo) logoImg.src = mainLogo.src;
+  if(!mainLogo) return;
+  document.querySelectorAll('.report-logo-img').forEach(img => { img.src = mainLogo.src; });
+}
+
+function printSingleReport(idx){
+  const r = currentRows[idx];
+  if(!r) return;
+  document.getElementById('singleReport').innerHTML = reportPageHTML(r);
+  syncReportLogos();
   document.body.classList.add('printing-single');
   window.print();
 }
+
+document.getElementById('printReportsBtn').addEventListener('click', ()=>{
+  if(currentRows.length === 0){ alert('Aucun resultat a imprimer.'); return; }
+  document.getElementById('singleReport').innerHTML = currentRows.map(reportPageHTML).join('');
+  syncReportLogos();
+  document.body.classList.add('printing-single');
+  window.print();
+});
+
 window.addEventListener('afterprint', ()=>{ document.body.classList.remove('printing-single'); });
 
 document.getElementById('exportBtn').addEventListener('click', ()=>{
@@ -350,10 +406,29 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
   URL.revokeObjectURL(url);
 });
 
-document.getElementById('clearBtn').addEventListener('click', ()=>{
-  if(confirm('Voulez-vous vraiment effacer tout l\'historique des resultats sur cet appareil ? Cette action est irreversible.')){
-    localStorage.removeItem('eduflow_archive');
-    render();
+document.getElementById('clearBtn').addEventListener('click', async ()=>{
+  if(!confirm('Voulez-vous vraiment effacer TOUT l\'historique des resultats, pour TOUS les eleves et TOUS les appareils ? Cette action est irreversible.')) return;
+  localStorage.removeItem('eduflow_archive');
+  let remoteDeleteOk = false;
+  try{
+    const res = await fetch(SUPABASE_URL + '/rest/v1/results?id=gt.0', {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Prefer': 'return=representation'
+      }
+    });
+    if(res.ok){
+      const deleted = await res.json().catch(()=>[]);
+      remoteDeleteOk = Array.isArray(deleted) && deleted.length > 0;
+    }
+  }catch(e){}
+  remoteResults = [];
+  render();
+  // Re-sync with the server to reflect what actually happened (RLS can silently block the delete).
+  await loadArchiveFromSupabase();
+  if(!remoteDeleteOk && remoteResults && remoteResults.length > 0){
+    alert('La suppression locale a fonctionne, mais le serveur partage a refuse de supprimer les resultats (probablement une regle de securite Supabase qui bloque la suppression). Les resultats sont revenus apres synchronisation. Il faut activer une politique DELETE pour le role "anon" sur la table results dans le tableau de bord Supabase.');
   }
 });
 

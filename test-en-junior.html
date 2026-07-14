@@ -39,7 +39,7 @@
   }
 
   .stage {
-    max-width: 720px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 28px 18px 60px;
     min-height: 100vh;
@@ -98,6 +98,12 @@
     border-radius: 999px;
     white-space: nowrap;
   }
+  .counter.timer-low{
+    color: #B3261E;
+    background: #FDECEA;
+    border-color: #F5C2C0;
+  }
+  .badges-wrap{ display:flex; align-items:center; gap:8px; }
 
   .route-wrap{
     padding: 18px 30px 4px;
@@ -238,7 +244,7 @@
   }
 
   .nav-row{
-    display:flex; justify-content: space-between; align-items:center; gap: 12px;
+    display:flex; justify-content: flex-end; align-items:center; gap: 12px;
   }
 
   /* RESULT SCREEN */
@@ -429,7 +435,10 @@
           <p>Communication Skills Programme</p>
         </div>
       </div>
-      <div class="counter" id="counter">Not started</div>
+      <div class="badges-wrap">
+        <div class="counter" id="timerBadge" style="display:none;">⏱️ --:--</div>
+        <div class="counter" id="counter">Not started</div>
+      </div>
     </header>
 
     <div class="route-wrap" id="routeWrap" style="display:none;">
@@ -553,6 +562,9 @@ let studentObjective = '';
   }catch(e){}
 })();
 
+const SUPABASE_URL = 'https://capbydzmhgllequsdhtp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcGJ5ZHptaGdsbGVxdXNkaHRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODY5NDEsImV4cCI6MjA5OTQ2Mjk0MX0.g53p79GmpEOCPf_wEYFsPW5-cFOQuJLAcGmtLNaxKw0';
+
 function pushToEduFlowArchive(record){
   try{
     var key = 'eduflow_archive';
@@ -560,8 +572,57 @@ function pushToEduFlowArchive(record){
     list.push(record);
     localStorage.setItem(key, JSON.stringify(list));
   }catch(e){}
+  try{
+    fetch(SUPABASE_URL + '/rest/v1/results', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        name: record.name, age: record.age, objective: record.objective,
+        subject: record.subject, test_type: record.testType,
+        level: record.level, score_pct: record.scorePct, skills: record.skills
+      })
+    }).catch(function(){});
+  }catch(e){}
 }
 let startedAt = null;
+
+const TOTAL_SECONDS = 20*60; // 20 minutes max for the Junior test
+let timerInterval = null;
+let secondsLeft = TOTAL_SECONDS;
+
+function startTimer(){
+  secondsLeft = TOTAL_SECONDS;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(tick, 1000);
+  updateTimerDisplay();
+}
+
+function tick(){
+  secondsLeft--;
+  if (secondsLeft <= 0){
+    clearInterval(timerInterval);
+    secondsLeft = 0;
+    updateTimerDisplay();
+    renderResult();
+    return;
+  }
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay(){
+  const el = document.getElementById('timerBadge');
+  if (!el) return;
+  const m = Math.floor(secondsLeft/60).toString().padStart(2,'0');
+  const s = (secondsLeft%60).toString().padStart(2,'0');
+  el.textContent = '⏱️ ' + m + ':' + s;
+  el.style.display = 'inline-block';
+  el.classList.toggle('timer-low', secondsLeft <= 120);
+}
 
 const body = document.getElementById('body');
 const counter = document.getElementById('counter');
@@ -578,7 +639,7 @@ function renderStart(){
       <p class="eyebrow">Welcome to Edu Flow Academy</p>
       <p class="lede">A short journey through grammar, vocabulary, reading, and listening — to find out exactly where your English stands today.</p>
       <ul>
-        <li><span class="dot"></span>${QUESTIONS.length} questions, about 30–35 minutes.</li>
+        <li><span class="dot"></span>${QUESTIONS.length} questions, 20 minutes max. The test ends automatically when time is up.</li>
         <li><span class="dot"></span>Grammar &amp; vocabulary, two reading passages, and three listening recordings (British English audio).</li>
         <li><span class="dot"></span>Your level (Pre-A1 to B2) is calculated automatically at the end, with a full report.</li>
         <li><span class="dot"></span>Answer as best you can — there's no penalty for guessing.</li>
@@ -617,8 +678,17 @@ function renderStart(){
     answers = new Array(QUESTIONS.length).fill(null);
     listeningPlaysLeft = LISTENING_RECS.map(() => 2);
     startedAt = new Date();
+    startTimer();
+    window.onbeforeunload = function(){ return "The test is in progress. If you leave, your progress will be lost."; };
+    history.pushState({eduflowTest:true}, '', location.href);
+    window.addEventListener('popstate', blockBackNavigation);
     renderQuestion();
   });
+}
+
+function blockBackNavigation(){
+  history.pushState({eduflowTest:true}, '', location.href);
+  alert("Going back is not allowed during the test.");
 }
 
 function updateRoute(){
@@ -763,7 +833,6 @@ function renderQuestion(){
       <p class="question">${item.q}</p>
       <div class="options">${optsHtml}</div>
       <div class="nav-row">
-        <button class="btn secondary" id="backBtn" ${current===0 ? 'disabled':''}>Back</button>
         <button class="btn" id="nextBtn" ${answers[current]===null ? 'disabled':''}>${current === QUESTIONS.length-1 ? 'See my result' : 'Next'}</button>
       </div>
     </div>
@@ -774,9 +843,6 @@ function renderQuestion(){
       answers[current] = parseInt(btn.dataset.i, 10);
       renderQuestion();
     });
-  });
-  document.getElementById('backBtn').addEventListener('click', () => {
-    if (current > 0){ current--; renderQuestion(); }
   });
   document.getElementById('nextBtn').addEventListener('click', () => {
     if (answers[current] === null) return;
@@ -832,7 +898,12 @@ function computeBreakdown(){
 }
 
 function levelFor(score){
-  return LEVELS.find(l => score >= l.min && score <= l.max) || LEVELS[LEVELS.length-1];
+  const found = LEVELS.find(l => score >= l.min && score <= l.max) || LEVELS[LEVELS.length-1];
+  // Junior test is capped at A2 max — B1/B2 require the full 100-question test.
+  const order = ['Pre-A1','A1','A2','B1','B2'];
+  const a2 = LEVELS.find(l => l.name === 'A2');
+  if(order.indexOf(found.name) > order.indexOf('A2') && a2) return a2;
+  return found;
 }
 
 function buildCorrectionHTML(){
@@ -853,17 +924,24 @@ function buildCorrectionHTML(){
 }
 
 function renderResult(){
+  clearInterval(timerInterval);
+  const timerBadge = document.getElementById('timerBadge');
+  if (timerBadge) timerBadge.style.display = 'none';
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  window.onbeforeunload = null;
+  window.removeEventListener('popstate', blockBackNavigation);
   routeWrap.style.display = 'none';
   counter.textContent = 'Complete';
   const score = computeScore();
   const level = levelFor(score);
   const bd = computeBreakdown();
 
+  const pct = (s) => s.total ? Math.round(s.correct / s.total * 100) : 0;
   pushToEduFlowArchive({
     name: studentName, age: studentAge, objective: studentObjective,
     subject: 'Anglais', testType: 'Junior (-12 ans)',
     level: level.name, scorePct: Math.round(score / QUESTIONS.length * 100),
-    skills: { Grammar: bd.grammar, Reading: bd.reading, Listening: bd.listening },
+    skills: { Grammar: pct(bd.grammar), Reading: pct(bd.reading), Listening: pct(bd.listening) },
     date: new Date().toISOString()
   });
   const finishedAt = new Date();

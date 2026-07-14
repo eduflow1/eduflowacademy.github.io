@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Espace Reception</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:760px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:30px 28px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:20px;text-align:center;
+  }
+  .welcome-icon{font-size:2.4rem;margin-bottom:10px;}
+  .card h2{margin:0 0 8px;font-size:1.3rem;}
+  .card p{color:#7A7B7D;font-size:0.92rem;line-height:1.6;max-width:480px;margin:0 auto;}
+
+  .coming-soon-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:22px;}
+  .coming-soon-item{
+    border:1.5px dashed var(--line);border-radius:14px;padding:18px 12px;text-align:center;
+    color:#B8BCBA;font-weight:700;font-family:'Quicksand',sans-serif;font-size:0.9rem;
+  }
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Espace Reception</div>
+    <div class="who" id="whoLabel"></div>
+    <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+  </div>
+
+  <div class="card">
+    <div class="welcome-icon">💁</div>
+    <h2 id="welcomeMsg">Bienvenue</h2>
+    <p>Votre espace reception est en cours de construction. Les modules suivants arriveront ici prochainement.</p>
+    <div class="coming-soon-grid">
+      <div class="coming-soon-item">🇪🇸 Eleves — Espagnol</div>
+      <div class="coming-soon-item">🇫🇷 Eleves — Francais</div>
+      <div class="coming-soon-item">🇬🇧 Eleves — Anglais</div>
+      <div class="coming-soon-item">🇳🇱 Eleves — Neerlandais</div>
+      <div class="coming-soon-item">💳 Paiements eleves</div>
+      <div class="coming-soon-item">🗓️ Emploi du temps</div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['receptionist', 'admin']);
+  if (!result) return;
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('welcomeMsg').textContent = 'Bienvenue, ' + (result.profile.full_name || 'vous') + ' !';
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+})();
+</script>
+</body>
+</html>

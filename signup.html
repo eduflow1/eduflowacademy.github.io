@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Creer un compte</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:28px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .gate-screen{width:100%;max-width:440px;}
+  .gate-card{background:var(--card);border-radius:var(--radius);padding:36px 30px;box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);text-align:center;width:100%;}
+  .gate-lock{font-size:2.4rem;margin-bottom:6px;}
+  .brand-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:2px;}
+  .gate-card h2{margin:14px 0 10px;font-size:1.3rem;}
+  .gate-lead{color:#7A7B7D;font-size:0.92rem;line-height:1.5;margin-bottom:22px;}
+  label{display:block;font-weight:600;font-size:0.85rem;margin-bottom:6px;color:var(--ink);text-align:left;}
+  input[type=text],input[type=email],input[type=password]{
+    width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:1rem;font-family:'Inter',sans-serif;margin-bottom:16px;background:#FAFBFB;
+  }
+  input:focus{outline:none;border-color:var(--blue);}
+  .error-msg{color:var(--danger);font-size:0.85rem;margin:-8px 0 14px;display:none;text-align:left;}
+  .hint-msg{color:#8A8B8D;font-size:0.78rem;margin:-8px 0 14px;text-align:left;}
+  button{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;
+    border:none;border-radius:14px;padding:14px 26px;cursor:pointer;width:100%;
+    background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
+    box-shadow:0 8px 20px rgba(63,174,221,0.30);
+  }
+  button:disabled{opacity:0.6;cursor:not-allowed;}
+  .role-badge{display:inline-block;background:#F6F8F7;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:0.82rem;font-weight:600;color:var(--blue-dark);margin-bottom:18px;}
+  .back-link{display:block;margin-top:16px;font-size:0.82rem;color:#9A9B9C;text-decoration:none;}
+  .back-link:hover{color:var(--blue-dark);text-decoration:underline;}
+  .success-icon{font-size:2.6rem;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<div class="gate-screen">
+  <div class="gate-card">
+
+    <div id="stepCode">
+      <div class="gate-lock">🔑</div>
+      <div class="brand-name">Edu Flow Academy</div>
+      <h2>Code d'invitation</h2>
+      <p class="gate-lead">Saisissez le code d'invitation fourni par l'administration pour creer votre compte (personnel enseignant ou reception).</p>
+      <label for="inviteCodeInput">Code d'invitation</label>
+      <input type="text" id="inviteCodeInput" placeholder="Ex. : STAFF-INVITE-XXXXXX">
+      <div class="error-msg" id="errCode">Code invalide. Verifiez aupres de l'administration.</div>
+      <button id="checkCodeBtn">Continuer</button>
+      <a class="back-link" href="login.html">J'ai deja un compte — se connecter</a>
+    </div>
+
+    <div id="stepForm" style="display:none;">
+      <div class="gate-lock">📝</div>
+      <div class="brand-name">Edu Flow Academy</div>
+      <h2>Creer mon compte</h2>
+      <div class="role-badge" id="roleBadge"></div>
+      <label for="nameInput">Nom complet</label>
+      <input type="text" id="nameInput" placeholder="Ex. : Sara El Amrani">
+      <div class="error-msg" id="errName">Merci d'indiquer votre nom.</div>
+      <label for="emailInput">Adresse email</label>
+      <input type="email" id="emailInput" placeholder="Ex. : sara@eduflowacademy.ma">
+      <div class="error-msg" id="errEmail">Merci d'indiquer une adresse email valide.</div>
+      <label for="passwordInput">Mot de passe</label>
+      <input type="password" id="passwordInput" placeholder="8 caracteres minimum">
+      <div class="hint-msg">8 caracteres minimum.</div>
+      <div class="error-msg" id="errPassword">Le mot de passe doit contenir au moins 8 caracteres.</div>
+      <div class="error-msg" id="errSubmit"></div>
+      <button id="createAccountBtn">Creer mon compte</button>
+      <a class="back-link" href="#" id="backToCodeLink">← Changer de code</a>
+    </div>
+
+    <div id="stepDone" style="display:none;">
+      <div class="success-icon">✅</div>
+      <div class="brand-name">Edu Flow Academy</div>
+      <h2>Compte cree</h2>
+      <p class="gate-lead">Votre compte a bien ete cree et est <strong>en attente de validation</strong> par l'administration. Vous recevrez l'acces des qu'un administrateur aura confirme votre role. Vous pouvez fermer cette page.</p>
+      <a class="back-link" href="login.html">← Retour a la page de connexion</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+let matchedRole = null;
+
+document.getElementById('checkCodeBtn').addEventListener('click', () => {
+  const val = document.getElementById('inviteCodeInput').value.trim().toUpperCase();
+  const errCode = document.getElementById('errCode');
+  if (val === EDUFLOW_INVITE_CODES.staff) matchedRole = 'staff';
+  else if (val === EDUFLOW_INVITE_CODES.receptionist) matchedRole = 'receptionist';
+  else matchedRole = null;
+
+  if (!matchedRole){
+    errCode.style.display = 'block';
+    return;
+  }
+  errCode.style.display = 'none';
+  document.getElementById('roleBadge').textContent =
+    matchedRole === 'staff' ? '👩‍🏫 Compte Personnel enseignant' : '💁 Compte Reception';
+  document.getElementById('stepCode').style.display = 'none';
+  document.getElementById('stepForm').style.display = 'block';
+});
+
+document.getElementById('backToCodeLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('stepForm').style.display = 'none';
+  document.getElementById('stepCode').style.display = 'block';
+});
+
+document.getElementById('createAccountBtn').addEventListener('click', async () => {
+  const name = document.getElementById('nameInput').value.trim();
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  const errName = document.getElementById('errName');
+  const errEmail = document.getElementById('errEmail');
+  const errPassword = document.getElementById('errPassword');
+  const errSubmit = document.getElementById('errSubmit');
+  errSubmit.style.display = 'none';
+
+  const nameOk = !!name;
+  const emailOk = /.+@.+\..+/.test(email);
+  const passwordOk = password.length >= 8;
+  errName.style.display = nameOk ? 'none' : 'block';
+  errEmail.style.display = emailOk ? 'none' : 'block';
+  errPassword.style.display = passwordOk ? 'none' : 'block';
+  if (!nameOk || !emailOk || !passwordOk) return;
+
+  const btn = document.getElementById('createAccountBtn');
+  btn.disabled = true;
+  btn.textContent = 'Creation en cours...';
+
+  const { error } = await eduflowClient.auth.signUp({
+    email, password,
+    options: { data: { full_name: name, requested_role: matchedRole } }
+  });
+
+  if (error){
+    errSubmit.textContent = error.message === 'User already registered'
+      ? 'Un compte existe deja avec cet email. Essayez de vous connecter.'
+      : 'Erreur : ' + error.message;
+    errSubmit.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Creer mon compte';
+    return;
+  }
+
+  document.getElementById('stepForm').style.display = 'none';
+  document.getElementById('stepDone').style.display = 'block';
+});
+</script>
+</body>
+</html>

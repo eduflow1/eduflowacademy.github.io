@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Connexion Personnel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:28px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .gate-screen{width:100%;max-width:420px;}
+  .gate-card{background:var(--card);border-radius:var(--radius);padding:36px 30px;box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);text-align:center;width:100%;}
+  .gate-lock{font-size:2.4rem;margin-bottom:6px;}
+  .brand-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:2px;}
+  .gate-card h2{margin:14px 0 10px;font-size:1.3rem;}
+  .gate-lead{color:#7A7B7D;font-size:0.92rem;line-height:1.5;margin-bottom:22px;}
+  .notice{background:#FDF3E7;border-left:4px solid #E0A93F;border-radius:10px;padding:12px 14px;font-size:0.85rem;color:#7A5B1E;margin-bottom:20px;text-align:left;line-height:1.5;display:none;}
+  label{display:block;font-weight:600;font-size:0.85rem;margin-bottom:6px;color:var(--ink);text-align:left;}
+  input[type=email],input[type=password]{
+    width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:1rem;font-family:'Inter',sans-serif;margin-bottom:16px;background:#FAFBFB;
+  }
+  input:focus{outline:none;border-color:var(--blue);}
+  .error-msg{color:var(--danger);font-size:0.85rem;margin:-8px 0 14px;display:none;text-align:left;}
+  button{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;
+    border:none;border-radius:14px;padding:14px 26px;cursor:pointer;width:100%;
+    background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
+    box-shadow:0 8px 20px rgba(63,174,221,0.30);
+  }
+  button:disabled{opacity:0.6;cursor:not-allowed;}
+  .links-row{display:flex;justify-content:space-between;margin-top:16px;font-size:0.82rem;}
+  .links-row a{color:#9A9B9C;text-decoration:none;}
+  .links-row a:hover{color:var(--blue-dark);text-decoration:underline;}
+  .success-msg{color:var(--green-dark);font-size:0.85rem;margin:-8px 0 14px;display:none;text-align:left;}
+</style>
+</head>
+<body>
+
+<div class="gate-screen">
+  <div class="gate-card">
+    <div class="gate-lock">👤</div>
+    <div class="brand-name">Edu Flow Academy</div>
+    <h2>Connexion Personnel</h2>
+    <p class="gate-lead">Reservee a l'administration, au personnel enseignant et a la reception.</p>
+
+    <div class="notice" id="notice"></div>
+
+    <label for="emailInput">Adresse email</label>
+    <input type="email" id="emailInput" placeholder="vous@eduflowacademy.ma">
+    <label for="passwordInput">Mot de passe</label>
+    <input type="password" id="passwordInput" placeholder="••••••••">
+    <div class="error-msg" id="errLogin"></div>
+    <div class="success-msg" id="successMsg"></div>
+    <button id="loginBtn">Se connecter</button>
+
+    <div class="links-row">
+      <a href="#" id="forgotLink">Mot de passe oublie ?</a>
+      <a href="signup.html">Creer un compte</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const reason = params.get('reason');
+const notice = document.getElementById('notice');
+if (reason === 'pending'){
+  notice.textContent = 'Votre compte a bien ete cree mais attend encore la validation d\'un administrateur. Reessayez plus tard.';
+  notice.style.display = 'block';
+} else if (reason === 'disabled'){
+  notice.textContent = 'Ce compte a ete desactive. Contactez l\'administration.';
+  notice.style.display = 'block';
+}
+
+// If already logged in with an approved account, skip straight to the right dashboard.
+(async () => {
+  const { session, profile } = await eduflowGetProfile();
+  if (session && profile && profile.status === 'active' && profile.role !== 'pending'){
+    window.location.replace(eduflowRoleHome(profile.role));
+  }
+})();
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  const errLogin = document.getElementById('errLogin');
+  errLogin.style.display = 'none';
+
+  if (!email || !password){
+    errLogin.textContent = 'Merci de renseigner votre email et votre mot de passe.';
+    errLogin.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = 'Connexion...';
+
+  const { error } = await eduflowClient.auth.signInWithPassword({ email, password });
+  if (error){
+    errLogin.textContent = 'Email ou mot de passe incorrect.';
+    errLogin.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Se connecter';
+    return;
+  }
+
+  const { profile } = await eduflowGetProfile();
+  if (!profile || profile.status !== 'active'){
+    await eduflowClient.auth.signOut();
+    errLogin.textContent = 'Ce compte a ete desactive. Contactez l\'administration.';
+    errLogin.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Se connecter';
+    return;
+  }
+  if (profile.role === 'pending'){
+    await eduflowClient.auth.signOut();
+    errLogin.textContent = 'Votre compte attend encore la validation d\'un administrateur.';
+    errLogin.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Se connecter';
+    return;
+  }
+
+  window.location.replace(eduflowRoleHome(profile.role));
+});
+
+document.getElementById('forgotLink').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('emailInput').value.trim();
+  const errLogin = document.getElementById('errLogin');
+  const successMsg = document.getElementById('successMsg');
+  errLogin.style.display = 'none';
+  successMsg.style.display = 'none';
+
+  if (!/.+@.+\..+/.test(email)){
+    errLogin.textContent = 'Saisissez d\'abord votre adresse email ci-dessus, puis cliquez a nouveau sur "Mot de passe oublie ?".';
+    errLogin.style.display = 'block';
+    return;
+  }
+
+  const redirectTo = window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html');
+  const { error } = await eduflowClient.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error){
+    errLogin.textContent = 'Erreur : ' + error.message;
+    errLogin.style.display = 'block';
+    return;
+  }
+  successMsg.textContent = 'Un email de reinitialisation a ete envoye a ' + email + ' (verifiez aussi les spams).';
+  successMsg.style.display = 'block';
+});
+</script>
+</body>
+</html>

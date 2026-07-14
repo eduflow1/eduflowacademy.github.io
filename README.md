@@ -4,27 +4,59 @@
 
 - `index.html` — Page d'accueil / connexion. L'élève saisit son nom, son âge
   et choisit la langue (Français / English), puis est redirigé automatiquement :
-  - **14 ans ou moins** → test **Junior** (30 à 42 questions, ~20-35 min)
-  - **15 ans et plus** → test **Complet** (100 questions, ~45 min)
+  - **12 ans ou moins** → test **Junior** (30 à 42 questions, 20 min max)
+  - **13 ans et plus** → test **Complet** (100 questions, 45 min max)
 - `test-fr-junior.html` — Test français, version Junior (30 questions)
 - `test-fr-full.html` — Test français, version complète (100 questions, A1 à B1)
 - `test-en-junior.html` — Test anglais, version Junior (42 questions)
 - `test-en-full.html` — Test anglais, version complète (100 questions, A1 à B1)
 - `archive.html` — Tableau de bord des résultats archivés (recherche, tri,
-  export CSV, effacement)
+  export CSV, effacement, impression)
 
 Les 4 tests évaluent les mêmes compétences (compréhension écrite, compréhension
-orale, grammaire/vocabulaire, expression orale) et enregistrent automatiquement
-le résultat dans l'archive partagée à la fin.
+orale, grammaire/vocabulaire, expression orale), s'arrêtent automatiquement à la
+fin du temps imparti, et enregistrent automatiquement le résultat dans l'archive
+partagée à la fin.
+
+## Comptes du personnel (nouveau)
+
+En plus de l'archive des résultats (protégée par le code partagé `STAFF-F6WSAR`),
+la plateforme propose maintenant de vrais comptes individuels avec mot de passe,
+pour l'administration, le personnel enseignant et la reception :
+
+- `login.html` — connexion avec email + mot de passe. Redirige automatiquement
+  vers le bon espace selon le rôle du compte.
+- `signup.html` — création de compte : un code d'invitation (différent selon
+  le rôle demandé) donne accès au formulaire d'inscription. Le compte créé
+  reste **en attente** tant qu'un administrateur ne l'a pas validé.
+- `admin-dashboard.html` — réservé à l'administration : validation des
+  demandes de compte, attribution des rôles, désactivation/réactivation des
+  comptes, réinitialisation de mot de passe. L'administration a accès à tout.
+- `staff-dashboard.html` — espace du personnel enseignant.
+- `reception-dashboard.html` — espace de la réception.
+- `reset-password.html` — page où l'on choisit un nouveau mot de passe après
+  avoir cliqué sur le lien reçu par email ("mot de passe oublié").
+- `eduflow-auth.js` — fichier partagé (connexion à Supabase + vérification du
+  rôle), chargé par toutes les pages ci-dessus.
+
+Ces 6 pages (Phase 1) posent seulement la fondation : comptes, mots de passe
+et rôles. Les modules Paiements, Emploi du temps, Présence, Classes et Ateliers
+mentionnés dans le tableau de bord administration arriveront dans une phase
+suivante.
+
+**Mise en place unique côté base de données** : le fichier `supabase-setup.sql`
+doit être collé une seule fois dans l'éditeur SQL du tableau de bord Supabase
+avant la première utilisation (voir `deploy-instructions.md`).
 
 ## ⚠️ Important : hébergement requis
 
 Pour que la connexion automatique (le nom/âge saisis sur `index.html` soient
-transmis au test) et l'archivage des résultats fonctionnent, **ces 6 fichiers
-doivent être ouverts depuis un vrai serveur web (http/https)**, tous dans le
-même dossier — pas simplement ouverts en double-cliquant depuis l'explorateur
-de fichiers (`file://`). La plupart des navigateurs isolent chaque fichier
-local, ce qui empêche le partage des données entre les pages.
+transmis au test), l'archivage des résultats et les comptes du personnel
+fonctionnent, **tous ces fichiers doivent être ouverts depuis un vrai serveur
+web (http/https)**, tous dans le même dossier — pas simplement ouverts en
+double-cliquant depuis l'explorateur de fichiers (`file://`). La plupart des
+navigateurs isolent chaque fichier local, ce qui empêche le partage des
+données entre les pages.
 
 Solutions simples :
 - Héberger le dossier sur le site existant de l'académie (n'importe quel
