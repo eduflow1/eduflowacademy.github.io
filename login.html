@@ -46,11 +46,22 @@
   .links-row a{color:#9A9B9C;text-decoration:none;}
   .links-row a:hover{color:var(--blue-dark);text-decoration:underline;}
   .success-msg{color:var(--green-dark);font-size:0.85rem;margin:-8px 0 14px;display:none;text-align:left;}
+  .pwd-field{position:relative;}
+  .pwd-field input{padding-right:44px;}
+  .pwd-toggle{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-size:1.05rem;padding:6px 8px;
+    line-height:1;border-radius:8px;width:auto;box-shadow:none;
+  }
+  .pwd-toggle:hover{background:#F0F3F2;}
+  .home-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:14px;}
+  .home-link:hover{color:var(--blue-dark);}
 </style>
 </head>
 <body>
 
 <div class="gate-screen">
+  <a href="index.html" class="home-link">🏠 Accueil</a>
   <div class="gate-card">
     <div class="gate-lock">👤</div>
     <div class="brand-name">Edu Flow Academy</div>
@@ -62,7 +73,10 @@
     <label for="emailInput">Adresse email</label>
     <input type="email" id="emailInput" placeholder="vous@eduflowacademy.ma">
     <label for="passwordInput">Mot de passe</label>
-    <input type="password" id="passwordInput" placeholder="••••••••">
+    <div class="pwd-field">
+      <input type="password" id="passwordInput" placeholder="••••••••">
+      <button type="button" class="pwd-toggle" id="passwordToggle" aria-label="Afficher/masquer le mot de passe">👁️</button>
+    </div>
     <div class="error-msg" id="errLogin"></div>
     <div class="success-msg" id="successMsg"></div>
     <button id="loginBtn">Se connecter</button>
@@ -140,6 +154,14 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   }
 
   window.location.replace(eduflowRoleHome(profile.role));
+});
+
+document.getElementById('passwordToggle').addEventListener('click', () => {
+  const input = document.getElementById('passwordInput');
+  const btn = document.getElementById('passwordToggle');
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.textContent = showing ? '👁️' : '🙈';
 });
 
 document.getElementById('forgotLink').addEventListener('click', async (e) => {

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Ateliers &amp; Formations</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:1000px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:26px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:10px;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
+  .count-badge{
+    background:var(--blue);color:#fff;font-size:0.72rem;font-weight:700;
+    border-radius:999px;padding:2px 9px;font-family:'Inter',sans-serif;
+  }
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  .toolbar input[type=text]{flex:1;min-width:160px;}
+
+  select, input[type=text], input[type=number], input[type=date], input[type=time]{
+    padding:9px 11px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);
+  }
+  select:focus, input:focus{outline:none;border-color:var(--blue);}
+
+  .btn-sm{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;
+    border:none;border-radius:10px;padding:8px 14px;cursor:pointer;color:#fff;
+  }
+  .btn-primary-sm{background:var(--blue);}
+  .btn-primary-sm:hover{background:var(--blue-dark);}
+  .btn-approve{background:var(--green);}
+  .btn-approve:hover{background:var(--green-dark);}
+  .btn-reject{background:var(--danger);}
+  .btn-reject:hover{opacity:0.88;}
+  .btn-ghost-sm{background:none;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-ghost-sm:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .btn-xs{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.75rem;
+    border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:#fff;background:var(--danger);
+  }
+  .btn-sm:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:8px 0;}
+
+  table.data-table{width:100%;border-collapse:collapse;font-size:0.86rem;}
+  table.data-table th{
+    text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:.04em;
+    color:#9A9B9C;padding:8px 10px;border-bottom:1.5px solid var(--line);
+  }
+  table.data-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  table.data-table tr:last-child td{border-bottom:none;}
+  table.data-table tr.clickable{cursor:pointer;}
+  table.data-table tr.clickable:hover{background:#FAFBFB;}
+  .status-pill{display:inline-block;font-size:0.72rem;font-weight:700;border-radius:999px;padding:3px 10px;}
+  .status-active{background:#E8F5E4;color:var(--green-dark);}
+  .status-disabled{background:#FCE9E6;color:var(--danger);}
+
+  label{display:block;font-weight:600;font-size:0.82rem;margin-bottom:5px;color:var(--ink);}
+  .field{margin-bottom:14px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  @media (max-width:600px){.field-row,.field-row-3{grid-template-columns:1fr;}}
+  .form-actions{display:flex;gap:10px;margin-top:6px;}
+
+  .back-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:14px;cursor:pointer;}
+  .back-link:hover{color:var(--blue-dark);}
+
+  .reg-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .reg-row:last-child{border-bottom:none;}
+  .reg-info{flex:1;}
+
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Ateliers &amp; Formations</div>
+    <div class="who" id="whoLabel"></div>
+    <div class="topbar-actions">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="listView">
+    <div class="card">
+      <h2>Ateliers &amp; formations <span class="count-badge" id="workshopCount">0</span></h2>
+      <p class="lead" id="listLead">Sessions ponctuelles (hors classes regulieres).</p>
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="Rechercher par titre, formateur...">
+        <button class="btn-sm btn-primary-sm" id="newWorkshopBtn" style="display:none;">+ Nouvel atelier</button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Titre</th><th>Date</th><th>Formateur</th><th>Inscrits</th><th>Statut</th></tr>
+        </thead>
+        <tbody id="workshopsBody"></tbody>
+      </table>
+      <div class="empty-msg" id="workshopsEmpty" style="display:none;">Aucun atelier ne correspond a ces criteres.</div>
+    </div>
+  </div>
+
+  <!-- FORM VIEW (admin only) -->
+  <div id="formView" style="display:none;">
+    <a class="back-link" id="formBackLink">← Retour a la liste</a>
+    <div class="card">
+      <h2 id="formTitle">Nouvel atelier</h2>
+      <div class="field">
+        <label for="fTitleInput">Titre</label>
+        <input type="text" id="fTitleInput" placeholder="Ex. : Preparation TOEFL">
+      </div>
+      <div class="field">
+        <label for="fDescInput">Description</label>
+        <input type="text" id="fDescInput" placeholder="Optionnel">
+      </div>
+      <div class="field-row-3">
+        <div class="field">
+          <label for="fDateInput">Date</label>
+          <input type="date" id="fDateInput">
+        </div>
+        <div class="field">
+          <label for="fStartInput">Heure debut</label>
+          <input type="time" id="fStartInput" value="14:00">
+        </div>
+        <div class="field">
+          <label for="fEndInput">Heure fin</label>
+          <input type="time" id="fEndInput" value="16:00">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fInstructorInput">Formateur</label>
+          <select id="fInstructorInput"><option value="">— Non assigne —</option></select>
+        </div>
+        <div class="field">
+          <label for="fRoomInput">Salle</label>
+          <input type="text" id="fRoomInput" placeholder="Ex. : Salle 1">
+        </div>
+      </div>
+      <div class="field">
+        <label for="fCapacityInput">Capacite</label>
+        <input type="number" id="fCapacityInput" min="1" value="20">
+      </div>
+      <div class="form-actions">
+        <button class="btn-sm btn-primary-sm" id="saveWorkshopBtn">Enregistrer</button>
+        <button class="btn-sm btn-ghost-sm" id="cancelFormBtn">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div id="detailView" style="display:none;">
+    <a class="back-link" id="detailBackLink">← Retour a la liste</a>
+    <div class="card">
+      <h2 id="detailName">—</h2>
+      <p class="lead" id="detailMeta">—</p>
+      <div class="form-actions" id="detailActions"></div>
+    </div>
+    <div class="card">
+      <h2>Inscriptions</h2>
+      <div id="regList"></div>
+      <div class="empty-msg" id="regEmpty" style="display:none;">Aucun eleve inscrit.</div>
+      <div class="form-actions" style="margin-top:14px;" id="regActionWrap">
+        <select id="studentPicker"></select>
+        <button class="btn-sm btn-primary-sm" id="registerBtn">+ Inscrire</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+let currentProfile = null;
+let allWorkshops = [];
+let regCounts = {};
+let instructorOptions = [];
+let activeStudents = [];
+let currentDetail = null;
+let editingId = null;
+
+function isAdmin(){ return currentProfile && currentProfile.role === 'admin'; }
+function canWrite(){ return isAdmin(); }
+function canRegister(){ return currentProfile.role === 'admin' || currentProfile.role === 'receptionist'; }
+
+function fmtDate(iso){
+  if (!iso) return '—';
+  return new Date(iso + 'T00:00:00').toLocaleDateString('fr-FR', {year:'numeric', month:'short', day:'numeric'});
+}
+
+async function loadAll(){
+  const { data: workshops, error: wErr } = await eduflowClient.from('workshops').select('*').order('workshop_date', { ascending: false });
+  if (wErr){ alert('Erreur : ' + wErr.message); return; }
+  allWorkshops = workshops || [];
+
+  const { data: regs } = await eduflowClient.from('workshop_registrations').select('workshop_id').eq('status', 'registered');
+  regCounts = {};
+  (regs || []).forEach(r => { regCounts[r.workshop_id] = (regCounts[r.workshop_id] || 0) + 1; });
+
+  if (isAdmin() || currentProfile.role === 'receptionist'){
+    const { data: profiles } = await eduflowClient.from('profiles').select('id, full_name').eq('role', 'staff').eq('status', 'active');
+    instructorOptions = profiles || [];
+  }
+  if (canRegister()){
+    const { data: students } = await eduflowClient.from('students').select('id, full_name, student_code').eq('status', 'active').order('full_name');
+    activeStudents = students || [];
+  }
+
+  renderTable();
+}
+
+function instructorName(id){
+  if (!id) return '—';
+  if (currentProfile.id === id) return currentProfile.full_name || currentProfile.email;
+  const t = instructorOptions.find(p => p.id === id);
+  return t ? t.full_name : '—';
+}
+
+function renderTable(){
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const body = document.getElementById('workshopsBody');
+  body.innerHTML = '';
+
+  const visible = allWorkshops.filter(w => {
+    if (!search) return true;
+    const hay = (w.title + ' ' + instructorName(w.instructor_id)).toLowerCase();
+    return hay.includes(search);
+  });
+
+  document.getElementById('workshopCount').textContent = allWorkshops.filter(w => w.status === 'active').length;
+  document.getElementById('workshopsEmpty').style.display = visible.length ? 'none' : 'block';
+  document.getElementById('listLead').textContent = currentProfile.role === 'staff'
+    ? 'Vos ateliers.'
+    : 'Sessions ponctuelles (hors classes regulieres).';
+
+  visible.forEach(w => {
+    const tr = document.createElement('tr');
+    tr.className = 'clickable';
+    tr.innerHTML = `
+      <td>${w.title}</td>
+      <td>${fmtDate(w.workshop_date)}</td>
+      <td>${instructorName(w.instructor_id)}</td>
+      <td>${regCounts[w.id] || 0} / ${w.capacity}</td>
+      <td><span class="status-pill ${w.status==='active'?'status-active':'status-disabled'}">${w.status==='active'?'Actif':'Archive'}</span></td>
+    `;
+    tr.addEventListener('click', () => openDetail(w.id));
+    body.appendChild(tr);
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', renderTable);
+
+function showView(name){
+  document.getElementById('listView').style.display = name === 'list' ? 'block' : 'none';
+  document.getElementById('formView').style.display = name === 'form' ? 'block' : 'none';
+  document.getElementById('detailView').style.display = name === 'detail' ? 'block' : 'none';
+}
+
+function populateInstructorSelect(selectedId){
+  const sel = document.getElementById('fInstructorInput');
+  sel.innerHTML = '<option value="">— Non assigne —</option>' +
+    instructorOptions.map(t => `<option value="${t.id}" ${t.id===selectedId?'selected':''}>${t.full_name || t.id}</option>`).join('');
+}
+
+function openNewForm(){
+  editingId = null;
+  document.getElementById('fTitleInput').value = '';
+  document.getElementById('fDescInput').value = '';
+  document.getElementById('fDateInput').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('fStartInput').value = '14:00';
+  document.getElementById('fEndInput').value = '16:00';
+  populateInstructorSelect(null);
+  document.getElementById('fRoomInput').value = '';
+  document.getElementById('fCapacityInput').value = 20;
+  document.getElementById('formTitle').textContent = 'Nouvel atelier';
+  showView('form');
+}
+
+function openEditForm(w){
+  editingId = w.id;
+  document.getElementById('fTitleInput').value = w.title;
+  document.getElementById('fDescInput').value = w.description || '';
+  document.getElementById('fDateInput').value = w.workshop_date || '';
+  document.getElementById('fStartInput').value = w.start_time || '14:00';
+  document.getElementById('fEndInput').value = w.end_time || '16:00';
+  populateInstructorSelect(w.instructor_id);
+  document.getElementById('fRoomInput').value = w.room || '';
+  document.getElementById('fCapacityInput').value = w.capacity;
+  document.getElementById('formTitle').textContent = 'Modifier ' + w.title;
+  showView('form');
+}
+
+document.getElementById('newWorkshopBtn').addEventListener('click', openNewForm);
+document.getElementById('formBackLink').addEventListener('click', () => showView('list'));
+document.getElementById('cancelFormBtn').addEventListener('click', () => showView('list'));
+
+document.getElementById('saveWorkshopBtn').addEventListener('click', async () => {
+  const title = document.getElementById('fTitleInput').value.trim();
+  if (!title){ alert('Le titre est obligatoire.'); return; }
+  const capacity = parseInt(document.getElementById('fCapacityInput').value, 10);
+  if (!capacity || capacity < 1){ alert('Capacite invalide.'); return; }
+
+  const payload = {
+    title,
+    description: document.getElementById('fDescInput').value.trim() || null,
+    workshop_date: document.getElementById('fDateInput').value || null,
+    start_time: document.getElementById('fStartInput').value || null,
+    end_time: document.getElementById('fEndInput').value || null,
+    instructor_id: document.getElementById('fInstructorInput').value || null,
+    room: document.getElementById('fRoomInput').value.trim() || null,
+    capacity
+  };
+
+  const btn = document.getElementById('saveWorkshopBtn');
+  btn.disabled = true;
+  let error;
+  if (editingId){
+    ({ error } = await eduflowClient.from('workshops').update(payload).eq('id', editingId));
+  } else {
+    payload.created_by = currentProfile.id;
+    ({ error } = await eduflowClient.from('workshops').insert(payload));
+  }
+  btn.disabled = false;
+  if (error){ alert('Erreur : ' + error.message); return; }
+  await loadAll();
+  showView('list');
+});
+
+async function openDetail(id){
+  currentDetail = allWorkshops.find(w => w.id === id);
+  if (!currentDetail) return;
+  await renderDetail();
+  showView('detail');
+}
+
+async function renderDetail(){
+  const w = currentDetail;
+  document.getElementById('detailName').textContent = w.title;
+  const bits = [fmtDate(w.workshop_date), w.start_time && w.end_time ? w.start_time + ' - ' + w.end_time : null,
+    w.room ? 'Salle ' + w.room : null, 'Formateur : ' + instructorName(w.instructor_id), w.description || null].filter(Boolean);
+  document.getElementById('detailMeta').textContent = bits.join(' · ');
+
+  const actions = document.getElementById('detailActions');
+  actions.innerHTML = '';
+  if (canWrite()){
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-sm btn-ghost-sm';
+    editBtn.textContent = 'Modifier';
+    editBtn.addEventListener('click', () => openEditForm(w));
+    actions.appendChild(editBtn);
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn-sm ' + (w.status === 'active' ? 'btn-reject' : 'btn-approve');
+    toggleBtn.textContent = w.status === 'active' ? 'Archiver' : 'Reactiver';
+    toggleBtn.addEventListener('click', async () => {
+      if (w.status === 'active' && !confirm('Archiver cet atelier ?')) return;
+      const newStatus = w.status === 'active' ? 'archived' : 'active';
+      const { error } = await eduflowClient.from('workshops').update({ status: newStatus }).eq('id', w.id);
+      if (error){ alert('Erreur : ' + error.message); return; }
+      await loadAll();
+      currentDetail = allWorkshops.find(x => x.id === w.id);
+      await renderDetail();
+    });
+    actions.appendChild(toggleBtn);
+  }
+
+  const { data: regs, error } = await eduflowClient
+    .from('workshop_registrations')
+    .select('id, status, students(id, full_name, student_code)')
+    .eq('workshop_id', w.id).eq('status', 'registered');
+
+  const list = document.getElementById('regList');
+  const empty = document.getElementById('regEmpty');
+  list.innerHTML = '';
+  const rows = error ? [] : (regs || []).filter(r => r.students);
+  empty.style.display = rows.length ? 'none' : 'block';
+
+  rows.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'reg-row';
+    row.innerHTML = `<div class="reg-info">${r.students.full_name} <span style="color:#9A9B9C;font-size:0.8rem;">${r.students.student_code||''}</span></div>`;
+    if (canRegister()){
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'btn-xs';
+      cancelBtn.textContent = 'Retirer';
+      cancelBtn.addEventListener('click', async () => {
+        if (!confirm('Retirer cette inscription ?')) return;
+        const { error } = await eduflowClient.from('workshop_registrations').update({ status: 'cancelled' }).eq('id', r.id);
+        if (error){ alert('Erreur : ' + error.message); return; }
+        await loadAll();
+        currentDetail = allWorkshops.find(x => x.id === w.id);
+        await renderDetail();
+      });
+      row.appendChild(cancelBtn);
+    }
+    list.appendChild(row);
+  });
+
+  const wrap = document.getElementById('regActionWrap');
+  wrap.style.display = canRegister() ? 'flex' : 'none';
+  if (canRegister()){
+    const registeredIds = rows.map(r => r.students.id);
+    const picker = document.getElementById('studentPicker');
+    const available = activeStudents.filter(s => !registeredIds.includes(s.id));
+    picker.innerHTML = available.map(s => `<option value="${s.id}">${s.full_name}</option>`).join('') || '<option value="">Aucun eleve disponible</option>';
+  }
+}
+
+document.getElementById('registerBtn').addEventListener('click', async () => {
+  const studentId = document.getElementById('studentPicker').value;
+  if (!studentId) return;
+  const w = currentDetail;
+  const currentCount = regCounts[w.id] || 0;
+  if (currentCount >= w.capacity){
+    if (!confirm(`Cet atelier est a sa capacite maximale (${w.capacity}). Inscrire quand meme ?`)) return;
+  }
+  const btn = document.getElementById('registerBtn');
+  btn.disabled = true;
+  const { error } = await eduflowClient.from('workshop_registrations').insert({
+    workshop_id: w.id, student_id: studentId, created_by: currentProfile.id
+  });
+  btn.disabled = false;
+  if (error){
+    alert(error.code === '23505' ? 'Cet eleve est deja inscrit a cet atelier.' : 'Erreur : ' + error.message);
+    return;
+  }
+  await loadAll();
+  currentDetail = allWorkshops.find(x => x.id === w.id);
+  await renderDetail();
+});
+
+document.getElementById('detailBackLink').addEventListener('click', () => showView('list'));
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['admin', 'receptionist', 'staff']);
+  if (!result) return;
+  currentProfile = result.profile;
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('newWorkshopBtn').style.display = canWrite() ? 'inline-block' : 'none';
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadAll();
+})();
+</script>
+</body>
+</html>

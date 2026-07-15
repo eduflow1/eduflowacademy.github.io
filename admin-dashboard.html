@@ -21,7 +21,14 @@
     display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
   }
   h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
-  .wrap{width:100%;max-width:960px;}
+  .wrap{width:100%;max-width:1260px;}
+
+  .dashboard-grid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;}
+  @media (max-width:960px){.dashboard-grid{grid-template-columns:1fr;}}
+  .accounts-sidebar{position:sticky;top:20px;}
+  @media (max-width:960px){.accounts-sidebar{position:static;}}
+  .table-scroll{overflow-x:auto;}
+  .table-scroll table{min-width:480px;}
 
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
   .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
@@ -32,6 +39,13 @@
     background:#fff;color:var(--ink);
   }
   .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
 
   .card{
     background:var(--card);border-radius:var(--radius);padding:26px 26px;
@@ -108,8 +122,63 @@
   <div class="topbar">
     <div class="brand-name">Edu Flow Academy — Administration</div>
     <div class="who" id="whoLabel"></div>
-    <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    <div class="topbar-actions">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
   </div>
+
+  <div class="dashboard-grid">
+  <div class="main-col">
+
+  <div class="card">
+    <h2>Eleves &amp; Classes</h2>
+    <p class="lead">Fiches eleves, catalogue des classes et inscriptions.</p>
+    <div class="coming-soon-grid" style="margin-bottom:16px;">
+      <div class="coming-soon-item" style="border-style:solid;color:var(--blue-dark);"><span class="count-badge" id="studentsCountBadge">—</span><br>Eleves actifs</div>
+      <div class="coming-soon-item" style="border-style:solid;color:var(--green-dark);"><span class="count-badge" id="classesCountBadge" style="background:var(--green);">—</span><br>Classes actives</div>
+    </div>
+    <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="students.html" class="btn-sm btn-approve" style="text-decoration:none;display:inline-block;">Gerer les eleves</a>
+      <a href="classes.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les classes</a>
+      <a href="timetable.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Emploi du temps</a>
+      <a href="attendance.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Presence</a>
+      <a href="payments.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Paiements eleves</a>
+      <a href="workshops.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Ateliers &amp; formations</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💰 Salaires du personnel</h2>
+    <p class="lead">Reserve a l'administration — pas visible par la reception ni par le personnel lui-meme.</p>
+    <a href="staff-payments.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les salaires</a>
+  </div>
+
+  <div class="card">
+    <h2>📊 Resultats des tests</h2>
+    <p class="lead">Historique des tests de positionnement passes par les eleves — recherche, impression et export.</p>
+    <button class="btn-sm btn-reset" id="openResultsBtn">Ouvrir les resultats</button>
+  </div>
+
+  <div class="card">
+    <h2>🚪 Visiter un espace</h2>
+    <p class="lead">Acces direct a n'importe quel espace, sans mot de passe supplementaire — votre session admin y donne deja acces.</p>
+    <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="staff-dashboard.html" class="btn-sm" style="text-decoration:none;display:inline-block;border:1.5px solid var(--line);background:#fff;color:var(--ink);">👩‍🏫 Espace enseignant</a>
+      <a href="reception-dashboard.html" class="btn-sm" style="text-decoration:none;display:inline-block;border:1.5px solid var(--line);background:#fff;color:var(--ink);">💁 Espace reception</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>A venir</h2>
+    <p class="lead">Ces modules s'ajouteront a la plateforme dans une prochaine phase.</p>
+    <div class="coming-soon-grid">
+      <div class="coming-soon-item">💳 Paiement gateway en ligne</div>
+    </div>
+  </div>
+
+  </div>
+  <div class="accounts-sidebar">
 
   <div class="card">
     <h2>Comptes en attente <span class="count-badge" id="pendingCount">0</span></h2>
@@ -121,42 +190,17 @@
   <div class="card">
     <h2>Tous les comptes</h2>
     <input type="text" id="searchInput" placeholder="Rechercher par nom ou email...">
-    <table class="accounts-table">
-      <thead>
-        <tr><th>Nom</th><th>Email</th><th>Role</th><th>Statut</th><th>Actions</th></tr>
-      </thead>
-      <tbody id="accountsBody"></tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h2>Eleves &amp; Classes</h2>
-    <p class="lead">Fiches eleves, catalogue des classes et inscriptions.</p>
-    <div class="coming-soon-grid" style="margin-bottom:16px;">
-      <div class="coming-soon-item" style="border-style:solid;color:var(--blue-dark);"><span class="count-badge" id="studentsCountBadge">—</span><br>Eleves actifs</div>
-      <div class="coming-soon-item" style="border-style:solid;color:var(--green-dark);"><span class="count-badge" id="classesCountBadge" style="background:var(--green);">—</span><br>Classes actives</div>
-    </div>
-    <div class="form-actions" style="display:flex;gap:10px;">
-      <a href="students.html" class="btn-sm btn-approve" style="text-decoration:none;display:inline-block;">Gerer les eleves</a>
-      <a href="classes.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les classes</a>
+    <div class="table-scroll">
+      <table class="accounts-table">
+        <thead>
+          <tr><th>Nom</th><th>Email</th><th>Role</th><th>Statut</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="accountsBody"></tbody>
+      </table>
     </div>
   </div>
 
-  <div class="card">
-    <h2>📊 Resultats des tests</h2>
-    <p class="lead">Historique des tests de positionnement passes par les eleves — recherche, impression et export.</p>
-    <button class="btn-sm btn-reset" id="openResultsBtn">Ouvrir les resultats</button>
   </div>
-
-  <div class="card">
-    <h2>A venir</h2>
-    <p class="lead">Ces modules s'ajouteront a la plateforme dans une prochaine phase.</p>
-    <div class="coming-soon-grid">
-      <div class="coming-soon-item">💳 Paiements</div>
-      <div class="coming-soon-item">🗓️ Emploi du temps</div>
-      <div class="coming-soon-item">✅ Presence</div>
-      <div class="coming-soon-item">🎓 Ateliers &amp; formations</div>
-    </div>
   </div>
 </div>
 

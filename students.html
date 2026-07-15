@@ -33,6 +33,13 @@
     background:#fff;color:var(--ink);
   }
   .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
 
   .card{
     background:var(--card);border-radius:var(--radius);padding:26px;
@@ -109,6 +116,9 @@
   .enroll-info{flex:1;min-width:160px;}
 
   .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+  @media print{
+    .no-print{display:none !important;}
+  }
 </style>
 </head>
 <body>
@@ -117,7 +127,10 @@
   <div class="topbar">
     <div class="brand-name">Edu Flow Academy — Eleves</div>
     <div class="who" id="whoLabel"></div>
-    <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    <div class="topbar-actions no-print">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
   </div>
 
   <!-- LIST VIEW -->
@@ -125,7 +138,7 @@
     <div class="card">
       <h2>Eleves <span class="count-badge" id="studentCount">0</span></h2>
       <p class="lead">Fiches eleves et leurs inscriptions aux classes.</p>
-      <div class="toolbar">
+      <div class="toolbar no-print">
         <input type="text" id="searchInput" placeholder="Rechercher par nom, code, telephone...">
         <select id="subjectFilter">
           <option value="">Toutes les matieres</option>
@@ -135,6 +148,7 @@
           <option value="nl">Neerlandais</option>
         </select>
         <button class="btn-sm btn-primary-sm" id="newStudentBtn" style="display:none;">+ Nouvel eleve</button>
+        <button class="btn-sm btn-ghost-sm" id="printListBtn">🖨️ Imprimer</button>
       </div>
       <table class="data-table">
         <thead>
@@ -198,19 +212,31 @@
 
   <!-- DETAIL VIEW -->
   <div id="detailView" style="display:none;">
-    <a class="back-link" id="detailBackLink">← Retour a la liste</a>
+    <a class="back-link no-print" id="detailBackLink">← Retour a la liste</a>
     <div class="card">
       <h2 id="detailName">—</h2>
       <p class="lead" id="detailMeta">—</p>
-      <div class="form-actions" id="detailActions"></div>
+      <div class="form-actions no-print" id="detailActions"></div>
+      <div class="form-actions no-print" style="margin-top:10px;">
+        <button class="btn-sm btn-ghost-sm" id="printProfileBtn">🖨️ Imprimer la fiche</button>
+      </div>
     </div>
     <div class="card">
       <h2>Inscriptions</h2>
       <div id="enrollList"></div>
       <div class="empty-msg" id="enrollEmpty" style="display:none;">Aucune inscription active.</div>
-      <div class="form-actions" style="margin-top:14px;" id="enrollActionWrap">
+      <div class="form-actions no-print" style="margin-top:14px;" id="enrollActionWrap">
         <select id="classPicker"></select>
         <button class="btn-sm btn-primary-sm" id="enrollBtn">+ Inscrire a cette classe</button>
+      </div>
+    </div>
+    <div class="card" id="paymentsCard" style="display:none;">
+      <h2>Paiements</h2>
+      <p class="lead" id="paymentsTotalLine">—</p>
+      <div id="paymentsList"></div>
+      <div class="empty-msg" id="paymentsEmpty" style="display:none;">Aucun paiement enregistre.</div>
+      <div class="form-actions no-print" style="margin-top:14px;">
+        <a class="btn-sm btn-primary-sm" id="recordPaymentLink" style="text-decoration:none;">+ Enregistrer un paiement</a>
       </div>
     </div>
   </div>
@@ -348,6 +374,8 @@ function openEditForm(student){
 }
 
 document.getElementById('newStudentBtn').addEventListener('click', openNewForm);
+document.getElementById('printListBtn').addEventListener('click', () => window.print());
+document.getElementById('printProfileBtn').addEventListener('click', () => window.print());
 document.getElementById('formBackLink').addEventListener('click', () => showView('list'));
 document.getElementById('cancelFormBtn').addEventListener('click', () => showView('list'));
 
@@ -448,6 +476,49 @@ function renderDetail(){
   }
 
   renderEnrollments();
+  renderPayments();
+}
+
+async function renderPayments(){
+  const s = currentDetailStudent;
+  const card = document.getElementById('paymentsCard');
+  if (currentProfile.role === 'staff'){ card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  document.getElementById('recordPaymentLink').href = 'payments.html?student=' + s.id;
+
+  const { data, error } = await eduflowClient
+    .from('payments')
+    .select('id, amount, currency, method, note, paid_at, status')
+    .eq('student_id', s.id)
+    .order('paid_at', { ascending: false });
+
+  const list = document.getElementById('paymentsList');
+  const empty = document.getElementById('paymentsEmpty');
+  const totalLine = document.getElementById('paymentsTotalLine');
+  list.innerHTML = '';
+
+  if (error || !data || !data.length){
+    empty.style.display = 'block';
+    totalLine.textContent = 'Total paye : 0.00 MAD';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const total = data.filter(p => p.status === 'active').reduce((sum, p) => sum + Number(p.amount), 0);
+  totalLine.textContent = 'Total paye : ' + total.toFixed(2) + ' MAD';
+
+  data.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'enroll-row';
+    const voided = p.status === 'voided';
+    row.innerHTML = `
+      <div class="enroll-info" style="${voided ? 'text-decoration:line-through;color:#B8BCBA;' : ''}">
+        <strong>${Number(p.amount).toFixed(2)} ${p.currency}</strong> — ${fmtDate(p.paid_at)}${p.note ? ' · ' + p.note : ''}
+      </div>
+    `;
+    list.appendChild(row);
+  });
 }
 
 function renderEnrollments(){

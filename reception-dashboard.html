@@ -32,6 +32,13 @@
     background:#fff;color:var(--ink);
   }
   .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
 
   .card{
     background:var(--card);border-radius:var(--radius);padding:30px 28px;
@@ -67,7 +74,10 @@
   <div class="topbar">
     <div class="brand-name">Edu Flow Academy — Espace Reception</div>
     <div class="who" id="whoLabel"></div>
-    <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    <div class="topbar-actions">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
   </div>
 
   <div class="card">
@@ -79,8 +89,10 @@
       <a href="students.html?subject=fr" class="tile-link">🇫🇷 Eleves — Francais</a>
       <a href="students.html?subject=en" class="tile-link">🇬🇧 Eleves — Anglais</a>
       <a href="students.html?subject=nl" class="tile-link">🇳🇱 Eleves — Neerlandais</a>
-      <div class="coming-soon-item">💳 Paiements eleves</div>
-      <div class="coming-soon-item">🗓️ Emploi du temps</div>
+      <a href="payments.html" class="tile-link">💳 Paiements eleves</a>
+      <a href="timetable.html" class="tile-link">🗓️ Emploi du temps</a>
+      <a href="attendance.html" class="tile-link">✅ Presence</a>
+      <a href="workshops.html" class="tile-link">🎓 Ateliers &amp; formations</a>
     </div>
     <a href="students.html" class="quick-add-btn">+ Nouvel eleve</a>
     <br>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Emploi du temps</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:1200px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:26px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  select{
+    padding:9px 11px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);
+  }
+  select:focus{outline:none;border-color:var(--blue);}
+
+  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;}
+  @media (max-width:900px){.week-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:520px){.week-grid{grid-template-columns:1fr;}}
+  .day-col{background:#FAFBFB;border:1.5px solid var(--line);border-radius:14px;padding:12px;min-height:80px;}
+  .day-col h3{margin:0 0 10px;font-size:0.88rem;text-transform:capitalize;color:var(--blue-dark);text-align:center;}
+  .day-add{display:block;text-align:center;font-size:0.72rem;color:#9A9B9C;text-decoration:none;margin-bottom:8px;}
+  .day-add:hover{color:var(--blue-dark);}
+  .slot-card{
+    background:#fff;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;
+    padding:8px 10px;margin-bottom:8px;font-size:0.8rem;cursor:pointer;text-decoration:none;color:inherit;display:block;
+  }
+  .slot-card:hover{border-color:var(--blue);}
+  .slot-time{font-weight:700;color:var(--ink);}
+  .slot-name{color:var(--ink);}
+  .slot-meta{color:#9A9B9C;font-size:0.74rem;}
+  .empty-day{color:#B8BCBA;font-size:0.78rem;text-align:center;padding:10px 0;}
+
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+  @media print{
+    .no-print{display:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Emploi du temps</div>
+    <div class="who" id="whoLabel"></div>
+    <div class="topbar-actions no-print">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Emploi du temps hebdomadaire</h2>
+    <p class="lead" id="lead">Toutes les classes actives, par jour.</p>
+    <div class="toolbar no-print">
+      <select id="subjectFilter">
+        <option value="">Toutes les matieres</option>
+        <option value="fr">Francais</option>
+        <option value="en">Anglais</option>
+        <option value="es">Espagnol</option>
+        <option value="nl">Neerlandais</option>
+      </select>
+      <button class="btn-home" id="printGridBtn" type="button">🖨️ Imprimer</button>
+    </div>
+    <div class="week-grid" id="weekGrid"></div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+const WEEKDAYS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+let currentProfile = null;
+let allClasses = [];
+
+function subjectLabel(code){ return EDUFLOW_SUBJECT_LABELS[code] || code; }
+
+async function loadClasses(){
+  const { data, error } = await eduflowClient.from('classes').select('*').eq('status', 'active').order('name');
+  if (error){ alert('Erreur de chargement : ' + error.message); return; }
+  allClasses = data || [];
+  renderGrid();
+}
+
+function renderGrid(){
+  const subjectFilter = document.getElementById('subjectFilter').value;
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = '';
+
+  // Flatten each class's schedule slots into per-day entries.
+  const byDay = {};
+  WEEKDAYS.forEach(d => byDay[d] = []);
+  allClasses.forEach(c => {
+    if (subjectFilter && c.subject !== subjectFilter) return;
+    (c.schedule || []).forEach(slot => {
+      if (byDay[slot.day]){
+        byDay[slot.day].push({ start: slot.start, end: slot.end, cls: c });
+      }
+    });
+  });
+  WEEKDAYS.forEach(d => byDay[d].sort((a,b) => a.start.localeCompare(b.start)));
+
+  const canAddSlot = currentProfile.role === 'admin' || currentProfile.role === 'receptionist';
+  WEEKDAYS.forEach(day => {
+    const col = document.createElement('div');
+    col.className = 'day-col';
+    const slots = byDay[day];
+    const addLink = canAddSlot ? `<a class="day-add no-print" href="classes.html?newDay=${day}">+ Ajouter un creneau</a>` : '';
+    col.innerHTML = `<h3>${day}</h3>` + addLink + (slots.length
+      ? slots.map(s => `
+          <a class="slot-card" href="classes.html?id=${s.cls.id}">
+            <div class="slot-time">${s.start} - ${s.end}</div>
+            <div class="slot-name">${s.cls.name}</div>
+            <div class="slot-meta">${subjectLabel(s.cls.subject)}${s.cls.room ? ' · Salle ' + s.cls.room : ''}</div>
+          </a>
+        `).join('')
+      : '<div class="empty-day">—</div>');
+    grid.appendChild(col);
+  });
+}
+
+document.getElementById('subjectFilter').addEventListener('change', renderGrid);
+document.getElementById('printGridBtn').addEventListener('click', () => window.print());
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['admin', 'receptionist', 'staff']);
+  if (!result) return;
+  currentProfile = result.profile;
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('lead').textContent = currentProfile.role === 'staff'
+    ? 'Vos classes, par jour.'
+    : 'Toutes les classes actives, par jour.';
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadClasses();
+})();
+</script>
+</body>
+</html>

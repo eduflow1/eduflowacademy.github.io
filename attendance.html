@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Presence</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --orange:#E0A93F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:900px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:26px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  select, input[type=date]{
+    padding:9px 11px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);
+  }
+  select:focus, input:focus{outline:none;border-color:var(--blue);}
+
+  .btn-sm{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;
+    border:none;border-radius:10px;padding:8px 14px;cursor:pointer;color:#fff;
+  }
+  .btn-primary-sm{background:var(--blue);}
+  .btn-primary-sm:hover{background:var(--blue-dark);}
+  .btn-ghost-sm{background:none;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-ghost-sm:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .btn-sm:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:8px 0;}
+  .back-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:14px;cursor:pointer;}
+  .back-link:hover{color:var(--blue-dark);}
+
+  .att-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .att-row:last-child{border-bottom:none;}
+  .att-info{flex:1;min-width:160px;}
+  .status-btns{display:flex;gap:6px;}
+  .status-btn{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.76rem;
+    border:1.5px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;background:#fff;color:#9A9B9C;
+  }
+  .status-btn.present.selected{background:var(--green);border-color:var(--green);color:#fff;}
+  .status-btn.absent.selected{background:var(--danger);border-color:var(--danger);color:#fff;}
+  .status-btn.late.selected{background:var(--orange);border-color:var(--orange);color:#fff;}
+  .status-btn.excused.selected{background:var(--blue);border-color:var(--blue);color:#fff;}
+
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Presence</div>
+    <div class="who" id="whoLabel"></div>
+    <div class="topbar-actions">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
+  </div>
+
+  <!-- PICKER VIEW -->
+  <div id="pickerView">
+    <div class="card">
+      <h2>Feuille de presence</h2>
+      <p class="lead" id="pickerLead">Choisissez une classe et une date.</p>
+      <div class="toolbar">
+        <select id="classPicker"></select>
+        <input type="date" id="datePicker">
+        <button class="btn-sm btn-primary-sm" id="openSessionBtn">Ouvrir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSION VIEW -->
+  <div id="sessionView" style="display:none;">
+    <a class="back-link" id="backLink">← Retour</a>
+    <div class="card">
+      <h2 id="sessionTitle">—</h2>
+      <p class="lead" id="sessionMeta">—</p>
+      <div id="attList"></div>
+      <div class="empty-msg" id="attEmpty" style="display:none;">Aucun eleve inscrit dans cette classe.</div>
+      <div class="toolbar" style="margin-top:16px;" id="saveWrap">
+        <button class="btn-sm btn-primary-sm" id="saveAttBtn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+let currentProfile = null;
+let myClasses = [];
+let currentSession = null;
+let currentClass = null;
+let rosterEntries = []; // {student, status}
+const STATUS_LABELS = { present:'Present', absent:'Absent', late:'Retard', excused:'Excuse' };
+
+function canMark(){ return currentProfile.role === 'admin' || currentProfile.role === 'staff'; }
+
+async function loadClasses(){
+  const { data, error } = await eduflowClient.from('classes').select('id, name, subject').eq('status', 'active').order('name');
+  if (error){ alert('Erreur : ' + error.message); return; }
+  myClasses = data || [];
+  document.getElementById('classPicker').innerHTML = myClasses.map(c =>
+    `<option value="${c.id}">${c.name}</option>`
+  ).join('') || '<option value="">Aucune classe</option>';
+}
+
+document.getElementById('openSessionBtn').addEventListener('click', async () => {
+  const classId = document.getElementById('classPicker').value;
+  const date = document.getElementById('datePicker').value;
+  if (!classId || !date){ alert('Choisissez une classe et une date.'); return; }
+  await openSession(classId, date);
+});
+
+async function openSession(classId, date){
+  currentClass = myClasses.find(c => c.id === classId);
+
+  // Find or create the session for this class+date.
+  let { data: existing } = await eduflowClient.from('class_sessions').select('*').eq('class_id', classId).eq('session_date', date).maybeSingle();
+  if (!existing){
+    if (!canMark()){
+      alert('Cette seance n\'a pas encore ete ouverte par un enseignant ou l\'administration.');
+      return;
+    }
+    const { data: created, error: createErr } = await eduflowClient
+      .from('class_sessions').insert({ class_id: classId, session_date: date }).select('*').single();
+    if (createErr){ alert('Erreur : ' + createErr.message); return; }
+    existing = created;
+  }
+  currentSession = existing;
+
+  const { data: enrollments, error: enrErr } = await eduflowClient
+    .from('enrollments').select('student_id, students(id, full_name, student_code)').eq('class_id', classId).eq('status', 'active');
+  if (enrErr){ alert('Erreur : ' + enrErr.message); return; }
+
+  const { data: records } = await eduflowClient
+    .from('attendance_records').select('*').eq('session_id', currentSession.id);
+  const recordByStudent = {};
+  (records || []).forEach(r => { recordByStudent[r.student_id] = r; });
+
+  rosterEntries = (enrollments || []).filter(e => e.students).map(e => ({
+    student: e.students,
+    status: recordByStudent[e.student_id] ? recordByStudent[e.student_id].status : 'present'
+  }));
+
+  document.getElementById('sessionTitle').textContent = currentClass.name;
+  document.getElementById('sessionMeta').textContent = new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  renderRoster();
+  document.getElementById('pickerView').style.display = 'none';
+  document.getElementById('sessionView').style.display = 'block';
+}
+
+function renderRoster(){
+  const list = document.getElementById('attList');
+  const empty = document.getElementById('attEmpty');
+  list.innerHTML = '';
+  empty.style.display = rosterEntries.length ? 'none' : 'block';
+  document.getElementById('saveWrap').style.display = canMark() ? 'flex' : 'none';
+
+  rosterEntries.forEach((entry, idx) => {
+    const row = document.createElement('div');
+    row.className = 'att-row';
+    const statusBtns = Object.keys(STATUS_LABELS).map(st =>
+      `<button type="button" class="status-btn ${st} ${entry.status===st?'selected':''}" data-idx="${idx}" data-status="${st}" ${canMark() ? '' : 'disabled'}>${STATUS_LABELS[st]}</button>`
+    ).join('');
+    row.innerHTML = `
+      <div class="att-info">${entry.student.full_name} <span style="color:#9A9B9C;font-size:0.8rem;">${entry.student.student_code||''}</span></div>
+      <div class="status-btns">${statusBtns}</div>
+    `;
+    list.appendChild(row);
+  });
+
+  if (canMark()){
+    list.querySelectorAll('.status-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        rosterEntries[idx].status = btn.dataset.status;
+        renderRoster();
+      });
+    });
+  }
+}
+
+document.getElementById('saveAttBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveAttBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enregistrement...';
+
+  const rows = rosterEntries.map(e => ({
+    session_id: currentSession.id,
+    student_id: e.student.id,
+    status: e.status,
+    marked_by: currentProfile.id
+  }));
+
+  const { error } = await eduflowClient.from('attendance_records').upsert(rows, { onConflict: 'session_id,student_id' });
+  btn.disabled = false;
+  btn.textContent = 'Enregistrer';
+  if (error){ alert('Erreur : ' + error.message); return; }
+  alert('Presence enregistree.');
+});
+
+document.getElementById('backLink').addEventListener('click', () => {
+  document.getElementById('sessionView').style.display = 'none';
+  document.getElementById('pickerView').style.display = 'block';
+});
+
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['admin', 'staff', 'receptionist']);
+  if (!result) return;
+  currentProfile = result.profile;
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('pickerLead').textContent = currentProfile.role === 'staff'
+    ? 'Choisissez une de vos classes et une date.'
+    : 'Choisissez une classe et une date.';
+  document.getElementById('datePicker').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadClasses();
+})();
+</script>
+</body>
+</html>

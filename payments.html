@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Paiements</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:960px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:26px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:10px;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
+  .count-badge{
+    background:var(--blue);color:#fff;font-size:0.72rem;font-weight:700;
+    border-radius:999px;padding:2px 9px;font-family:'Inter',sans-serif;
+  }
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  .toolbar input[type=text], .toolbar select{flex:1;min-width:160px;}
+
+  select, input[type=text], input[type=number], input[type=date]{
+    padding:9px 11px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);
+  }
+  select:focus, input:focus{outline:none;border-color:var(--blue);}
+
+  .btn-sm{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;
+    border:none;border-radius:10px;padding:8px 14px;cursor:pointer;color:#fff;
+  }
+  .btn-primary-sm{background:var(--blue);}
+  .btn-primary-sm:hover{background:var(--blue-dark);}
+  .btn-reject{background:var(--danger);}
+  .btn-reject:hover{opacity:0.88;}
+  .btn-ghost-sm{background:none;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-ghost-sm:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .btn-sm:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:8px 0;}
+
+  table.data-table{width:100%;border-collapse:collapse;font-size:0.86rem;}
+  table.data-table th{
+    text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:.04em;
+    color:#9A9B9C;padding:8px 10px;border-bottom:1.5px solid var(--line);
+  }
+  table.data-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  table.data-table tr:last-child td{border-bottom:none;}
+  .status-pill{display:inline-block;font-size:0.72rem;font-weight:700;border-radius:999px;padding:3px 10px;}
+  .status-active{background:#E8F5E4;color:var(--green-dark);}
+  .status-voided{background:#FCE9E6;color:var(--danger);text-decoration:line-through;}
+  .amount-cell{font-weight:700;}
+
+  label{display:block;font-weight:600;font-size:0.82rem;margin-bottom:5px;color:var(--ink);}
+  .field{margin-bottom:14px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:600px){.field-row{grid-template-columns:1fr;}}
+  .form-actions{display:flex;gap:10px;margin-top:6px;}
+
+  .back-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:14px;cursor:pointer;}
+  .back-link:hover{color:var(--blue-dark);}
+
+  .total-line{font-size:0.9rem;color:var(--green-dark);font-weight:700;margin-bottom:16px;}
+
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+  @media print{
+    .no-print{display:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Paiements</div>
+    <div class="who" id="whoLabel"></div>
+    <div class="topbar-actions no-print">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="listView">
+    <div class="card">
+      <h2>Paiements <span class="count-badge" id="paymentCount">0</span></h2>
+      <p class="lead">Historique des paiements enregistres par eleve.</p>
+      <div class="total-line" id="totalLine"></div>
+      <div class="toolbar no-print">
+        <input type="text" id="searchInput" placeholder="Rechercher par nom d'eleve...">
+        <button class="btn-sm btn-primary-sm" id="newPaymentBtn">+ Nouveau paiement</button>
+        <button class="btn-sm btn-ghost-sm" id="printListBtn">🖨️ Imprimer</button>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Date</th><th>Eleve</th><th>Montant</th><th>Methode</th><th>Statut</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="paymentsBody"></tbody>
+      </table>
+      <div class="empty-msg" id="paymentsEmpty" style="display:none;">Aucun paiement enregistre.</div>
+    </div>
+  </div>
+
+  <!-- FORM VIEW -->
+  <div id="formView" style="display:none;">
+    <a class="back-link" id="formBackLink">← Retour a la liste</a>
+    <div class="card">
+      <h2>Nouveau paiement</h2>
+      <div class="field">
+        <label for="fStudentInput">Eleve</label>
+        <select id="fStudentInput"></select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fAmountInput">Montant (MAD)</label>
+          <input type="number" id="fAmountInput" min="0" step="0.01" placeholder="Ex. : 800">
+        </div>
+        <div class="field">
+          <label for="fDateInput">Date</label>
+          <input type="date" id="fDateInput">
+        </div>
+      </div>
+      <div class="field">
+        <label for="fMethodInput">Methode</label>
+        <select id="fMethodInput">
+          <option value="especes">Especes</option>
+          <option value="carte">Carte</option>
+          <option value="virement">Virement</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fNoteInput">Note</label>
+        <input type="text" id="fNoteInput" placeholder="Optionnel — ex. : Frais d'inscription, Mois de juillet...">
+      </div>
+      <div class="form-actions">
+        <button class="btn-sm btn-primary-sm" id="savePaymentBtn">Enregistrer</button>
+        <button class="btn-sm btn-ghost-sm" id="cancelFormBtn">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+let currentProfile = null;
+let allPayments = [];
+let activeStudents = [];
+
+function fmtDate(iso){
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('fr-FR', {year:'numeric', month:'short', day:'numeric'});
+}
+function fmtAmount(a, currency){ return Number(a).toFixed(2) + ' ' + (currency || 'MAD'); }
+const METHOD_LABELS = { especes:'Especes', carte:'Carte', virement:'Virement', autre:'Autre' };
+
+async function loadAll(){
+  const [{ data: payments, error: pErr }, { data: students, error: sErr }] = await Promise.all([
+    eduflowClient.from('payments').select('id, amount, currency, method, note, paid_at, status, students(id, full_name, student_code)').order('paid_at', { ascending: false }),
+    eduflowClient.from('students').select('id, full_name, student_code').eq('status', 'active').order('full_name')
+  ]);
+  if (pErr){ alert('Erreur de chargement des paiements : ' + pErr.message); return; }
+  if (sErr){ alert('Erreur de chargement des eleves : ' + sErr.message); return; }
+  allPayments = payments || [];
+  activeStudents = students || [];
+  renderTable();
+}
+
+function renderTable(){
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const body = document.getElementById('paymentsBody');
+  body.innerHTML = '';
+
+  const visible = allPayments.filter(p => {
+    if (!search) return true;
+    const name = p.students ? p.students.full_name.toLowerCase() : '';
+    return name.includes(search);
+  });
+
+  document.getElementById('paymentCount').textContent = allPayments.filter(p => p.status === 'active').length;
+  document.getElementById('paymentsEmpty').style.display = visible.length ? 'none' : 'block';
+
+  const total = visible.filter(p => p.status === 'active').reduce((sum, p) => sum + Number(p.amount), 0);
+  document.getElementById('totalLine').textContent = visible.length ? 'Total (visible, hors annules) : ' + total.toFixed(2) + ' MAD' : '';
+
+  visible.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${fmtDate(p.paid_at)}</td>
+      <td>${p.students ? p.students.full_name : '—'}</td>
+      <td class="amount-cell">${fmtAmount(p.amount, p.currency)}</td>
+      <td>${METHOD_LABELS[p.method] || p.method || '—'}${p.note ? ' <span style="color:#9A9B9C;">— ' + p.note + '</span>' : ''}</td>
+      <td><span class="status-pill ${p.status==='active'?'status-active':'status-voided'}">${p.status==='active'?'Valide':'Annule'}</span></td>
+      <td></td>
+    `;
+    if (p.status === 'active'){
+      const voidBtn = document.createElement('button');
+      voidBtn.className = 'btn-sm btn-reject no-print';
+      voidBtn.textContent = 'Annuler';
+      voidBtn.addEventListener('click', async () => {
+        if (!confirm('Annuler ce paiement ? Il restera visible mais marque comme annule.')) return;
+        const { error } = await eduflowClient.from('payments').update({ status: 'voided' }).eq('id', p.id);
+        if (error){ alert('Erreur : ' + error.message); return; }
+        await loadAll();
+      });
+      tr.lastElementChild.appendChild(voidBtn);
+    }
+    body.appendChild(tr);
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', renderTable);
+
+function showView(name){
+  document.getElementById('listView').style.display = name === 'list' ? 'block' : 'none';
+  document.getElementById('formView').style.display = name === 'form' ? 'block' : 'none';
+}
+
+function openNewForm(preselectStudentId){
+  document.getElementById('fStudentInput').innerHTML = activeStudents.map(s =>
+    `<option value="${s.id}">${s.full_name} (${s.student_code || '—'})</option>`
+  ).join('') || '<option value="">Aucun eleve actif</option>';
+  if (preselectStudentId) document.getElementById('fStudentInput').value = preselectStudentId;
+  document.getElementById('fAmountInput').value = '';
+  document.getElementById('fDateInput').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('fMethodInput').value = 'especes';
+  document.getElementById('fNoteInput').value = '';
+  showView('form');
+}
+
+document.getElementById('newPaymentBtn').addEventListener('click', () => openNewForm());
+document.getElementById('printListBtn').addEventListener('click', () => window.print());
+document.getElementById('formBackLink').addEventListener('click', () => showView('list'));
+document.getElementById('cancelFormBtn').addEventListener('click', () => showView('list'));
+
+document.getElementById('savePaymentBtn').addEventListener('click', async () => {
+  const studentId = document.getElementById('fStudentInput').value;
+  const amount = parseFloat(document.getElementById('fAmountInput').value);
+  if (!studentId){ alert('Choisissez un eleve.'); return; }
+  if (!amount || amount <= 0){ alert('Montant invalide.'); return; }
+
+  const payload = {
+    student_id: studentId,
+    amount,
+    paid_at: document.getElementById('fDateInput').value || new Date().toISOString().slice(0, 10),
+    method: document.getElementById('fMethodInput').value,
+    note: document.getElementById('fNoteInput').value.trim() || null,
+    recorded_by: currentProfile.id
+  };
+
+  const btn = document.getElementById('savePaymentBtn');
+  btn.disabled = true;
+  const { error } = await eduflowClient.from('payments').insert(payload);
+  btn.disabled = false;
+  if (error){ alert('Erreur : ' + error.message); return; }
+  await loadAll();
+  showView('list');
+});
+
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['admin', 'receptionist']);
+  if (!result) return;
+  currentProfile = result.profile;
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadAll();
+
+  const params = new URLSearchParams(window.location.search);
+  const studentParam = params.get('student');
+  if (studentParam) openNewForm(studentParam);
+})();
+</script>
+</body>
+</html>

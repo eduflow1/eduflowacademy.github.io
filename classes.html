@@ -32,6 +32,13 @@
     background:#fff;color:var(--ink);
   }
   .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
 
   .card{
     background:var(--card);border-radius:var(--radius);padding:26px;
@@ -110,6 +117,9 @@
   .roster-info{flex:1;}
 
   .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+  @media print{
+    .no-print{display:none !important;}
+  }
 </style>
 </head>
 <body>
@@ -118,7 +128,10 @@
   <div class="topbar">
     <div class="brand-name">Edu Flow Academy — Classes</div>
     <div class="who" id="whoLabel"></div>
-    <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    <div class="topbar-actions no-print">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
   </div>
 
   <!-- LIST VIEW -->
@@ -126,7 +139,7 @@
     <div class="card">
       <h2>Catalogue des classes <span class="count-badge" id="classCount">0</span></h2>
       <p class="lead" id="listLead">Toutes les classes actives.</p>
-      <div class="toolbar">
+      <div class="toolbar no-print">
         <input type="text" id="searchInput" placeholder="Rechercher par nom, niveau, enseignant...">
         <select id="subjectFilter">
           <option value="">Toutes les matieres</option>
@@ -136,6 +149,7 @@
           <option value="nl">Neerlandais</option>
         </select>
         <button class="btn-sm btn-primary-sm" id="newClassBtn" style="display:none;">+ Nouvelle classe</button>
+        <button class="btn-sm btn-ghost-sm" id="printListBtn">🖨️ Imprimer</button>
       </div>
       <table class="data-table">
         <thead>
@@ -206,11 +220,14 @@
 
   <!-- DETAIL / ROSTER VIEW -->
   <div id="detailView" style="display:none;">
-    <a class="back-link" id="detailBackLink">← Retour a la liste</a>
+    <a class="back-link no-print" id="detailBackLink">← Retour a la liste</a>
     <div class="card">
       <h2 id="detailName">—</h2>
       <p class="lead" id="detailMeta">—</p>
-      <div class="form-actions" id="detailActions"></div>
+      <div class="form-actions no-print" id="detailActions"></div>
+      <div class="form-actions no-print" style="margin-top:10px;">
+        <button class="btn-sm btn-ghost-sm" id="printRosterBtn">🖨️ Imprimer la liste des eleves</button>
+      </div>
     </div>
     <div class="card">
       <h2>Liste des eleves</h2>
@@ -236,7 +253,8 @@ const WEEKDAYS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanc
 
 function subjectLabel(code){ return EDUFLOW_SUBJECT_LABELS[code] || code; }
 function isAdmin(){ return currentProfile && currentProfile.role === 'admin'; }
-function canWrite(){ return isAdmin(); } // catalog ownership (create/edit/archive) is admin-only
+function isReceptionist(){ return currentProfile && currentProfile.role === 'receptionist'; }
+function canWrite(){ return isAdmin() || isReceptionist(); } // catalog ownership: admin + reception
 
 function scheduleText(schedule){
   if (!schedule || !schedule.length) return '—';
@@ -393,6 +411,8 @@ function openEditForm(c){
 }
 
 document.getElementById('newClassBtn').addEventListener('click', openNewForm);
+document.getElementById('printListBtn').addEventListener('click', () => window.print());
+document.getElementById('printRosterBtn').addEventListener('click', () => window.print());
 document.getElementById('formBackLink').addEventListener('click', () => showView('list'));
 document.getElementById('cancelFormBtn').addEventListener('click', () => showView('list'));
 
@@ -484,7 +504,7 @@ async function renderDetail(){
     row.innerHTML = `<div class="roster-info">${r.students.full_name} <span style="color:#9A9B9C;font-size:0.8rem;">${r.students.student_code||''}</span></div>`;
     if (currentProfile.role === 'admin' || currentProfile.role === 'receptionist'){
       const dropBtn = document.createElement('button');
-      dropBtn.className = 'btn-xs';
+      dropBtn.className = 'btn-xs no-print';
       dropBtn.textContent = 'Retirer';
       dropBtn.addEventListener('click', async () => {
         if (!confirm('Retirer cet eleve de la classe ?')) return;
@@ -522,6 +542,12 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
 
   const idParam = params.get('id');
   if (idParam && allClasses.find(c => c.id === idParam)) await openDetail(idParam);
+
+  const newDayParam = params.get('newDay');
+  if (newDayParam && canWrite()){
+    openNewForm();
+    addSlotRow({ day: newDayParam, start: '18:00', end: '19:30' });
+  }
 })();
 </script>
 </body>

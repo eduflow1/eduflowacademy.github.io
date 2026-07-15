@@ -32,6 +32,13 @@
     background:#fff;color:var(--ink);
   }
   .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
 
   .card{
     background:var(--card);border-radius:var(--radius);padding:30px 28px;
@@ -47,6 +54,12 @@
     border:1.5px dashed var(--line);border-radius:14px;padding:18px 12px;text-align:center;
     color:#B8BCBA;font-weight:700;font-family:'Quicksand',sans-serif;font-size:0.9rem;
   }
+  .tile-link{
+    border:1.5px solid var(--line);border-radius:14px;padding:18px 12px;text-align:center;
+    color:var(--blue-dark);font-weight:700;font-family:'Quicksand',sans-serif;font-size:0.9rem;
+    text-decoration:none;display:block;background:#fff;transition:border-color .15s, transform .15s;
+  }
+  .tile-link:hover{border-color:var(--blue);transform:translateY(-2px);}
   .my-classes-list{text-align:left;margin-top:6px;}
   .my-class-row{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -68,7 +81,10 @@
   <div class="topbar">
     <div class="brand-name">Edu Flow Academy — Espace Personnel</div>
     <div class="who" id="whoLabel"></div>
-    <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    <div class="topbar-actions">
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
   </div>
 
   <div class="card">
@@ -76,8 +92,9 @@
     <h2 id="welcomeMsg">Bienvenue</h2>
     <p>Votre espace personnel est en cours de construction. Les modules suivants arriveront ici prochainement.</p>
     <div class="coming-soon-grid">
-      <div class="coming-soon-item">🗓️ Emploi du temps</div>
-      <div class="coming-soon-item">✅ Presence</div>
+      <a href="timetable.html" class="tile-link">🗓️ Emploi du temps</a>
+      <a href="attendance.html" class="tile-link">✅ Presence</a>
+      <a href="workshops.html" class="tile-link">🎓 Ateliers &amp; formations</a>
       <div class="coming-soon-item">💳 Paiement / Salaire</div>
     </div>
   </div>
