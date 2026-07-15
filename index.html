@@ -143,12 +143,104 @@
     line-height:1;border-radius:8px;
   }
   .pwd-toggle:hover{background:#F0F3F2;}
+
+  /* ---- Portal landing page ---- */
+  .portal-screen{width:100%;max-width:1100px;margin:0 auto;padding:24px 0 40px;}
+  .portal-logo-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:6px;animation:portalFadeDown .6s ease both;}
+  .portal-logo-row img{height:64px;width:auto;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,0.10);}
+  .portal-logo-row .portal-name{text-align:left;}
+  .portal-logo-row .portal-name .brand-name{font-size:1.5rem;}
+  .portal-logo-row .portal-name .brand-sub{font-size:0.8rem;}
+
+  .portal-tagline{text-align:center;color:#6B6C6E;font-size:1rem;margin:8px 0 38px;animation:portalFadeDown .6s ease .05s both;}
+
+  .portal-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  @media (max-width:860px){.portal-cards{grid-template-columns:1fr 1fr;}}
+  @media (max-width:520px){.portal-cards{grid-template-columns:1fr;}}
+
+  .portal-card{
+    background:var(--card);border-radius:var(--radius);border:1.5px solid var(--line);
+    padding:30px 20px;text-align:center;cursor:pointer;text-decoration:none;color:inherit;
+    display:block;box-shadow:0 8px 20px rgba(30,50,60,0.06);
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    animation:portalCardIn .55s ease both;
+  }
+  .portal-card:hover{transform:translateY(-6px);box-shadow:0 16px 32px rgba(30,50,60,0.14);border-color:var(--card-accent,var(--blue));}
+  .portal-card:nth-child(1){animation-delay:.08s;}
+  .portal-card:nth-child(2){animation-delay:.16s;}
+  .portal-card:nth-child(3){animation-delay:.24s;}
+  .portal-card:nth-child(4){animation-delay:.32s;}
+
+  .portal-icon{
+    width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:1.9rem;margin:0 auto 16px;background:var(--card-accent-bg,rgba(63,174,221,0.12));
+    animation:portalFloat 3.4s ease-in-out infinite;
+  }
+  .portal-card:nth-child(2) .portal-icon{animation-delay:.3s;}
+  .portal-card:nth-child(3) .portal-icon{animation-delay:.6s;}
+  .portal-card:nth-child(4) .portal-icon{animation-delay:.9s;}
+
+  .portal-card h3{margin:0 0 6px;font-size:1.08rem;}
+  .portal-card p{margin:0;color:#7A7B7D;font-size:0.84rem;line-height:1.4;}
+
+  .portal-card.student{--card-accent:var(--blue);--card-accent-bg:rgba(63,174,221,0.12);}
+  .portal-card.admin{--card-accent:#54585C;--card-accent-bg:rgba(84,88,92,0.10);}
+  .portal-card.staff{--card-accent:var(--green);--card-accent-bg:rgba(123,196,107,0.14);}
+  .portal-card.reception{--card-accent:#D9A441;--card-accent-bg:rgba(217,164,65,0.14);}
+
+  .portal-back{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:16px;}
+  .portal-back:hover{color:var(--blue-dark);}
+
+  @keyframes portalFadeDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes portalCardIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes portalFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+  @media (prefers-reduced-motion: reduce){
+    .portal-logo-row,.portal-tagline,.portal-card,.portal-icon{animation:none !important;}
+  }
 </style>
 </head>
 <body>
 
-  <div id="gateScreen" class="gate-screen">
+  <div id="portalLanding" class="portal-screen">
+    <div class="portal-logo-row">
+      <img id="portalLogoImg" alt="Edu Flow Academy">
+      <div class="portal-name">
+        <div class="brand-name">Edu Flow Academy</div>
+        <div class="brand-sub">Academie de langues</div>
+      </div>
+    </div>
+    <p class="portal-tagline">Choisissez votre espace pour continuer</p>
+
+    <div class="portal-cards">
+      <a href="#" class="portal-card student" id="portalStudentCard">
+        <div class="portal-icon">🎓</div>
+        <h3>Eleve</h3>
+        <p>Passer un test de positionnement</p>
+      </a>
+      <a href="login.html" class="portal-card admin">
+        <div class="portal-icon">🔑</div>
+        <h3>Administration</h3>
+        <p>Gestion complete de la plateforme</p>
+      </a>
+      <a href="login.html" class="portal-card staff">
+        <div class="portal-icon">👨‍🏫</div>
+        <h3>Personnel enseignant</h3>
+        <p>Emploi du temps, presence, classes</p>
+      </a>
+      <a href="login.html" class="portal-card reception">
+        <div class="portal-icon">🛎️</div>
+        <h3>Reception</h3>
+        <p>Listes des eleves par matiere</p>
+      </a>
+    </div>
+
+    <div class="admin-link" style="margin-top:30px;"><a href="archive.html">Ancien tableau de bord (resultats)</a></div>
+    <footer class="mini">Edu Flow Academy — Plateforme d'evaluation linguistique</footer>
+  </div>
+
+  <div id="gateScreen" class="gate-screen" style="display:none;">
     <div class="gate-card">
+      <a href="#" class="portal-back" id="backToPortalLink">← Retour</a>
       <div class="gate-lock">🔒</div>
       <div class="brand-name">Edu Flow Academy</div>
       <h2>Acces reserve</h2>
@@ -237,10 +329,26 @@
 <script>
 const PLATFORM_CODE = 'EFA-7M9HYX';
 
+// Reuse the logo image already embedded in the topbar below, instead of duplicating that data.
+document.getElementById('portalLogoImg').src = document.querySelector('.topbar .logo-wrap img').src;
+
+function showPortal(){
+  document.getElementById('portalLanding').style.display = 'block';
+  document.getElementById('gateScreen').style.display = 'none';
+  document.getElementById('appContent').style.display = 'none';
+}
+function showGate(){
+  document.getElementById('portalLanding').style.display = 'none';
+  document.getElementById('gateScreen').style.display = 'flex';
+}
 function showApp(){
+  document.getElementById('portalLanding').style.display = 'none';
   document.getElementById('gateScreen').style.display = 'none';
   document.getElementById('appContent').style.display = 'block';
 }
+
+document.getElementById('portalStudentCard').addEventListener('click', (e)=>{ e.preventDefault(); showGate(); });
+document.getElementById('backToPortalLink').addEventListener('click', (e)=>{ e.preventDefault(); showPortal(); });
 
 if(sessionStorage.getItem('eduflow_platform_unlocked') === '1'){ showApp(); }
 

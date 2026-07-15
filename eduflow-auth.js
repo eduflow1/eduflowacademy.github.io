@@ -6,7 +6,15 @@
 const SUPABASE_URL = 'https://capbydzmhgllequsdhtp.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcGJ5ZHptaGdsbGVxdXNkaHRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODY5NDEsImV4cCI6MjA5OTQ2Mjk0MX0.g53p79GmpEOCPf_wEYFsPW5-cFOQuJLAcGmtLNaxKw0';
 
-const eduflowClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// flowType 'implicit': password-reset/invite links are opened from an email
+// app, almost always a different browser context than the one that
+// requested them. PKCE (the library default) needs a code_verifier stored
+// locally by the requesting browser, so it fails whenever the link is
+// opened elsewhere. Implicit flow puts the session directly in the link
+// itself, so it works regardless of where the link is opened.
+const eduflowClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { flowType: 'implicit' }
+});
 
 // Role-specific signup invite codes (same idea as the existing shared platform/staff codes).
 const EDUFLOW_INVITE_CODES = {
