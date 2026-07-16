@@ -141,6 +141,19 @@
   .enroll-check-row:last-child{border-bottom:none;}
   .enroll-check-row label{display:flex;align-items:center;gap:8px;font-weight:600;font-size:0.88rem;margin:0;flex:1;min-width:200px;}
   .enroll-check-row input[type=checkbox]{width:18px;height:18px;}
+
+  .subject-group{border-bottom:1px solid var(--line);}
+  .subject-group:last-child{border-bottom:none;}
+  .subject-header{
+    display:flex;align-items:center;justify-content:space-between;padding:12px 4px;
+    cursor:pointer;font-weight:700;font-size:0.9rem;color:var(--ink);
+  }
+  .subject-header:hover{color:var(--blue-dark);}
+  .subject-header .subject-count{color:#9A9B9C;font-weight:600;font-size:0.8rem;margin-left:6px;}
+  .subject-header .chevron{transition:transform .15s;color:#9A9B9C;font-size:0.75rem;}
+  .subject-header.open .chevron{transform:rotate(90deg);}
+  .subject-classes{display:none;padding:0 4px 8px 18px;}
+  .subject-classes.open{display:block;}
   .enroll-amount{width:180px;display:none;}
   .enroll-row:last-child{border-bottom:none;}
   .enroll-info{flex:1;min-width:160px;}
@@ -644,6 +657,8 @@ document.getElementById('saveStudentBtn').addEventListener('click', async () => 
 
 // ---------- enroll step (new student only) ----------
 
+const ENROLL_LEVEL_ORDER = ['Pre-A1','A1','A2','B1','B2','C1','C2'];
+
 function openEnrollStep(studentId){
   newlyCreatedStudentId = studentId;
   const list = document.getElementById('enrollChecklist');
@@ -651,23 +666,62 @@ function openEnrollStep(studentId){
   list.innerHTML = '';
   empty.style.display = activeClasses.length ? 'none' : 'block';
 
+  const bySubject = {};
   activeClasses.forEach(c => {
-    const row = document.createElement('div');
-    row.className = 'enroll-check-row';
-    row.innerHTML = `
-      <label>
-        <input type="checkbox" class="enroll-check" value="${c.id}">
-        ${c.name} <span class="subject-pill">${subjectLabel(c.subject)}</span>
-      </label>
-      <input type="number" class="enroll-amount" min="0" step="0.01" placeholder="Montant attendu (MAD)">
-    `;
-    const checkbox = row.querySelector('.enroll-check');
-    const amountInput = row.querySelector('.enroll-amount');
-    checkbox.addEventListener('change', () => {
-      amountInput.style.display = checkbox.checked ? 'inline-block' : 'none';
-    });
-    list.appendChild(row);
+    if (!bySubject[c.subject]) bySubject[c.subject] = [];
+    bySubject[c.subject].push(c);
   });
+
+  Object.keys(bySubject)
+    .sort((a, b) => subjectLabel(a).localeCompare(subjectLabel(b)))
+    .forEach(subject => {
+      const classes = bySubject[subject].slice().sort((a, b) => {
+        const ia = ENROLL_LEVEL_ORDER.indexOf(a.level);
+        const ib = ENROLL_LEVEL_ORDER.indexOf(b.level);
+        if (ia === -1 && ib === -1) return a.name.localeCompare(b.name);
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+
+      const group = document.createElement('div');
+      group.className = 'subject-group';
+      group.innerHTML = `
+        <div class="subject-header">
+          <span>${subjectLabel(subject)}<span class="subject-count">${classes.length} classe${classes.length > 1 ? 's' : ''}</span></span>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="subject-classes"></div>
+      `;
+      const header = group.querySelector('.subject-header');
+      const classesBox = group.querySelector('.subject-classes');
+
+      classes.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'enroll-check-row';
+        const optionLabel = c.level ? c.level : c.name;
+        row.innerHTML = `
+          <label>
+            <input type="checkbox" class="enroll-check" value="${c.id}">
+            ${optionLabel}${c.level ? ' <span style="color:#9A9B9C;font-weight:400;">(' + c.name + ')</span>' : ''}
+          </label>
+          <input type="number" class="enroll-amount" min="0" step="0.01" placeholder="Montant attendu (MAD)">
+        `;
+        const checkbox = row.querySelector('.enroll-check');
+        const amountInput = row.querySelector('.enroll-amount');
+        checkbox.addEventListener('change', () => {
+          amountInput.style.display = checkbox.checked ? 'inline-block' : 'none';
+        });
+        classesBox.appendChild(row);
+      });
+
+      header.addEventListener('click', () => {
+        header.classList.toggle('open');
+        classesBox.classList.toggle('open');
+      });
+
+      list.appendChild(group);
+    });
 
   document.getElementById('enrollPaymentAmount').value = '';
   document.getElementById('enrollPaymentMethod').value = 'especes';

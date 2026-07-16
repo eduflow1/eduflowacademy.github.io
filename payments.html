@@ -161,6 +161,7 @@
       <div class="field">
         <label for="fStudentInput">Eleve</label>
         <select id="fStudentInput"></select>
+        <div id="fRemainingDisplay" style="display:none;font-size:0.85rem;margin-top:6px;"></div>
       </div>
       <div class="field-row">
         <div class="field">
@@ -282,7 +283,8 @@ function renderTable(){
   document.getElementById('paymentsEmpty').style.display = visible.length ? 'none' : 'block';
 
   const total = visible.filter(p => p.status === 'active').reduce((sum, p) => sum + Number(p.amount), 0);
-  document.getElementById('totalLine').textContent = visible.length ? 'Total (visible, hors annules) : ' + total.toFixed(2) + ' MAD' : '';
+  document.getElementById('totalLine').textContent = (visible.length && currentProfile.role === 'admin')
+    ? 'Total (visible, hors annules) : ' + total.toFixed(2) + ' MAD' : '';
 
   visible.forEach(p => {
     const tr = document.createElement('tr');
@@ -311,6 +313,23 @@ function renderTable(){
         await loadAll();
       });
       tr.lastElementChild.appendChild(voidBtn);
+    }
+    if (currentProfile.role === 'admin'){
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-sm btn-reject no-print';
+      deleteBtn.style.background = '#8A1F13';
+      deleteBtn.textContent = 'Supprimer';
+      deleteBtn.addEventListener('click', async () => {
+        const typed = prompt(`Suppression definitive et irreversible de ce paiement de ${fmtAmount(p.amount, p.currency)}.\n\nPour confirmer, tapez le montant exact (sans le "MAD") :\n${Number(p.amount).toFixed(2)}`);
+        if (typed !== Number(p.amount).toFixed(2)){
+          if (typed !== null) alert('Montant incorrect — suppression annulee.');
+          return;
+        }
+        const { error } = await eduflowClient.from('payments').delete().eq('id', p.id);
+        if (error){ alert('Erreur : ' + error.message); return; }
+        await loadAll();
+      });
+      tr.lastElementChild.appendChild(deleteBtn);
     }
     body.appendChild(tr);
   });
@@ -372,7 +391,29 @@ function openNewForm(preselectStudentId){
   document.getElementById('fPeriodInput').value = '';
   document.getElementById('fNoteInput').value = '';
   showView('form');
+  updateRemainingDisplay();
 }
+
+async function updateRemainingDisplay(){
+  const box = document.getElementById('fRemainingDisplay');
+  const studentId = document.getElementById('fStudentInput').value;
+  if (!studentId){ box.style.display = 'none'; return; }
+
+  const [{ data: enrolls }, { data: paid }] = await Promise.all([
+    eduflowClient.from('enrollments').select('expected_amount').eq('student_id', studentId).eq('status', 'active'),
+    eduflowClient.from('payments').select('amount').eq('student_id', studentId).eq('status', 'active')
+  ]);
+  const expected = (enrolls || []).reduce((sum, e) => sum + (e.expected_amount ? Number(e.expected_amount) : 0), 0);
+  if (expected <= 0){ box.style.display = 'none'; return; }
+  const totalPaid = (paid || []).reduce((sum, x) => sum + Number(x.amount), 0);
+  const remaining = Math.max(expected - totalPaid, 0);
+  box.textContent = remaining > 0
+    ? `Reste a payer avant ce paiement : ${remaining.toFixed(2)} MAD (sur ${expected.toFixed(2)} MAD attendus)`
+    : `Deja entierement paye (${totalPaid.toFixed(2)} / ${expected.toFixed(2)} MAD).`;
+  box.style.color = remaining > 0 ? 'var(--danger)' : 'var(--green-dark)';
+  box.style.display = 'block';
+}
+document.getElementById('fStudentInput').addEventListener('change', updateRemainingDisplay);
 
 document.getElementById('newPaymentBtn').addEventListener('click', () => openNewForm());
 document.getElementById('printListBtn').addEventListener('click', () => window.print());
