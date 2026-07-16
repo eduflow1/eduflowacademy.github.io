@@ -24,11 +24,21 @@ const EDUFLOW_INVITE_CODES = {
 
 // Shared subject display labels — classes.subject stores short codes,
 // every page renders the same French label from this one map.
+// fr/en/es/de are language classes; the rest are the professional
+// formations (+ secourisme) that classes.html can also create,
+// reusing the same catalog/enrollment/timetable machinery.
 const EDUFLOW_SUBJECT_LABELS = {
   fr: 'Francais',
   en: 'Anglais',
   es: 'Espagnol',
-  de: 'Allemand'
+  de: 'Allemand',
+  drone: 'Drone',
+  ia: 'Intelligence Artificielle',
+  infographie: 'Infographie',
+  ecommerce: 'E-commerce',
+  marketing_digital: 'Marketing digital',
+  bureautique: 'Bureautique',
+  secourisme: 'Secourisme'
 };
 
 async function eduflowGetProfile(){
