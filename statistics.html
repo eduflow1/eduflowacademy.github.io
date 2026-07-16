@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Statistiques</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:1360px;}
+
+  .app-shell{display:flex;gap:24px;align-items:flex-start;}
+  @media (max-width:860px){.app-shell{flex-direction:column;}}
+
+  .sidebar{
+    width:230px;flex:none;background:#20242B;border-radius:var(--radius);
+    padding:22px 16px;position:sticky;top:20px;
+    box-shadow:0 10px 34px rgba(20,22,26,0.25);
+  }
+  @media (max-width:860px){.sidebar{width:100%;position:static;}}
+  .sidebar-brand .brand-name{color:#fff;font-size:1.05rem;font-weight:700;}
+  .sidebar-brand .brand-sub{color:#9AA5B1;font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+  .sidebar-who{color:#9AA5B1;font-size:0.78rem;margin:14px 0;padding-bottom:14px;border-bottom:1px solid #333A45;}
+  .sidebar-nav{display:flex;flex-direction:column;gap:3px;}
+  .sidebar-link{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+    color:#C7CDD6;text-decoration:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.86rem;
+    background:none;border:none;cursor:pointer;text-align:left;width:100%;
+  }
+  .sidebar-link:hover{background:#2C313A;color:#fff;}
+  .sidebar-link.active{background:#2C313A;color:#fff;}
+  .sidebar-divider{height:1px;background:#333A45;margin:10px 4px;}
+
+  .main-area{flex:1;min-width:0;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:26px 26px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);border-left:4px solid var(--line);
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:10px;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
+  .card-blue{border-left-color:var(--blue);}
+  .card-green{border-left-color:var(--green);}
+  .card-gold{border-left-color:#D9A441;}
+  .card-teal{border-left-color:#2FA891;}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px;}
+  .kpi-card{
+    background:var(--card);border-radius:var(--radius);padding:20px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    text-align:center;
+  }
+  .kpi-card .num{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.7rem;color:var(--ink);}
+  .kpi-card .lbl{font-size:0.78rem;color:#8A8B8D;margin-top:4px;}
+
+  .chart-box{position:relative;height:280px;}
+  .chart-box.tall{height:320px;}
+
+  .trend-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+  .trend-chip{
+    display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;
+    background:#F7F8F8;border:1px solid var(--line);font-size:0.82rem;font-weight:600;
+  }
+  .trend-up{color:var(--green-dark);}
+  .trend-down{color:var(--danger);}
+  .trend-flat{color:#9A9B9C;}
+
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-name">Edu Flow Academy</div>
+        <div class="brand-sub">Administration</div>
+      </div>
+      <div class="sidebar-who" id="whoLabel"></div>
+      <div class="sidebar-nav">
+        <a href="admin-dashboard.html#accounts" class="sidebar-link">👤 Comptes</a>
+        <a href="students.html" class="sidebar-link">🎓 Eleves</a>
+        <a href="classes.html" class="sidebar-link">📚 Classes</a>
+        <a href="timetable.html" class="sidebar-link">🗓️ Emploi du temps</a>
+        <a href="attendance.html" class="sidebar-link">✅ Presence</a>
+        <a href="payments.html" class="sidebar-link">💳 Paiements eleves</a>
+        <a href="staff-payments.html" class="sidebar-link">💰 Salaires</a>
+        <a href="workshops.html" class="sidebar-link">🎪 Ateliers</a>
+        <a href="statistics.html" class="sidebar-link active">📈 Statistiques</a>
+        <div class="sidebar-divider"></div>
+        <a href="admin-dashboard.html" class="sidebar-link">🏠 Tableau de bord</a>
+        <button class="sidebar-link" id="logoutBtn">🚪 Deconnexion</button>
+      </div>
+    </nav>
+
+    <main class="main-area">
+
+      <div class="card card-blue">
+        <h2>📈 Statistiques generales</h2>
+        <p class="lead">Vue d'ensemble de l'academie — eleves, classes, paiements.</p>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="num" id="kpiStudents">—</div><div class="lbl">Eleves actifs</div></div>
+          <div class="kpi-card"><div class="num" id="kpiClasses">—</div><div class="lbl">Classes actives</div></div>
+          <div class="kpi-card"><div class="num" id="kpiCollected">—</div><div class="lbl">Encaisse (MAD)</div></div>
+          <div class="kpi-card"><div class="num" id="kpiRate">—</div><div class="lbl">Taux de recouvrement</div></div>
+        </div>
+      </div>
+
+      <div class="card card-green">
+        <h2>Eleves par matiere</h2>
+        <p class="lead">Nombre d'eleves actuellement inscrits, par matiere.</p>
+        <div class="chart-box"><canvas id="subjectBarChart"></canvas></div>
+        <div class="trend-list" id="trendList"></div>
+      </div>
+
+      <div class="card card-teal">
+        <h2>Evolution des inscriptions</h2>
+        <p class="lead">Nouvelles inscriptions par mois et par matiere, 6 derniers mois.</p>
+        <div class="chart-box tall"><canvas id="trendLineChart"></canvas></div>
+      </div>
+
+      <div class="card card-gold">
+        <h2>Statut des paiements</h2>
+        <p class="lead">Repartition des eleves selon leur statut de paiement.</p>
+        <div class="chart-box"><canvas id="paymentDonutChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2>Repartition par age</h2>
+        <p class="lead">Enfants (&lt;13 ans), adolescents (13-17 ans), adultes (18+ ans).</p>
+        <div class="chart-box"><canvas id="ageBarChart"></canvas></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+const SUBJECT_COLORS = { fr:'#3FAEDD', en:'#7BC46B', es:'#D9A441', de:'#2FA891' };
+function subjectColor(code){ return SUBJECT_COLORS[code] || '#B8BCBA'; }
+
+function monthKey(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+function monthLabel(key){
+  const [y,m] = key.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleDateString('fr-FR', { month:'short', year:'2-digit' });
+}
+
+async function loadStats(){
+  const [{ data: students, error: sErr }, { data: enrollments, error: eErr }, { data: classes, error: cErr }, { data: payments, error: pErr }] = await Promise.all([
+    eduflowClient.from('students').select('id, birth_date, status'),
+    eduflowClient.from('enrollments').select('id, student_id, class_id, status, enrolled_at, expected_amount, classes(subject)'),
+    eduflowClient.from('classes').select('id, subject, status').eq('status', 'active'),
+    eduflowClient.from('payments').select('student_id, amount, status')
+  ]);
+  if (sErr || eErr || cErr || pErr){
+    alert('Erreur de chargement des statistiques : ' + (sErr||eErr||cErr||pErr).message);
+    return;
+  }
+
+  const activeStudents = (students||[]).filter(s => s.status === 'active');
+  const activeClasses = (classes||[]);
+  const activeEnrollments = (enrollments||[]).filter(e => e.status === 'active' && e.classes);
+
+  // ---- KPI: totals ----
+  document.getElementById('kpiStudents').textContent = activeStudents.length;
+  document.getElementById('kpiClasses').textContent = activeClasses.length;
+
+  const totalExpected = activeEnrollments.reduce((sum,e)=> sum + (e.expected_amount ? Number(e.expected_amount) : 0), 0);
+  const totalPaid = (payments||[]).filter(p=>p.status==='active').reduce((sum,p)=> sum + Number(p.amount), 0);
+  document.getElementById('kpiCollected').textContent = totalPaid.toLocaleString('fr-FR') + ' MAD';
+  document.getElementById('kpiRate').textContent = totalExpected > 0 ? Math.round(Math.min(totalPaid/totalExpected,1)*100) + '%' : '—';
+
+  // ---- Students per subject (distinct students) ----
+  const studentsBySubject = {};
+  activeEnrollments.forEach(e => {
+    const subj = e.classes.subject;
+    if (!studentsBySubject[subj]) studentsBySubject[subj] = new Set();
+    studentsBySubject[subj].add(e.student_id);
+  });
+  const subjectCodes = Object.keys(studentsBySubject).sort();
+  const subjectCounts = subjectCodes.map(c => studentsBySubject[c].size);
+
+  new Chart(document.getElementById('subjectBarChart'), {
+    type: 'bar',
+    data: {
+      labels: subjectCodes.map(c => EDUFLOW_SUBJECT_LABELS[c] || c),
+      datasets: [{
+        label: 'Eleves',
+        data: subjectCounts,
+        backgroundColor: subjectCodes.map(subjectColor),
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  // ---- Monthly enrollment trend, last 6 months, per subject ----
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(monthKey(d));
+  }
+  const trendData = {}; // subject -> { monthKey: count }
+  (enrollments||[]).forEach(e => {
+    if (!e.classes || !e.enrolled_at) return;
+    const key = monthKey(new Date(e.enrolled_at));
+    if (!months.includes(key)) return;
+    const subj = e.classes.subject;
+    if (!trendData[subj]) trendData[subj] = {};
+    trendData[subj][key] = (trendData[subj][key] || 0) + 1;
+  });
+  const trendSubjects = Object.keys(trendData).sort();
+
+  new Chart(document.getElementById('trendLineChart'), {
+    type: 'line',
+    data: {
+      labels: months.map(monthLabel),
+      datasets: trendSubjects.map(subj => ({
+        label: EDUFLOW_SUBJECT_LABELS[subj] || subj,
+        data: months.map(m => trendData[subj][m] || 0),
+        borderColor: subjectColor(subj),
+        backgroundColor: subjectColor(subj),
+        tension: 0.3,
+        fill: false
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  // ---- Up/down trend chips: this month vs last month, per subject ----
+  const thisMonth = months[months.length-1];
+  const lastMonth = months[months.length-2];
+  const trendList = document.getElementById('trendList');
+  trendList.innerHTML = '';
+  subjectCodes.forEach(subj => {
+    const thisCount = (trendData[subj] && trendData[subj][thisMonth]) || 0;
+    const lastCount = (trendData[subj] && trendData[subj][lastMonth]) || 0;
+    const delta = thisCount - lastCount;
+    let cls = 'trend-flat', arrow = '▬';
+    if (delta > 0){ cls = 'trend-up'; arrow = '▲'; }
+    else if (delta < 0){ cls = 'trend-down'; arrow = '▼'; }
+    const chip = document.createElement('div');
+    chip.className = 'trend-chip ' + cls;
+    chip.textContent = `${arrow} ${EDUFLOW_SUBJECT_LABELS[subj] || subj} : ${delta > 0 ? '+' : ''}${delta} ce mois`;
+    trendList.appendChild(chip);
+  });
+  if (!subjectCodes.length){
+    trendList.innerHTML = '<span style="color:#9A9B9C;font-size:0.85rem;">Pas encore de donnees.</span>';
+  }
+
+  // ---- Payment status distribution ----
+  const expectedByStudent = {};
+  activeEnrollments.forEach(e => {
+    expectedByStudent[e.student_id] = (expectedByStudent[e.student_id] || 0) + (e.expected_amount ? Number(e.expected_amount) : 0);
+  });
+  const paidByStudent = {};
+  (payments||[]).filter(p=>p.status==='active').forEach(p => {
+    paidByStudent[p.student_id] = (paidByStudent[p.student_id] || 0) + Number(p.amount);
+  });
+  let paidCount = 0, partialCount = 0, unpaidCount = 0, noneCount = 0;
+  activeStudents.forEach(s => {
+    const expected = expectedByStudent[s.id] || 0;
+    if (expected <= 0){ noneCount++; return; }
+    const paid = paidByStudent[s.id] || 0;
+    if (paid >= expected) paidCount++;
+    else if (paid > 0) partialCount++;
+    else unpaidCount++;
+  });
+
+  new Chart(document.getElementById('paymentDonutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Paye', 'Partiel', 'Impaye', 'Pas de frais defini'],
+      datasets: [{
+        data: [paidCount, partialCount, unpaidCount, noneCount],
+        backgroundColor: ['#7BC46B', '#D9A441', '#E0654F', '#DDE3E1']
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // ---- Age category distribution ----
+  function ageCategory(birthDate){
+    if (!birthDate) return null;
+    const birth = new Date(birthDate + 'T00:00:00');
+    const nowD = new Date();
+    let age = nowD.getFullYear() - birth.getFullYear();
+    const monthDiff = nowD.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && nowD.getDate() < birth.getDate())) age--;
+    if (age < 13) return 'Enfant';
+    if (age < 18) return 'Adolescent';
+    return 'Adulte';
+  }
+  let childCount = 0, teenCount = 0, adultCount = 0, unknownCount = 0;
+  activeStudents.forEach(s => {
+    const cat = ageCategory(s.birth_date);
+    if (cat === 'Enfant') childCount++;
+    else if (cat === 'Adolescent') teenCount++;
+    else if (cat === 'Adulte') adultCount++;
+    else unknownCount++;
+  });
+
+  new Chart(document.getElementById('ageBarChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Enfants', 'Adolescents', 'Adultes', 'Non renseigne'],
+      datasets: [{
+        data: [childCount, teenCount, adultCount, unknownCount],
+        backgroundColor: ['#3FAEDD', '#D9A441', '#7BC46B', '#DDE3E1'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+}
+
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['admin']);
+  if (!result) return;
+  eduflowShowDeniedBanner();
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadStats();
+})();
+</script>
+</body>
+</html>
