@@ -95,6 +95,16 @@
     background:rgba(63,174,221,0.12);color:var(--blue-dark);margin:2px 4px 2px 0;
   }
   .code-tag{font-family:'Inter',monospace;font-size:0.78rem;color:#9A9B9C;}
+  .pay-status-pill{
+    display:inline-block;font-size:0.72rem;font-weight:700;border-radius:999px;padding:3px 9px;margin:2px 4px 2px 0;
+  }
+  .pay-status-paid{background:#E8F5E4;color:var(--green-dark);}
+  .pay-status-partial{background:#FDF3E7;color:#B3791E;}
+  .pay-status-unpaid{background:#FCE9E6;color:var(--danger);}
+  .age-pill{
+    display:inline-block;font-size:0.72rem;font-weight:700;border-radius:999px;padding:3px 9px;margin:2px 4px 2px 0;
+    background:#F0F0F5;color:#6B6C8A;
+  }
 
   label{display:block;font-weight:600;font-size:0.82rem;margin-bottom:5px;color:var(--ink);}
   .field{margin-bottom:14px;}
@@ -112,6 +122,13 @@
   .back-link:hover{color:var(--blue-dark);}
 
   .enroll-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .enroll-check-row{
+    display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;
+  }
+  .enroll-check-row:last-child{border-bottom:none;}
+  .enroll-check-row label{display:flex;align-items:center;gap:8px;font-weight:600;font-size:0.88rem;margin:0;flex:1;min-width:200px;}
+  .enroll-check-row input[type=checkbox]{width:18px;height:18px;}
+  .enroll-amount{width:180px;display:none;}
   .enroll-row:last-child{border-bottom:none;}
   .enroll-info{flex:1;min-width:160px;}
 
@@ -152,7 +169,7 @@
       </div>
       <table class="data-table">
         <thead>
-          <tr><th>Nom</th><th>Code</th><th>Matieres inscrites</th><th>Statut</th></tr>
+          <tr><th>Nom</th><th>Code</th><th>Age</th><th>Matieres inscrites</th><th>Paiement</th><th>Statut</th></tr>
         </thead>
         <tbody id="studentsBody"></tbody>
       </table>
@@ -203,9 +220,23 @@
         <div id="lookupHits"></div>
       </div>
 
-      <div class="form-actions">
+      <div class="form-actions" id="formSaveActions">
         <button class="btn-sm btn-primary-sm" id="saveStudentBtn">Enregistrer</button>
         <button class="btn-sm btn-ghost-sm" id="cancelFormBtn">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENROLL STEP (shown right after creating a new student) -->
+  <div id="enrollStepView" style="display:none;">
+    <div class="card">
+      <h2>Inscrire aux classes</h2>
+      <p class="lead">Selectionnez une ou plusieurs classes pour ce nouvel eleve (optionnel — vous pouvez aussi le faire plus tard).</p>
+      <div id="enrollChecklist"></div>
+      <div class="empty-msg" id="enrollChecklistEmpty" style="display:none;">Aucune classe active disponible.</div>
+      <div class="form-actions">
+        <button class="btn-sm btn-primary-sm" id="confirmEnrollBtn">Confirmer les inscriptions</button>
+        <button class="btn-sm btn-ghost-sm" id="skipEnrollBtn">Passer cette etape</button>
       </div>
     </div>
   </div>
@@ -215,6 +246,7 @@
     <a class="back-link no-print" id="detailBackLink">← Retour a la liste</a>
     <div class="card">
       <h2 id="detailName">—</h2>
+      <div id="detailPills" style="margin-bottom:8px;"></div>
       <p class="lead" id="detailMeta">—</p>
       <div class="form-actions no-print" id="detailActions"></div>
       <div class="form-actions no-print" style="margin-top:10px;">
@@ -253,6 +285,9 @@ let enrollmentsByStudent = {}; // student_id -> [{class_id, name, subject, level
 let activeClasses = [];
 let currentDetailStudent = null;
 let editingStudentId = null;
+let newlyCreatedStudentId = null;
+let paidByStudent = {};
+let showPaymentStatus = false;
 
 function subjectLabel(code){ return EDUFLOW_SUBJECT_LABELS[code] || code; }
 
@@ -268,10 +303,12 @@ function canWrite(){
 // ---------- data loading ----------
 
 async function loadAll(){
-  const [{ data: students, error: sErr }, { data: enrollments, error: eErr }, { data: classes, error: cErr }] = await Promise.all([
+  const canSeePayments = currentProfile.role === 'admin' || currentProfile.role === 'receptionist';
+  const [{ data: students, error: sErr }, { data: enrollments, error: eErr }, { data: classes, error: cErr }, paymentsRes] = await Promise.all([
     eduflowClient.from('students').select('*').order('full_name'),
-    eduflowClient.from('enrollments').select('id, status, student_id, class_id, classes(name, subject, level)').eq('status', 'active'),
-    eduflowClient.from('classes').select('id, name, subject, level, capacity, teacher_id').eq('status', 'active').order('name')
+    eduflowClient.from('enrollments').select('id, status, student_id, class_id, expected_amount, classes(name, subject, level)').eq('status', 'active'),
+    eduflowClient.from('classes').select('id, name, subject, level, capacity, teacher_id').eq('status', 'active').order('name'),
+    canSeePayments ? eduflowClient.from('payments').select('student_id, amount').eq('status', 'active') : Promise.resolve({ data: [], error: null })
   ]);
   if (sErr){ alert('Erreur de chargement des eleves : ' + sErr.message); return; }
   if (eErr){ alert('Erreur de chargement des inscriptions : ' + eErr.message); return; }
@@ -286,11 +323,57 @@ async function loadAll(){
     if (!enrollmentsByStudent[e.student_id]) enrollmentsByStudent[e.student_id] = [];
     enrollmentsByStudent[e.student_id].push({
       enrollment_id: e.id, class_id: e.class_id,
-      name: e.classes.name, subject: e.classes.subject, level: e.classes.level
+      name: e.classes.name, subject: e.classes.subject, level: e.classes.level,
+      expected_amount: e.expected_amount
     });
   });
 
+  paidByStudent = {};
+  if (canSeePayments){
+    (paymentsRes.data || []).forEach(p => {
+      paidByStudent[p.student_id] = (paidByStudent[p.student_id] || 0) + Number(p.amount);
+    });
+  }
+  showPaymentStatus = canSeePayments;
+
   renderStudentsTable();
+}
+
+// null = nothing expected yet (no pill); 'paid' / 'partial' / 'unpaid' otherwise.
+function paymentStatus(studentId){
+  if (!showPaymentStatus) return null;
+  const enrolls = enrollmentsByStudent[studentId] || [];
+  const expected = enrolls.reduce((sum, e) => sum + (e.expected_amount ? Number(e.expected_amount) : 0), 0);
+  if (expected <= 0) return null;
+  const paid = paidByStudent[studentId] || 0;
+  if (paid >= expected) return 'paid';
+  if (paid > 0) return 'partial';
+  return 'unpaid';
+}
+
+function paymentStatusPill(studentId){
+  const status = paymentStatus(studentId);
+  if (!status) return '';
+  const labels = { paid: '🟢 Paye', partial: '🟠 Partiel', unpaid: '🔴 Impaye' };
+  const classes = { paid: 'pay-status-paid', partial: 'pay-status-partial', unpaid: 'pay-status-unpaid' };
+  return `<span class="pay-status-pill ${classes[status]}">${labels[status]}</span>`;
+}
+
+function ageCategory(birthDate){
+  if (!birthDate) return null;
+  const birth = new Date(birthDate + 'T00:00:00');
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const monthDiff = now.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--;
+  if (age < 13) return 'Enfant';
+  if (age < 18) return 'Adolescent';
+  return 'Adulte';
+}
+
+function ageCategoryPill(birthDate){
+  const cat = ageCategory(birthDate);
+  return cat ? `<span class="age-pill">${cat}</span>` : '';
 }
 
 // ---------- list view ----------
@@ -323,10 +406,13 @@ function renderStudentsTable(){
       : '<span style="color:#B8BCBA;">—</span>';
     const tr = document.createElement('tr');
     tr.className = 'clickable';
+    const payPill = paymentStatusPill(s.id);
     tr.innerHTML = `
       <td>${s.full_name}</td>
       <td><span class="code-tag">${s.student_code || '—'}</span></td>
+      <td>${ageCategoryPill(s.birth_date) || '<span style="color:#B8BCBA;">—</span>'}</td>
       <td>${subsHtml}</td>
+      <td>${payPill || '<span style="color:#B8BCBA;">—</span>'}</td>
       <td><span class="status-pill ${s.status==='active'?'status-active':'status-disabled'}">${s.status==='active'?'Actif':'Inactif'}</span></td>
     `;
     tr.addEventListener('click', () => openDetail(s.id));
@@ -342,6 +428,7 @@ document.getElementById('subjectFilter').addEventListener('change', renderStuden
 function showView(name){
   document.getElementById('listView').style.display = name === 'list' ? 'block' : 'none';
   document.getElementById('formView').style.display = name === 'form' ? 'block' : 'none';
+  document.getElementById('enrollStepView').style.display = name === 'enrollStep' ? 'block' : 'none';
   document.getElementById('detailView').style.display = name === 'detail' ? 'block' : 'none';
 }
 
@@ -418,16 +505,77 @@ document.getElementById('saveStudentBtn').addEventListener('click', async () => 
 
   const btn = document.getElementById('saveStudentBtn');
   btn.disabled = true;
-  let error;
+  let error, newId = null;
   if (editingStudentId){
     ({ error } = await eduflowClient.from('students').update(payload).eq('id', editingStudentId));
   } else {
     payload.created_by = currentProfile.id;
-    ({ error } = await eduflowClient.from('students').insert(payload));
+    const res = await eduflowClient.from('students').insert(payload).select('id').single();
+    error = res.error;
+    newId = res.data ? res.data.id : null;
   }
   btn.disabled = false;
   if (error){ alert('Erreur : ' + error.message); return; }
   await loadAll();
+  if (newId){
+    openEnrollStep(newId);
+  } else {
+    showView('list');
+  }
+});
+
+// ---------- enroll step (new student only) ----------
+
+function openEnrollStep(studentId){
+  newlyCreatedStudentId = studentId;
+  const list = document.getElementById('enrollChecklist');
+  const empty = document.getElementById('enrollChecklistEmpty');
+  list.innerHTML = '';
+  empty.style.display = activeClasses.length ? 'none' : 'block';
+
+  activeClasses.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'enroll-check-row';
+    row.innerHTML = `
+      <label>
+        <input type="checkbox" class="enroll-check" value="${c.id}">
+        ${c.name} <span class="subject-pill">${subjectLabel(c.subject)}</span>
+      </label>
+      <input type="number" class="enroll-amount" min="0" step="0.01" placeholder="Montant attendu (MAD)">
+    `;
+    const checkbox = row.querySelector('.enroll-check');
+    const amountInput = row.querySelector('.enroll-amount');
+    checkbox.addEventListener('change', () => {
+      amountInput.style.display = checkbox.checked ? 'inline-block' : 'none';
+    });
+    list.appendChild(row);
+  });
+
+  showView('enrollStep');
+}
+
+document.getElementById('confirmEnrollBtn').addEventListener('click', async () => {
+  const rows = Array.from(document.querySelectorAll('.enroll-check-row')).filter(row =>
+    row.querySelector('.enroll-check').checked
+  ).map(row => ({
+    student_id: newlyCreatedStudentId,
+    class_id: row.querySelector('.enroll-check').value,
+    expected_amount: row.querySelector('.enroll-amount').value || null,
+    created_by: currentProfile.id
+  }));
+
+  if (!rows.length){ showView('list'); await loadAll(); return; }
+
+  const btn = document.getElementById('confirmEnrollBtn');
+  btn.disabled = true;
+  const { error } = await eduflowClient.from('enrollments').insert(rows);
+  btn.disabled = false;
+  if (error){ alert('Erreur : ' + error.message); return; }
+  await loadAll();
+  showView('list');
+});
+
+document.getElementById('skipEnrollBtn').addEventListener('click', () => {
   showView('list');
 });
 
@@ -443,6 +591,7 @@ async function openDetail(studentId){
 function renderDetail(){
   const s = currentDetailStudent;
   document.getElementById('detailName').textContent = s.full_name;
+  document.getElementById('detailPills').innerHTML = ageCategoryPill(s.birth_date) + paymentStatusPill(s.id);
   const bits = [];
   if (s.student_code) bits.push('Code : ' + s.student_code);
   if (s.birth_date) bits.push('Ne(e) le ' + fmtDate(s.birth_date));
@@ -473,6 +622,26 @@ function renderDetail(){
       renderDetail();
     });
     actions.appendChild(toggleBtn);
+  }
+  if (currentProfile.role === 'admin'){
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-sm btn-reject';
+    deleteBtn.style.background = '#8A1F13';
+    deleteBtn.textContent = 'Supprimer definitivement';
+    deleteBtn.addEventListener('click', async () => {
+      const typed = prompt(
+        `Cette action est IRREVERSIBLE et supprimera aussi toutes les inscriptions, paiements et presences de cet eleve.\n\nPour confirmer, tapez exactement le nom de l'eleve :\n${s.full_name}`
+      );
+      if (typed !== s.full_name) {
+        if (typed !== null) alert('Nom incorrect — suppression annulee.');
+        return;
+      }
+      const { error } = await eduflowClient.from('students').delete().eq('id', s.id);
+      if (error){ alert('Erreur : ' + error.message); return; }
+      await loadAll();
+      showView('list');
+    });
+    actions.appendChild(deleteBtn);
   }
 
   renderEnrollments();
@@ -598,6 +767,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
 (async () => {
   const result = await eduflowRequireRole(['admin', 'receptionist', 'staff']);
   if (!result) return;
+  eduflowShowDeniedBanner();
   currentProfile = result.profile;
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
   document.getElementById('newStudentBtn').style.display = canWrite() ? 'inline-block' : 'none';

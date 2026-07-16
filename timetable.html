@@ -169,6 +169,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
 (async () => {
   const result = await eduflowRequireRole(['admin', 'receptionist', 'staff']);
   if (!result) return;
+  eduflowShowDeniedBanner();
   currentProfile = result.profile;
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
   document.getElementById('lead').textContent = currentProfile.role === 'staff'

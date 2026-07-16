@@ -21,35 +21,36 @@
     display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
   }
   h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
-  .wrap{width:100%;max-width:1260px;}
+  .wrap{width:100%;max-width:1360px;}
 
-  .dashboard-grid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;}
-  @media (max-width:960px){.dashboard-grid{grid-template-columns:1fr;}}
-  .accounts-sidebar{position:sticky;top:20px;}
-  @media (max-width:960px){.accounts-sidebar{position:static;}}
+  .app-shell{display:flex;gap:24px;align-items:flex-start;}
+  @media (max-width:860px){.app-shell{flex-direction:column;}}
+
+  .sidebar{
+    width:230px;flex:none;background:#20242B;border-radius:var(--radius);
+    padding:22px 16px;position:sticky;top:20px;
+    box-shadow:0 10px 34px rgba(20,22,26,0.25);
+  }
+  @media (max-width:860px){.sidebar{width:100%;position:static;}}
+  .sidebar-brand .brand-name{color:#fff;font-size:1.05rem;font-weight:700;}
+  .sidebar-brand .brand-sub{color:#9AA5B1;font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+  .sidebar-who{color:#9AA5B1;font-size:0.78rem;margin:14px 0;padding-bottom:14px;border-bottom:1px solid #333A45;}
+  .sidebar-nav{display:flex;flex-direction:column;gap:3px;}
+  .sidebar-link{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+    color:#C7CDD6;text-decoration:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.86rem;
+    background:none;border:none;cursor:pointer;text-align:left;width:100%;
+  }
+  .sidebar-link:hover{background:#2C313A;color:#fff;}
+  .sidebar-divider{height:1px;background:#333A45;margin:10px 4px;}
+
+  .main-area{flex:1;min-width:0;}
   .table-scroll{overflow-x:auto;}
   .table-scroll table{min-width:480px;}
 
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
-  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
-  .who{font-size:0.85rem;color:#7A7B7D;}
-  .btn-logout{
-    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
-    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
-    background:#fff;color:var(--ink);
-  }
-  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
-  .btn-home{
-    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
-    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
-    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
-  }
-  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
-  .topbar-actions{display:flex;gap:8px;align-items:center;}
-
   .card{
     background:var(--card);border-radius:var(--radius);padding:26px 26px;
-    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);border-left:4px solid var(--line);
     margin-bottom:20px;
   }
   .card h2{margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:10px;}
@@ -58,6 +59,10 @@
     background:var(--blue);color:#fff;font-size:0.72rem;font-weight:700;
     border-radius:999px;padding:2px 9px;font-family:'Inter',sans-serif;
   }
+  .card-blue{border-left-color:var(--blue);}
+  .card-green{border-left-color:var(--green);}
+  .card-gold{border-left-color:#D9A441;}
+  .card-teal{border-left-color:#2FA891;}
 
   .pending-row{
     display:flex;align-items:center;gap:12px;flex-wrap:wrap;
@@ -119,88 +124,101 @@
 <body>
 
 <div class="wrap" id="app" style="display:none;">
-  <div class="topbar">
-    <div class="brand-name">Edu Flow Academy — Administration</div>
-    <div class="who" id="whoLabel"></div>
-    <div class="topbar-actions">
-      <a href="index.html" class="btn-home">🏠 Accueil</a>
-      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
-    </div>
-  </div>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-name">Edu Flow Academy</div>
+        <div class="brand-sub">Administration</div>
+      </div>
+      <div class="sidebar-who" id="whoLabel"></div>
+      <div class="sidebar-nav">
+        <a href="#accounts" class="sidebar-link">👤 Comptes</a>
+        <a href="students.html" class="sidebar-link">🎓 Eleves</a>
+        <a href="classes.html" class="sidebar-link">📚 Classes</a>
+        <a href="timetable.html" class="sidebar-link">🗓️ Emploi du temps</a>
+        <a href="attendance.html" class="sidebar-link">✅ Presence</a>
+        <a href="payments.html" class="sidebar-link">💳 Paiements eleves</a>
+        <a href="staff-payments.html" class="sidebar-link">💰 Salaires</a>
+        <a href="workshops.html" class="sidebar-link">🎪 Ateliers</a>
+        <button class="sidebar-link" id="openResultsBtn">📊 Resultats des tests</button>
+        <div class="sidebar-divider"></div>
+        <a href="staff-dashboard.html" class="sidebar-link">👩‍🏫 Espace enseignant</a>
+        <a href="reception-dashboard.html" class="sidebar-link">💁 Espace reception</a>
+        <div class="sidebar-divider"></div>
+        <a href="index.html" class="sidebar-link">🏠 Accueil</a>
+        <button class="sidebar-link" id="logoutBtn">🚪 Deconnexion</button>
+      </div>
+    </nav>
 
-  <div class="dashboard-grid">
-  <div class="main-col">
+    <main class="main-area">
 
-  <div class="card">
-    <h2>Eleves &amp; Classes</h2>
-    <p class="lead">Fiches eleves, catalogue des classes et inscriptions.</p>
-    <div class="coming-soon-grid" style="margin-bottom:16px;">
-      <div class="coming-soon-item" style="border-style:solid;color:var(--blue-dark);"><span class="count-badge" id="studentsCountBadge">—</span><br>Eleves actifs</div>
-      <div class="coming-soon-item" style="border-style:solid;color:var(--green-dark);"><span class="count-badge" id="classesCountBadge" style="background:var(--green);">—</span><br>Classes actives</div>
-    </div>
-    <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
-      <a href="students.html" class="btn-sm btn-approve" style="text-decoration:none;display:inline-block;">Gerer les eleves</a>
-      <a href="classes.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les classes</a>
-      <a href="timetable.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Emploi du temps</a>
-      <a href="attendance.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Presence</a>
-      <a href="payments.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Paiements eleves</a>
-      <a href="workshops.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Ateliers &amp; formations</a>
-    </div>
-  </div>
+      <div class="card card-green">
+        <h2>Eleves &amp; Classes</h2>
+        <p class="lead">Fiches eleves, catalogue des classes et inscriptions.</p>
+        <div class="coming-soon-grid" style="margin-bottom:16px;">
+          <div class="coming-soon-item" style="border-style:solid;color:var(--blue-dark);"><span class="count-badge" id="studentsCountBadge">—</span><br>Eleves actifs</div>
+          <div class="coming-soon-item" style="border-style:solid;color:var(--green-dark);"><span class="count-badge" id="classesCountBadge" style="background:var(--green);">—</span><br>Classes actives</div>
+        </div>
+        <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a href="students.html" class="btn-sm btn-approve" style="text-decoration:none;display:inline-block;">Gerer les eleves</a>
+          <a href="classes.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les classes</a>
+          <a href="timetable.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Emploi du temps</a>
+          <a href="attendance.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Presence</a>
+          <a href="payments.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Paiements eleves</a>
+          <a href="workshops.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Ateliers &amp; formations</a>
+        </div>
+      </div>
 
-  <div class="card">
-    <h2>💰 Salaires du personnel</h2>
-    <p class="lead">Reserve a l'administration — pas visible par la reception ni par le personnel lui-meme.</p>
-    <a href="staff-payments.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les salaires</a>
-  </div>
+      <div class="card card-gold">
+        <h2>💰 Salaires du personnel</h2>
+        <p class="lead">Reserve a l'administration — pas visible par la reception ni par le personnel lui-meme.</p>
+        <a href="staff-payments.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les salaires</a>
+      </div>
 
-  <div class="card">
-    <h2>📊 Resultats des tests</h2>
-    <p class="lead">Historique des tests de positionnement passes par les eleves — recherche, impression et export.</p>
-    <button class="btn-sm btn-reset" id="openResultsBtn">Ouvrir les resultats</button>
-  </div>
+      <div class="card card-teal">
+        <h2>📊 Resultats des tests</h2>
+        <p class="lead">Historique des tests de positionnement passes par les eleves — recherche, impression, export et suppression individuelle.</p>
+        <button class="btn-sm btn-reset" id="openResultsBtnCard">Ouvrir les resultats</button>
+      </div>
 
-  <div class="card">
-    <h2>🚪 Visiter un espace</h2>
-    <p class="lead">Acces direct a n'importe quel espace, sans mot de passe supplementaire — votre session admin y donne deja acces.</p>
-    <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
-      <a href="staff-dashboard.html" class="btn-sm" style="text-decoration:none;display:inline-block;border:1.5px solid var(--line);background:#fff;color:var(--ink);">👩‍🏫 Espace enseignant</a>
-      <a href="reception-dashboard.html" class="btn-sm" style="text-decoration:none;display:inline-block;border:1.5px solid var(--line);background:#fff;color:var(--ink);">💁 Espace reception</a>
-    </div>
-  </div>
+      <div class="card">
+        <h2>🚪 Visiter un espace</h2>
+        <p class="lead">Acces direct a n'importe quel espace, sans mot de passe supplementaire — votre session admin y donne deja acces.</p>
+        <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a href="staff-dashboard.html" class="btn-sm" style="text-decoration:none;display:inline-block;border:1.5px solid var(--line);background:#fff;color:var(--ink);">👩‍🏫 Espace enseignant</a>
+          <a href="reception-dashboard.html" class="btn-sm" style="text-decoration:none;display:inline-block;border:1.5px solid var(--line);background:#fff;color:var(--ink);">💁 Espace reception</a>
+        </div>
+      </div>
 
-  <div class="card">
-    <h2>A venir</h2>
-    <p class="lead">Ces modules s'ajouteront a la plateforme dans une prochaine phase.</p>
-    <div class="coming-soon-grid">
-      <div class="coming-soon-item">💳 Paiement gateway en ligne</div>
-    </div>
-  </div>
+      <div class="card">
+        <h2>A venir</h2>
+        <p class="lead">Ces modules s'ajouteront a la plateforme dans une prochaine phase.</p>
+        <div class="coming-soon-grid">
+          <div class="coming-soon-item">💳 Paiement gateway en ligne</div>
+        </div>
+      </div>
 
-  </div>
-  <div class="accounts-sidebar">
+      <div class="card card-blue" id="accounts">
+        <h2>Comptes en attente <span class="count-badge" id="pendingCount">0</span></h2>
+        <p class="lead">Nouvelles inscriptions a valider avant qu'elles puissent se connecter.</p>
+        <div id="pendingList"></div>
+        <div class="empty-msg" id="pendingEmpty" style="display:none;">Aucun compte en attente.</div>
+      </div>
 
-  <div class="card">
-    <h2>Comptes en attente <span class="count-badge" id="pendingCount">0</span></h2>
-    <p class="lead">Nouvelles inscriptions a valider avant qu'elles puissent se connecter.</p>
-    <div id="pendingList"></div>
-    <div class="empty-msg" id="pendingEmpty" style="display:none;">Aucun compte en attente.</div>
-  </div>
+      <div class="card card-blue">
+        <h2>Tous les comptes</h2>
+        <input type="text" id="searchInput" placeholder="Rechercher par nom ou email...">
+        <div class="table-scroll">
+          <table class="accounts-table">
+            <thead>
+              <tr><th>Nom</th><th>Email</th><th>Role</th><th>Statut</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="accountsBody"></tbody>
+          </table>
+        </div>
+      </div>
 
-  <div class="card">
-    <h2>Tous les comptes</h2>
-    <input type="text" id="searchInput" placeholder="Rechercher par nom ou email...">
-    <div class="table-scroll">
-      <table class="accounts-table">
-        <thead>
-          <tr><th>Nom</th><th>Email</th><th>Role</th><th>Statut</th><th>Actions</th></tr>
-        </thead>
-        <tbody id="accountsBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  </div>
+    </main>
   </div>
 </div>
 
@@ -397,14 +415,17 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
 // Admin is already authenticated through the real login system, so skip the
 // legacy shared-passphrase gate on the results archive rather than asking
 // for a second code.
-document.getElementById('openResultsBtn').addEventListener('click', () => {
+function openResults(){
   try{ sessionStorage.setItem('eduflow_staff_unlocked', '1'); }catch(e){}
   window.location.href = 'archive.html';
-});
+}
+document.getElementById('openResultsBtn').addEventListener('click', openResults);
+document.getElementById('openResultsBtnCard').addEventListener('click', openResults);
 
 (async () => {
   const result = await eduflowRequireRole(['admin']);
   if (!result) return; // guard already redirected
+  eduflowShowDeniedBanner();
   currentAdminId = result.session.user.id;
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
   document.getElementById('loadingMsg').style.display = 'none';

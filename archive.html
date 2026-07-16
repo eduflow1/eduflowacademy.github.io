@@ -160,6 +160,7 @@
             <th data-key="level">Niveau &#8645;</th>
             <th data-key="scorePct">Score &#8645;</th>
             <th class="no-print">Rapport</th>
+            <th class="no-print">Supprimer</th>
           </tr>
         </thead>
         <tbody id="resultsBody"></tbody>
@@ -195,7 +196,7 @@ async function loadArchiveFromSupabase(){
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     remoteResults = rows.map(r => ({
-      name: r.name, age: r.age, objective: r.objective, subject: r.subject,
+      id: r.id, name: r.name, age: r.age, objective: r.objective, subject: r.subject,
       testType: r.test_type, level: r.level, scorePct: r.score_pct, skills: r.skills,
       date: r.created_at
     }));
@@ -294,6 +295,7 @@ function render(){
         <td><span class="level-tag">${r.level || '—'}</span></td>
         <td>${r.scorePct != null ? r.scorePct + '%' : '—'}</td>
         <td class="no-print"><button class="btn-ghost" style="padding:4px 10px;font-size:0.78rem;" onclick="printSingleReport(${idx})">🖨️ Rapport</button></td>
+        <td class="no-print">${r.id ? `<button class="btn-ghost" style="padding:4px 10px;font-size:0.78rem;color:#B3261E;" onclick="deleteSingleResult('${r.id}')">🗑️</button>` : ''}</td>
       </tr>
     `).join('');
   }
@@ -377,6 +379,28 @@ function printSingleReport(idx){
   syncReportLogos();
   document.body.classList.add('printing-single');
   window.print();
+}
+
+async function deleteSingleResult(id){
+  if(!confirm('Supprimer definitivement ce resultat de test ? Cette action est irreversible.')) return;
+  try{
+    const res = await fetch(SUPABASE_URL + '/rest/v1/results?id=eq.' + id, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Prefer': 'return=representation'
+      }
+    });
+    const deleted = res.ok ? await res.json().catch(()=>[]) : [];
+    if(!res.ok || !deleted.length){
+      alert('La suppression a echoue (regle de securite Supabase ou erreur reseau). Rien n\'a ete supprime.');
+      return;
+    }
+  }catch(e){
+    alert('La suppression a echoue : ' + e.message);
+    return;
+  }
+  await loadArchiveFromSupabase();
 }
 
 document.getElementById('printReportsBtn').addEventListener('click', ()=>{

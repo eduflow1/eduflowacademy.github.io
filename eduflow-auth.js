@@ -69,10 +69,22 @@ async function eduflowRequireRole(allowedRoles){
     return null;
   }
   if (!allowedRoles.includes(profile.role)){
-    window.location.replace(eduflowRoleHome(profile.role));
+    window.location.replace(eduflowRoleHome(profile.role) + '?denied=1');
     return null;
   }
   return { session, profile };
+}
+
+// Call after eduflowRequireRole succeeds, on every protected page, to show
+// a banner if the visitor just got bounced back here from a space they
+// don't have access to (rather than failing silently).
+function eduflowShowDeniedBanner(){
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('denied') !== '1') return;
+  const banner = document.createElement('div');
+  banner.textContent = "Vous n'avez pas acces a cet espace.";
+  banner.style.cssText = 'background:#FCE9E6;color:#B3261E;border:1.5px solid #F5C2C0;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-family:Inter,sans-serif;font-size:0.88rem;text-align:center;';
+  document.body.insertBefore(banner, document.body.firstChild);
 }
 
 async function eduflowLogout(){
