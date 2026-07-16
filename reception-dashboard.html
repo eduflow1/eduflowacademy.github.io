@@ -60,6 +60,10 @@
     text-decoration:none;display:block;background:#fff;transition:border-color .15s, transform .15s;
   }
   .tile-link:hover{border-color:var(--blue);transform:translateY(-2px);}
+  .inbox-badge{
+    display:none;margin-left:6px;background:var(--danger);color:#fff;font-size:0.7rem;font-weight:700;
+    border-radius:999px;padding:1px 7px;
+  }
   .quick-add-btn{
     font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.88rem;
     border:none;border-radius:12px;padding:11px 20px;cursor:pointer;color:#fff;
@@ -93,6 +97,7 @@
       <a href="timetable.html" class="tile-link">🗓️ Emploi du temps</a>
       <a href="attendance.html" class="tile-link">✅ Presence</a>
       <a href="workshops.html" class="tile-link">🎓 Ateliers &amp; formations</a>
+      <a href="inbox.html" class="tile-link">📨 Notifications<span id="inboxBadge" class="inbox-badge"></span></a>
     </div>
     <a href="students.html" class="quick-add-btn">+ Nouvel eleve</a>
     <br>
@@ -115,6 +120,17 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   document.getElementById('welcomeMsg').textContent = 'Bienvenue, ' + (result.profile.full_name || 'vous') + ' !';
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+
+  const [{ data: messages }, { data: reads }] = await Promise.all([
+    eduflowClient.from('messages').select('id'),
+    eduflowClient.from('message_reads').select('message_id').eq('reader_id', result.session.user.id)
+  ]);
+  const unreadCount = (messages || []).length - new Set((reads || []).map(r => r.message_id)).size;
+  if (unreadCount > 0){
+    const badge = document.getElementById('inboxBadge');
+    badge.textContent = unreadCount;
+    badge.style.display = 'inline-block';
+  }
 })();
 </script>
 </body>

@@ -74,11 +74,21 @@
   .pending-info .meta{font-size:0.8rem;color:#8A8B8D;}
   .pending-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 
-  select, input[type=text]{
+  select, input[type=text], textarea{
     padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);
     font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);
   }
-  select:focus, input:focus{outline:none;border-color:var(--blue);}
+  select:focus, input:focus, textarea:focus{outline:none;border-color:var(--blue);}
+  textarea{width:100%;resize:vertical;font-family:'Inter',sans-serif;}
+
+  .msg-compose{display:flex;flex-direction:column;gap:4px;max-width:520px;}
+  .msg-compose label{font-size:0.78rem;font-weight:700;color:#7A7B7D;margin-top:8px;}
+  .msg-compose select{align-self:flex-start;}
+  .sent-msg-row{padding:12px 0;border-bottom:1px solid var(--line);}
+  .sent-msg-row:last-child{border-bottom:none;}
+  .sent-msg-row .name{font-weight:700;}
+  .sent-msg-row .meta{font-size:0.78rem;color:#9A9B9C;margin:2px 0 6px;}
+  .sent-msg-row .body-text{font-size:0.86rem;color:var(--ink);white-space:pre-wrap;}
 
   .btn-sm{
     font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;
@@ -142,6 +152,7 @@
         <a href="workshops.html" class="sidebar-link">🎪 Ateliers</a>
         <button class="sidebar-link" id="openResultsBtn">📊 Resultats des tests</button>
         <a href="statistics.html" class="sidebar-link">📈 Statistiques</a>
+        <a href="#messaging" class="sidebar-link">📨 Notifications</a>
         <div class="sidebar-divider"></div>
         <a href="staff-dashboard.html" class="sidebar-link">👩‍🏫 Espace enseignant</a>
         <a href="reception-dashboard.html" class="sidebar-link">💁 Espace reception</a>
@@ -186,6 +197,27 @@
         <h2>📈 Statistiques</h2>
         <p class="lead">Eleves par matiere, evolution des inscriptions, statut des paiements et repartition par age — avec graphiques.</p>
         <a href="statistics.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Voir les statistiques</a>
+      </div>
+
+      <div class="card card-blue" id="messaging">
+        <h2>📨 Notifications au personnel</h2>
+        <p class="lead">Envoyer un message a la reception, au personnel enseignant, ou aux deux — chacun le voit dans sa boite de reception.</p>
+        <div class="msg-compose">
+          <label for="msgTargetRole">Destinataires</label>
+          <select id="msgTargetRole">
+            <option value="all">Tout le personnel</option>
+            <option value="staff">Personnel enseignant</option>
+            <option value="receptionist">Reception</option>
+          </select>
+          <label for="msgSubject">Sujet</label>
+          <input type="text" id="msgSubject" placeholder="Ex. : Reunion vendredi">
+          <label for="msgBody">Message</label>
+          <textarea id="msgBody" rows="4" placeholder="Votre message..."></textarea>
+          <button class="btn-sm btn-approve" id="sendMsgBtn" style="margin-top:12px;align-self:flex-start;">Envoyer</button>
+        </div>
+        <h3 style="font-size:0.92rem;margin:22px 0 4px;">Messages envoyes</h3>
+        <div id="sentMessagesList"></div>
+        <div class="empty-msg" id="sentMessagesEmpty" style="display:none;">Aucun message envoye.</div>
       </div>
 
       <div class="card">
@@ -416,6 +448,42 @@ function renderAccounts(){
   });
 }
 
+const MSG_TARGET_LABELS = { all: 'Tout le personnel', staff: 'Personnel enseignant', receptionist: 'Reception' };
+
+async function loadSentMessages(){
+  const { data, error } = await eduflowClient.from('messages').select('*').order('created_at', { ascending:false });
+  if (error){ return; }
+  const list = document.getElementById('sentMessagesList');
+  const empty = document.getElementById('sentMessagesEmpty');
+  list.innerHTML = '';
+  empty.style.display = (data && data.length) ? 'none' : 'block';
+  (data||[]).forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'sent-msg-row';
+    row.innerHTML = `
+      <div class="name">${m.subject}</div>
+      <div class="meta">${MSG_TARGET_LABELS[m.target_role] || m.target_role} · ${fmtDate(m.created_at)}</div>
+      <div class="body-text">${m.body}</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('sendMsgBtn').addEventListener('click', async () => {
+  const target_role = document.getElementById('msgTargetRole').value;
+  const subject = document.getElementById('msgSubject').value.trim();
+  const body = document.getElementById('msgBody').value.trim();
+  if (!subject || !body){ alert('Merci de remplir le sujet et le message.'); return; }
+  const btn = document.getElementById('sendMsgBtn');
+  btn.disabled = true;
+  const { error } = await eduflowClient.from('messages').insert({ sender_id: currentAdminId, target_role, subject, body });
+  btn.disabled = false;
+  if (error){ alert('Erreur : ' + error.message); return; }
+  document.getElementById('msgSubject').value = '';
+  document.getElementById('msgBody').value = '';
+  await loadSentMessages();
+});
+
 document.getElementById('searchInput').addEventListener('input', renderAccounts);
 document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
 
@@ -438,6 +506,7 @@ document.getElementById('openResultsBtnCard').addEventListener('click', openResu
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   await refreshProfiles();
+  await loadSentMessages();
 
   const [{ count: studentsCount }, { count: classesCount }] = await Promise.all([
     eduflowClient.from('students').select('id', { count: 'exact', head: true }).eq('status', 'active'),

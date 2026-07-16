@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Notifications</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:760px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:24px 24px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:16px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 4px;}
+
+  .msg-row{
+    border:1.5px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px;
+    cursor:pointer;transition:border-color .15s;background:#fff;
+  }
+  .msg-row:hover{border-color:var(--blue);}
+  .msg-row.unread{border-left:4px solid var(--blue);background:#F5FAFD;}
+  .msg-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .msg-subject{font-weight:700;font-family:'Quicksand',sans-serif;}
+  .msg-meta{font-size:0.76rem;color:#9A9B9C;}
+  .msg-body{margin-top:10px;font-size:0.9rem;color:var(--ink);line-height:1.6;display:none;white-space:pre-wrap;}
+  .msg-row.open .msg-body{display:block;}
+  .unread-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:6px;}
+  .target-pill{
+    display:inline-block;font-size:0.7rem;font-weight:700;border-radius:999px;padding:2px 9px;
+    background:rgba(63,174,221,0.12);color:var(--blue-dark);
+  }
+  .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:16px 0;text-align:center;}
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Notifications</div>
+    <div class="who" id="whoLabel"></div>
+    <div class="topbar-actions">
+      <a href="#" class="btn-home" id="backLink">← Retour</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📨 Boite de reception</h2>
+    <p class="lead">Messages envoyes par l'administration. Cliquez pour ouvrir.</p>
+    <div id="msgList"></div>
+    <div class="empty-msg" id="msgEmpty" style="display:none;">Aucun message pour le moment.</div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+let myId = null;
+let readIds = new Set();
+
+const TARGET_LABELS = { all: 'Tout le personnel', staff: 'Personnel enseignant', receptionist: 'Reception' };
+
+function fmtDate(iso){
+  return new Date(iso).toLocaleDateString('fr-FR', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+async function loadMessages(){
+  const [{ data: messages, error: mErr }, { data: reads, error: rErr }] = await Promise.all([
+    eduflowClient.from('messages').select('*').order('created_at', { ascending:false }),
+    eduflowClient.from('message_reads').select('message_id').eq('reader_id', myId)
+  ]);
+  if (mErr){ alert('Erreur de chargement des messages : ' + mErr.message); return; }
+  readIds = new Set((reads||[]).map(r => r.message_id));
+
+  const list = document.getElementById('msgList');
+  const empty = document.getElementById('msgEmpty');
+  list.innerHTML = '';
+  empty.style.display = (messages && messages.length) ? 'none' : 'block';
+
+  (messages||[]).forEach(m => {
+    const isUnread = !readIds.has(m.id);
+    const row = document.createElement('div');
+    row.className = 'msg-row' + (isUnread ? ' unread' : '');
+    row.innerHTML = `
+      <div class="msg-top">
+        <div class="msg-subject">${isUnread ? '<span class="unread-dot"></span>' : ''}${m.subject}</div>
+        <span class="target-pill">${TARGET_LABELS[m.target_role] || m.target_role}</span>
+      </div>
+      <div class="msg-meta">${fmtDate(m.created_at)}</div>
+      <div class="msg-body">${m.body}</div>
+    `;
+    row.addEventListener('click', async () => {
+      row.classList.toggle('open');
+      if (isUnread && !readIds.has(m.id)){
+        readIds.add(m.id);
+        row.classList.remove('unread');
+        row.querySelector('.unread-dot')?.remove();
+        await eduflowClient.from('message_reads').insert({ message_id: m.id, reader_id: myId });
+      }
+    });
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['staff', 'receptionist', 'admin']);
+  if (!result) return;
+  eduflowShowDeniedBanner();
+  myId = result.session.user.id;
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('backLink').href = result.profile.role === 'admin' ? 'admin-dashboard.html'
+    : result.profile.role === 'receptionist' ? 'reception-dashboard.html' : 'staff-dashboard.html';
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await loadMessages();
+})();
+</script>
+</body>
+</html>
