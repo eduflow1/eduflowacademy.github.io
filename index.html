@@ -144,94 +144,171 @@
   }
   .pwd-toggle:hover{background:#F0F3F2;}
 
-  /* ---- Portal landing page ---- */
-  .portal-screen{width:100%;max-width:1100px;margin:0 auto;padding:24px 0 40px;}
-  .portal-logo-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:6px;animation:portalFadeDown .6s ease both;}
-  .portal-logo-row img{height:64px;width:auto;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,0.10);}
-  .portal-logo-row .portal-name{text-align:left;}
-  .portal-logo-row .portal-name .brand-name{font-size:1.5rem;}
-  .portal-logo-row .portal-name .brand-sub{font-size:0.8rem;}
+  /* ---- Public homepage shell: persistent sidebar + swappable main area ---- */
+  .app-shell{display:flex;gap:24px;align-items:flex-start;width:100%;max-width:1400px;}
+  @media (max-width:860px){.app-shell{flex-direction:column;}}
 
-  .portal-tagline{text-align:center;color:#6B6C6E;font-size:1rem;margin:8px 0 38px;animation:portalFadeDown .6s ease .05s both;}
+  .sidebar{
+    width:220px;flex:none;background:#20242B;border-radius:var(--radius);
+    padding:22px 16px;position:sticky;top:20px;
+    box-shadow:0 10px 34px rgba(20,22,26,0.25);
+  }
+  @media (max-width:860px){.sidebar{width:100%;position:static;display:flex;flex-wrap:wrap;gap:8px;padding:14px;align-items:center;}}
+  .sidebar-brand{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  @media (max-width:860px){.sidebar-brand{margin-bottom:0;margin-right:6px;}}
+  .sidebar-brand img{width:36px;height:36px;border-radius:9px;object-fit:cover;}
+  .sidebar-brand .brand-name{color:#fff;font-size:0.96rem;font-weight:700;}
+  .sidebar-nav{display:flex;flex-direction:column;gap:3px;}
+  @media (max-width:860px){.sidebar-nav{flex-direction:row;flex-wrap:wrap;flex:1;}}
+  .sidebar-link{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+    color:#C7CDD6;text-decoration:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.86rem;
+    background:none;border:none;cursor:pointer;text-align:left;width:100%;
+  }
+  @media (max-width:860px){.sidebar-link{width:auto;padding:8px 12px;}}
+  .sidebar-link:hover{background:#2C313A;color:#fff;}
 
-  .portal-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
-  @media (max-width:860px){.portal-cards{grid-template-columns:1fr 1fr;}}
-  @media (max-width:520px){.portal-cards{grid-template-columns:1fr;}}
+  .main-area{flex:1;min-width:0;width:100%;}
 
-  .portal-card{
+  /* ---- Marketing homepage content ---- */
+  .marketing-hero{text-align:center;padding:16px 0 30px;}
+  .marketing-hero img{height:64px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,0.10);margin-bottom:14px;}
+  .marketing-hero h1{font-size:1.8rem;margin:0 0 10px;}
+  .marketing-hero p{color:#6B6C6E;font-size:1.02rem;max-width:560px;margin:0 auto;line-height:1.6;}
+
+  .section-title{font-size:1.25rem;margin:36px 0 6px;text-align:center;}
+  .section-sub{color:#7A7B7D;font-size:0.9rem;text-align:center;margin-bottom:22px;}
+
+  .programs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  @media (max-width:860px){.programs-grid{grid-template-columns:1fr;}}
+  .program-card{
     background:var(--card);border-radius:var(--radius);border:1.5px solid var(--line);
-    padding:30px 20px;text-align:center;cursor:pointer;text-decoration:none;color:inherit;
-    display:block;box-shadow:0 8px 20px rgba(30,50,60,0.06);
-    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-    animation:portalCardIn .55s ease both;
+    padding:26px 22px;box-shadow:0 8px 20px rgba(30,50,60,0.06);
   }
-  .portal-card:hover{transform:translateY(-6px);box-shadow:0 16px 32px rgba(30,50,60,0.14);border-color:var(--card-accent,var(--blue));}
-  .portal-card:nth-child(1){animation-delay:.08s;}
-  .portal-card:nth-child(2){animation-delay:.16s;}
-  .portal-card:nth-child(3){animation-delay:.24s;}
-  .portal-card:nth-child(4){animation-delay:.32s;}
-
-  .portal-icon{
-    width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-size:1.9rem;margin:0 auto 16px;background:var(--card-accent-bg,rgba(63,174,221,0.12));
-    animation:portalFloat 3.4s ease-in-out infinite;
+  .program-card .program-icon{font-size:2rem;margin-bottom:10px;}
+  .program-card h3{margin:0 0 8px;font-size:1.08rem;}
+  .program-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+  .program-tag{
+    font-size:0.76rem;font-weight:600;background:rgba(63,174,221,0.10);color:var(--blue-dark);
+    padding:4px 10px;border-radius:999px;
   }
-  .portal-card:nth-child(2) .portal-icon{animation-delay:.3s;}
-  .portal-card:nth-child(3) .portal-icon{animation-delay:.6s;}
-  .portal-card:nth-child(4) .portal-icon{animation-delay:.9s;}
 
-  .portal-card h3{margin:0 0 6px;font-size:1.08rem;}
-  .portal-card p{margin:0;color:#7A7B7D;font-size:0.84rem;line-height:1.4;}
-
-  .portal-card.student{--card-accent:var(--blue);--card-accent-bg:rgba(63,174,221,0.12);}
-  .portal-card.admin{--card-accent:#54585C;--card-accent-bg:rgba(84,88,92,0.10);}
-  .portal-card.staff{--card-accent:var(--green);--card-accent-bg:rgba(123,196,107,0.14);}
-  .portal-card.reception{--card-accent:#D9A441;--card-accent-bg:rgba(217,164,65,0.14);}
-
-  .portal-back{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:16px;}
-  .portal-back:hover{color:var(--blue-dark);}
-
-  @keyframes portalFadeDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
-  @keyframes portalCardIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
-  @keyframes portalFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-  @media (prefers-reduced-motion: reduce){
-    .portal-logo-row,.portal-tagline,.portal-card,.portal-icon{animation:none !important;}
+  .media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media (max-width:700px){.media-grid{grid-template-columns:1fr 1fr;}}
+  .media-item{
+    aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:#F0F3F2;border:1.5px dashed var(--line);
+    display:flex;align-items:center;justify-content:center;color:#B8BCBA;font-size:0.82rem;text-align:center;padding:10px;
   }
+  .media-item img, .media-item video{width:100%;height:100%;object-fit:cover;display:block;}
+
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+  @media (max-width:700px){.contact-grid{grid-template-columns:1fr;}}
+  .contact-list{list-style:none;padding:0;margin:0;}
+  .contact-list li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:0.92rem;}
+  .contact-list li:last-child{border-bottom:none;}
+  .map-placeholder{
+    width:100%;height:260px;border-radius:14px;border:1.5px dashed var(--line);background:#F0F3F2;
+    display:flex;align-items:center;justify-content:center;color:#B8BCBA;font-size:0.85rem;text-align:center;
+  }
+  .map-placeholder iframe{width:100%;height:100%;border:0;border-radius:14px;}
+
+  .qr-section{text-align:center;margin-top:36px;}
+  .qr-section img{width:130px;height:130px;border-radius:14px;border:1.5px solid var(--line);padding:8px;background:#fff;}
 </style>
 </head>
 <body>
 
-  <div id="portalLanding" class="portal-screen">
-    <div class="portal-logo-row">
-      <img id="portalLogoImg" alt="Edu Flow Academy">
-      <div class="portal-name">
-        <div class="brand-name">Edu Flow Academy</div>
-        <div class="brand-sub">Academie de langues</div>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <img id="sidebarLogoImg" alt="Edu Flow Academy">
+      <div class="brand-name">Edu Flow Academy</div>
+    </div>
+    <div class="sidebar-nav">
+      <a href="#" class="sidebar-link" id="navHomeLink">🏠 Accueil</a>
+      <a href="#" class="sidebar-link" id="navStudentLink">🎓 Eleve</a>
+      <a href="login.html" class="sidebar-link">🔑 Administration</a>
+      <a href="login.html" class="sidebar-link">👨‍🏫 Personnel enseignant</a>
+      <a href="login.html" class="sidebar-link">🛎️ Reception</a>
+    </div>
+  </nav>
+
+  <main class="main-area">
+
+  <div id="homeView">
+    <div class="marketing-hero">
+      <img id="heroLogoImg" alt="Edu Flow Academy">
+      <h1>Bienvenue a Edu Flow Academy 👋</h1>
+      <p>Langues, formations professionnelles et accompagnement educatif — decouvrez tout ce que notre academie propose, pour les enfants comme pour les adultes.</p>
+    </div>
+
+    <h2 class="section-title">Nos programmes</h2>
+    <p class="section-sub">Trois domaines, un seul objectif : vous accompagner a chaque etape.</p>
+    <div class="programs-grid">
+      <div class="program-card">
+        <div class="program-icon">🌍</div>
+        <h3>Langues</h3>
+        <p class="lead" style="margin:0;">Cours de langues pour tous les niveaux.</p>
+        <div class="program-tags">
+          <span class="program-tag">Anglais</span>
+          <span class="program-tag">Francais</span>
+          <span class="program-tag">Espagnol</span>
+          <span class="program-tag">Allemand</span>
+        </div>
+      </div>
+      <div class="program-card">
+        <div class="program-icon">💼</div>
+        <h3>Formation professionnelle</h3>
+        <p class="lead" style="margin:0;">Developpez de nouvelles competences.</p>
+        <div class="program-tags">
+          <span class="program-tag">Drone</span>
+          <span class="program-tag">IA</span>
+          <span class="program-tag">Infographie</span>
+          <span class="program-tag">E-commerce</span>
+          <span class="program-tag">Marketing digital</span>
+          <span class="program-tag">Bureautique</span>
+        </div>
+      </div>
+      <div class="program-card">
+        <div class="program-icon">🧩</div>
+        <h3>Accompagnement educatif &amp; therapie</h3>
+        <p class="lead" style="margin:0;">Un suivi adapte a chaque enfant.</p>
+        <div class="program-tags">
+          <span class="program-tag">Psychomotricite</span>
+          <span class="program-tag">Psychologue</span>
+          <span class="program-tag">Orthophoniste</span>
+          <span class="program-tag">Educatrice specialisee</span>
+          <span class="program-tag">Enfants autistes</span>
+          <span class="program-tag">Enfants trisomiques</span>
+        </div>
       </div>
     </div>
-    <p class="portal-tagline">Choisissez votre espace pour continuer</p>
 
-    <div class="portal-cards">
-      <a href="#" class="portal-card student" id="portalStudentCard">
-        <div class="portal-icon">🎓</div>
-        <h3>Eleve</h3>
-        <p>Passer un test de positionnement</p>
-      </a>
-      <a href="login.html" class="portal-card admin">
-        <div class="portal-icon">🔑</div>
-        <h3>Administration</h3>
-        <p>Gestion complete de la plateforme</p>
-      </a>
-      <a href="login.html" class="portal-card staff">
-        <div class="portal-icon">👨‍🏫</div>
-        <h3>Personnel enseignant</h3>
-        <p>Emploi du temps, presence, classes</p>
-      </a>
-      <a href="login.html" class="portal-card reception">
-        <div class="portal-icon">🛎️</div>
-        <h3>Reception</h3>
-        <p>Listes des eleves par matiere</p>
-      </a>
+    <h2 class="section-title">Photos &amp; videos</h2>
+    <p class="section-sub">Un apercu de nos activites.</p>
+    <div class="media-grid" id="mediaGrid">
+      <!-- Placeholder slots: replace with <img src="media/xxx.jpg" alt="..."> or <video> tags once real files are provided -->
+      <div class="media-item">📷<br>Photo a venir</div>
+      <div class="media-item">📷<br>Photo a venir</div>
+      <div class="media-item"><video src="media/academy-video-1.mp4" controls preload="metadata"></video></div>
+    </div>
+
+    <h2 class="section-title">Nous contacter</h2>
+    <p class="section-sub">Une question ? Contactez-nous directement.</p>
+    <div class="contact-grid">
+      <ul class="contact-list">
+        <li>📞 0521406510</li>
+        <li>📞 0665688128</li>
+        <li>📞 0669313643</li>
+      </ul>
+      <!-- Placeholder: replace with a Google Maps iframe once the address is provided -->
+      <div class="map-placeholder" id="mapArea">📍 Adresse a venir</div>
+    </div>
+
+    <div class="qr-section">
+      <h2 class="section-title" style="margin-top:0;">Scannez-nous</h2>
+      <p class="section-sub">Retrouvez cette plateforme en un scan.</p>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https%3A%2F%2Fazzioui1995brahim.github.io%2Feduflowacademy%2F" alt="QR code Edu Flow Academy">
     </div>
 
     <footer class="mini">Edu Flow Academy — Plateforme d'evaluation linguistique</footer>
@@ -239,7 +316,6 @@
 
   <div id="gateScreen" class="gate-screen" style="display:none;">
     <div class="gate-card">
-      <a href="#" class="portal-back" id="backToPortalLink">← Retour</a>
       <div class="gate-lock">🔒</div>
       <div class="brand-name">Edu Flow Academy</div>
       <h2>Acces reserve</h2>
@@ -251,9 +327,6 @@
       </div>
       <div class="error-msg" id="gateError">Code incorrect. Merci de reessayer.</div>
       <button class="btn-primary" id="gateBtn">Valider</button>
-
-      <div class="gate-divider">ou</div>
-      <div class="admin-link"><a href="login.html">🔑 Connexion Personnel / Admin</a></div>
     </div>
   </div>
 
@@ -316,36 +389,36 @@
       <button class="btn-primary" id="btnGo">Commencer le test 🚀</button>
     </div>
 
-    <div class="card" style="margin-top:18px;text-align:center;">
-      <div class="admin-link"><a href="login.html">🔑 Connexion Personnel / Admin</a></div>
-    </div>
-
     <footer class="mini">Edu Flow Academy — Plateforme d'evaluation linguistique</footer>
   </div>
+
+  </main>
+</div>
 
 <script>
 const PLATFORM_CODE = 'EFA-7M9HYX';
 
 // Reuse the logo image already embedded in the topbar below, instead of duplicating that data.
-document.getElementById('portalLogoImg').src = document.querySelector('.topbar .logo-wrap img').src;
+document.getElementById('heroLogoImg').src = document.querySelector('.topbar .logo-wrap img').src;
+document.getElementById('sidebarLogoImg').src = document.querySelector('.topbar .logo-wrap img').src;
 
-function showPortal(){
-  document.getElementById('portalLanding').style.display = 'block';
+function showHome(){
+  document.getElementById('homeView').style.display = 'block';
   document.getElementById('gateScreen').style.display = 'none';
   document.getElementById('appContent').style.display = 'none';
 }
 function showGate(){
-  document.getElementById('portalLanding').style.display = 'none';
+  document.getElementById('homeView').style.display = 'none';
   document.getElementById('gateScreen').style.display = 'flex';
 }
 function showApp(){
-  document.getElementById('portalLanding').style.display = 'none';
+  document.getElementById('homeView').style.display = 'none';
   document.getElementById('gateScreen').style.display = 'none';
   document.getElementById('appContent').style.display = 'block';
 }
 
-document.getElementById('portalStudentCard').addEventListener('click', (e)=>{ e.preventDefault(); showGate(); });
-document.getElementById('backToPortalLink').addEventListener('click', (e)=>{ e.preventDefault(); showPortal(); });
+document.getElementById('navHomeLink').addEventListener('click', (e)=>{ e.preventDefault(); showHome(); });
+document.getElementById('navStudentLink').addEventListener('click', (e)=>{ e.preventDefault(); showGate(); });
 
 if(sessionStorage.getItem('eduflow_platform_unlocked') === '1'){ showApp(); }
 
