@@ -76,6 +76,16 @@
   .btn-ghost-sm:hover{border-color:var(--blue);color:var(--blue-dark);}
   .btn-sm:disabled{opacity:0.5;cursor:not-allowed;}
 
+  .btn-xs{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.74rem;
+    border:1.5px solid var(--line);border-radius:8px;padding:5px 9px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-xs:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .btn-xs.danger{border-color:#F0B8B0;color:var(--danger);}
+  .btn-xs.danger:hover{background:#FCE9E6;}
+  .row-actions{display:flex;gap:5px;flex-wrap:wrap;}
+
   .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:8px 0;}
 
   table.data-table{width:100%;border-collapse:collapse;font-size:0.86rem;}
@@ -176,7 +186,7 @@
       </div>
       <table class="data-table">
         <thead>
-          <tr><th>Nom</th><th>Code</th><th>Age</th><th>Matieres inscrites</th><th>Paiement</th><th>Statut</th></tr>
+          <tr><th>Nom</th><th>Code</th><th>Age</th><th>Matieres inscrites</th><th>Paiement</th><th>Statut</th><th class="no-print">Actions</th></tr>
         </thead>
         <tbody id="studentsBody"></tbody>
       </table>
@@ -220,6 +230,13 @@
       <div class="field">
         <label for="fNotesInput">Notes</label>
         <input type="text" id="fNotesInput" placeholder="Optionnel">
+      </div>
+      <div class="field">
+        <label for="fStatusInput">Statut</label>
+        <select id="fStatusInput">
+          <option value="active">Actif</option>
+          <option value="inactive">Inactif</option>
+        </select>
       </div>
 
       <div class="lookup-box" id="lookupBox" style="display:none;">
@@ -322,6 +339,26 @@ function fmtDate(iso){
 
 function canWrite(){
   return currentProfile && (currentProfile.role === 'admin' || currentProfile.role === 'receptionist');
+}
+
+// Returns true if the student was actually deleted.
+async function deleteStudentWithConfirm(s){
+  const typed = prompt(
+    `Cette action est IRREVERSIBLE et supprimera aussi toutes les inscriptions, paiements et presences de cet eleve.\n\nPour confirmer, tapez exactement le nom de l'eleve :\n${s.full_name}`
+  );
+  if (typed !== s.full_name) {
+    if (typed !== null) alert('Nom incorrect — suppression annulee.');
+    return false;
+  }
+  const { error } = await eduflowClient.from('students').delete().eq('id', s.id);
+  if (error){ alert('Erreur : ' + error.message); return false; }
+  await loadAll();
+  return true;
+}
+
+async function quickPrintStudent(studentId){
+  await openDetail(studentId);
+  window.print();
 }
 
 // ---------- data loading ----------
@@ -438,7 +475,39 @@ function renderStudentsTable(){
       <td>${subsHtml}</td>
       <td>${payPill || '<span style="color:#B8BCBA;">—</span>'}</td>
       <td><span class="status-pill ${s.status==='active'?'status-active':'status-disabled'}">${s.status==='active'?'Actif':'Inactif'}</span></td>
+      <td class="row-actions no-print"></td>
     `;
+    const actionsCell = tr.querySelector('.row-actions');
+
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn-xs';
+    viewBtn.textContent = '👁️ Voir';
+    viewBtn.addEventListener('click', (e) => { e.stopPropagation(); openDetail(s.id); });
+    actionsCell.appendChild(viewBtn);
+
+    const printBtn = document.createElement('button');
+    printBtn.className = 'btn-xs';
+    printBtn.textContent = '🖨️ Imprimer';
+    printBtn.addEventListener('click', (e) => { e.stopPropagation(); quickPrintStudent(s.id); });
+    actionsCell.appendChild(printBtn);
+
+    if (canWrite()){
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-xs';
+      editBtn.textContent = '✏️ Modifier';
+      editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditForm(s); });
+      actionsCell.appendChild(editBtn);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-xs danger';
+      deleteBtn.textContent = '🗑️ Supprimer';
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await deleteStudentWithConfirm(s);
+      });
+      actionsCell.appendChild(deleteBtn);
+    }
+
     tr.addEventListener('click', () => openDetail(s.id));
     body.appendChild(tr);
   });
@@ -460,6 +529,7 @@ function clearForm(){
   ['fNameInput','fPhoneInput','fEmailInput','fGuardianNameInput','fGuardianPhoneInput','fNotesInput','fBirthInput'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  document.getElementById('fStatusInput').value = 'active';
   document.getElementById('lookupBox').style.display = 'none';
 }
 
@@ -479,6 +549,7 @@ function openEditForm(student){
   document.getElementById('fGuardianNameInput').value = student.guardian_name || '';
   document.getElementById('fGuardianPhoneInput').value = student.guardian_phone || '';
   document.getElementById('fNotesInput').value = student.notes || '';
+  document.getElementById('fStatusInput').value = student.status || 'active';
   document.getElementById('lookupBox').style.display = 'none';
   document.getElementById('formTitle').textContent = 'Modifier ' + student.full_name;
   showView('form');
@@ -524,7 +595,8 @@ document.getElementById('saveStudentBtn').addEventListener('click', async () => 
     email: document.getElementById('fEmailInput').value.trim() || null,
     guardian_name: document.getElementById('fGuardianNameInput').value.trim() || null,
     guardian_phone: document.getElementById('fGuardianPhoneInput').value.trim() || null,
-    notes: document.getElementById('fNotesInput').value.trim() || null
+    notes: document.getElementById('fNotesInput').value.trim() || null,
+    status: document.getElementById('fStatusInput').value
   };
 
   const btn = document.getElementById('saveStudentBtn');
@@ -669,23 +741,14 @@ function renderDetail(){
     });
     actions.appendChild(toggleBtn);
   }
-  if (currentProfile.role === 'admin' || currentProfile.role === 'receptionist'){
+  if (canWrite()){
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-sm btn-reject';
     deleteBtn.style.background = '#8A1F13';
     deleteBtn.textContent = 'Supprimer definitivement';
     deleteBtn.addEventListener('click', async () => {
-      const typed = prompt(
-        `Cette action est IRREVERSIBLE et supprimera aussi toutes les inscriptions, paiements et presences de cet eleve.\n\nPour confirmer, tapez exactement le nom de l'eleve :\n${s.full_name}`
-      );
-      if (typed !== s.full_name) {
-        if (typed !== null) alert('Nom incorrect — suppression annulee.');
-        return;
-      }
-      const { error } = await eduflowClient.from('students').delete().eq('id', s.id);
-      if (error){ alert('Erreur : ' + error.message); return; }
-      await loadAll();
-      showView('list');
+      const deleted = await deleteStudentWithConfirm(s);
+      if (deleted) showView('list');
     });
     actions.appendChild(deleteBtn);
   }
