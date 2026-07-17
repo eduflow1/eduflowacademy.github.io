@@ -47,6 +47,31 @@ const EDUFLOW_SUBJECT_LABELS = {
   enfants_trisomiques: 'Accompagnement enfants trisomiques'
 };
 
+// Shared per-subject theme (diplomas, charts, badges) — one accent colour
+// and one icon per subject, keyed the same way as EDUFLOW_SUBJECT_LABELS.
+const EDUFLOW_SUBJECT_THEME = {
+  fr: { color: '#3FAEDD', icon: '🇫🇷' },
+  en: { color: '#7BC46B', icon: '🇬🇧' },
+  es: { color: '#D9A441', icon: '🇪🇸' },
+  de: { color: '#2FA891', icon: '🇩🇪' },
+  drone: { color: '#5B7A9D', icon: '🚁' },
+  ia: { color: '#8B6FD1', icon: '🤖' },
+  infographie: { color: '#D46FB3', icon: '🎨' },
+  ecommerce: { color: '#E08A3C', icon: '🛒' },
+  marketing_digital: { color: '#5B67F1', icon: '📈' },
+  bureautique: { color: '#7A8C99', icon: '💼' },
+  secourisme: { color: '#E0654F', icon: '⛑️' },
+  psychomotricite: { color: '#4FB0A5', icon: '🤸' },
+  psychologue: { color: '#9A7FD4', icon: '🧠' },
+  orthophoniste: { color: '#4F9FD4', icon: '🗣️' },
+  educatrice_specialisee: { color: '#6FB35C', icon: '🧩' },
+  enfants_autistes: { color: '#D4A574', icon: '🧩' },
+  enfants_trisomiques: { color: '#E0A93F', icon: '💛' }
+};
+function subjectTheme(code){
+  return EDUFLOW_SUBJECT_THEME[code] || { color: '#8A8B8D', icon: '🎓' };
+}
+
 async function eduflowGetProfile(){
   const { data: { session } } = await eduflowClient.auth.getSession();
   if (!session) return { session: null, profile: null };

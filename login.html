@@ -21,7 +21,12 @@
     display:flex; align-items:center; justify-content:center; padding:28px 16px 60px;
   }
   h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
-  .gate-screen{width:100%;max-width:420px;}
+  body::before{
+    content:'';position:fixed;inset:0;
+    background:url('media/logo.jpg') center/560px no-repeat;
+    opacity:0.14;pointer-events:none;z-index:0;
+  }
+  .gate-screen{width:100%;max-width:420px;position:relative;z-index:1;}
   .gate-card{background:var(--card);border-radius:var(--radius);padding:36px 30px;box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);text-align:center;width:100%;}
   .gate-lock{font-size:2.4rem;margin-bottom:6px;}
   .brand-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:2px;}

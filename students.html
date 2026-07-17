@@ -114,6 +114,7 @@
   .pay-status-paid{background:#E8F5E4;color:var(--green-dark);}
   .pay-status-partial{background:#FDF3E7;color:#B3791E;}
   .pay-status-unpaid{background:#FCE9E6;color:var(--danger);}
+  .pay-amount-line{font-size:0.72rem;color:#8A8B8D;white-space:nowrap;}
   .age-pill{
     display:inline-block;font-size:0.72rem;font-weight:700;border-radius:999px;padding:3px 9px;margin:2px 4px 2px 0;
     background:#F0F0F5;color:#6B6C8A;
@@ -205,6 +206,13 @@
           <option value="educatrice_specialisee">Educatrice specialisee</option>
           <option value="enfants_autistes">Accompagnement enfants autistes</option>
           <option value="enfants_trisomiques">Accompagnement enfants trisomiques</option>
+        </select>
+        <select id="paymentFilter">
+          <option value="">Tous les paiements</option>
+          <option value="paid">🟢 Paye</option>
+          <option value="partial">🟠 Partiel</option>
+          <option value="unpaid">🔴 Impaye</option>
+          <option value="none">— Sans frais defini</option>
         </select>
         <button class="btn-sm btn-primary-sm" id="newStudentBtn" style="display:none;">+ Nouvel eleve</button>
         <button class="btn-sm btn-ghost-sm" id="printListBtn">🖨️ Imprimer</button>
@@ -435,24 +443,41 @@ async function loadAll(){
   renderStudentsTable();
 }
 
-// null = nothing expected yet (no pill); 'paid' / 'partial' / 'unpaid' otherwise.
-function paymentStatus(studentId){
+// Returns { status, paid, expected } — status is null only when there's
+// truly nothing to show (no fee expected and nothing paid).
+function paymentInfo(studentId){
   if (!showPaymentStatus) return null;
   const enrolls = enrollmentsByStudent[studentId] || [];
   const expected = enrolls.reduce((sum, e) => sum + (e.expected_amount ? Number(e.expected_amount) : 0), 0);
-  if (expected <= 0) return null;
   const paid = paidByStudent[studentId] || 0;
-  if (paid >= expected) return 'paid';
-  if (paid > 0) return 'partial';
-  return 'unpaid';
+  if (expected <= 0){
+    // No expected fee set — still surface a real payment instead of hiding
+    // it, same reasoning as the statistics page fix.
+    if (paid > 0) return { status: 'paid', paid, expected: 0 };
+    return null;
+  }
+  if (paid >= expected) return { status: 'paid', paid, expected };
+  if (paid > 0) return { status: 'partial', paid, expected };
+  return { status: 'unpaid', paid, expected };
+}
+
+function paymentStatus(studentId){
+  const info = paymentInfo(studentId);
+  return info ? info.status : null;
 }
 
 function paymentStatusPill(studentId){
-  const status = paymentStatus(studentId);
-  if (!status) return '';
+  const info = paymentInfo(studentId);
+  if (!info) return '';
   const labels = { paid: '🟢 Paye', partial: '🟠 Partiel', unpaid: '🔴 Impaye' };
   const classes = { paid: 'pay-status-paid', partial: 'pay-status-partial', unpaid: 'pay-status-unpaid' };
-  return `<span class="pay-status-pill ${classes[status]}">${labels[status]}</span>`;
+  const amountLine = info.expected > 0
+    ? `${info.paid.toLocaleString('fr-FR')} / ${info.expected.toLocaleString('fr-FR')} MAD`
+    : `${info.paid.toLocaleString('fr-FR')} MAD`;
+  return `
+    <span class="pay-status-pill ${classes[info.status]}">${labels[info.status]}</span>
+    <div class="pay-amount-line">${amountLine}</div>
+  `;
 }
 
 function ageCategory(birthDate){
@@ -477,6 +502,7 @@ function ageCategoryPill(birthDate){
 function renderStudentsTable(){
   const search = document.getElementById('searchInput').value.trim().toLowerCase();
   const subjectFilter = document.getElementById('subjectFilter').value;
+  const paymentFilter = document.getElementById('paymentFilter').value;
   const body = document.getElementById('studentsBody');
   body.innerHTML = '';
 
@@ -488,6 +514,10 @@ function renderStudentsTable(){
     if (subjectFilter){
       const subs = (enrollmentsByStudent[s.id] || []).map(e => e.subject);
       if (!subs.includes(subjectFilter)) return false;
+    }
+    if (paymentFilter){
+      const status = paymentStatus(s.id);
+      if (paymentFilter === 'none' ? status !== null : status !== paymentFilter) return false;
     }
     return true;
   });
@@ -550,6 +580,7 @@ function renderStudentsTable(){
 
 document.getElementById('searchInput').addEventListener('input', renderStudentsTable);
 document.getElementById('subjectFilter').addEventListener('change', renderStudentsTable);
+document.getElementById('paymentFilter').addEventListener('change', renderStudentsTable);
 
 // ---------- form view (new / edit) ----------
 
@@ -956,6 +987,8 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   currentProfile = result.profile;
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
   document.getElementById('newStudentBtn').style.display = canWrite() ? 'inline-block' : 'none';
+  document.getElementById('paymentFilter').style.display =
+    (currentProfile.role === 'admin' || currentProfile.role === 'receptionist') ? 'inline-block' : 'none';
 
   const params = new URLSearchParams(window.location.search);
   const subjectParam = params.get('subject');

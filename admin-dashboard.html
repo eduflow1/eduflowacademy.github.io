@@ -32,10 +32,19 @@
     width:var(--side-w);flex:none;background:linear-gradient(165deg,var(--side-bg-2),var(--side-bg-1));
     border-radius:var(--radius);padding:18px 14px;position:sticky;top:20px;
     box-shadow:0 10px 34px rgba(10,12,16,0.30);
-    transition:width .18s ease;overflow:hidden;
+    transition:width .18s ease;
+    display:flex;flex-direction:column;max-height:calc(100vh - 40px);
   }
   .sidebar.collapsed{width:var(--side-w-collapsed);padding:18px 10px;}
-  @media (max-width:860px){.sidebar{width:100%;position:static;}.sidebar.collapsed{width:100%;}}
+  @media (max-width:860px){.sidebar{width:100%;position:static;max-height:none;}.sidebar.collapsed{width:100%;}}
+
+  .sidebar-nav{
+    overflow-y:auto;flex:1;min-height:0;
+    scrollbar-width:thin;scrollbar-color:#3A4150 transparent;
+  }
+  .sidebar-nav::-webkit-scrollbar{width:6px;}
+  .sidebar-nav::-webkit-scrollbar-thumb{background:#3A4150;border-radius:999px;}
+  .sidebar-nav::-webkit-scrollbar-track{background:transparent;}
 
   .sidebar-head{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
   .brand-mark{
@@ -217,6 +226,7 @@
         <a href="workshops.html" class="sidebar-link" data-label="Ateliers"><span class="ic">🎪</span><span class="txt">Ateliers</span></a>
         <button class="sidebar-link" id="openResultsBtn" data-label="Resultats des tests"><span class="ic">📊</span><span class="txt">Resultats des tests</span></button>
         <a href="statistics.html" class="sidebar-link" data-label="Statistiques"><span class="ic">📈</span><span class="txt">Statistiques</span></a>
+        <a href="diplomas.html" class="sidebar-link" data-label="Diplomes"><span class="ic">🎖️</span><span class="txt">Diplomes</span></a>
         <a href="#messaging" class="sidebar-link" data-label="Notifications"><span class="ic">📨</span><span class="txt">Notifications</span></a>
         <a href="inbox.html" class="sidebar-link" data-label="Declarations de suppression"><span class="ic">📥</span><span class="txt">Declarations de suppression</span><span id="inboxBadge" class="count-badge" style="display:none;margin-left:6px;background:var(--danger);"></span></a>
         <div class="sidebar-divider"></div>
@@ -263,6 +273,12 @@
         <h2>📈 Statistiques</h2>
         <p class="lead">Eleves par matiere, evolution des inscriptions, statut des paiements et repartition par age — avec graphiques.</p>
         <a href="statistics.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Voir les statistiques</a>
+      </div>
+
+      <div class="card card-gold">
+        <h2>🎖️ Diplomes</h2>
+        <p class="lead">Generez et imprimez un diplome pour n'importe quel eleve, dans n'importe quelle matiere — tous les eleves actifs sont charges automatiquement.</p>
+        <a href="diplomas.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Ouvrir les diplomes</a>
       </div>
 
       <div class="card card-blue accounts-compact" id="messaging">
