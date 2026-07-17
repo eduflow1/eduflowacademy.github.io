@@ -9,6 +9,8 @@
   :root{
     --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
     --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+    --accent:#5B67F1; --accent-dark:#4650D6;
+    --side-bg-1:#161A23; --side-bg-2:#1E2430; --side-w:230px; --side-w-collapsed:76px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -27,22 +29,62 @@
   @media (max-width:860px){.app-shell{flex-direction:column;}}
 
   .sidebar{
-    width:230px;flex:none;background:#20242B;border-radius:var(--radius);
-    padding:22px 16px;position:sticky;top:20px;
-    box-shadow:0 10px 34px rgba(20,22,26,0.25);
+    width:var(--side-w);flex:none;background:linear-gradient(165deg,var(--side-bg-2),var(--side-bg-1));
+    border-radius:var(--radius);padding:18px 14px;position:sticky;top:20px;
+    box-shadow:0 10px 34px rgba(10,12,16,0.30);
+    transition:width .18s ease;overflow:hidden;
   }
-  @media (max-width:860px){.sidebar{width:100%;position:static;}}
-  .sidebar-brand .brand-name{color:#fff;font-size:1.05rem;font-weight:700;}
-  .sidebar-brand .brand-sub{color:#9AA5B1;font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
-  .sidebar-who{color:#9AA5B1;font-size:0.78rem;margin:14px 0;padding-bottom:14px;border-bottom:1px solid #333A45;}
-  .sidebar-nav{display:flex;flex-direction:column;gap:3px;}
+  .sidebar.collapsed{width:var(--side-w-collapsed);padding:18px 10px;}
+  @media (max-width:860px){.sidebar{width:100%;position:static;}.sidebar.collapsed{width:100%;}}
+
+  .sidebar-head{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .brand-mark{
+    flex:none;width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--blue));
+    color:#fff;font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    display:flex;align-items:center;justify-content:center;letter-spacing:-0.02em;
+  }
+  .sidebar-brand{min-width:0;overflow:hidden;}
+  .sidebar-brand .brand-name{color:#fff;font-size:0.98rem;font-weight:700;white-space:nowrap;}
+  .sidebar-brand .brand-sub{color:#8A94A6;font-size:0.68rem;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;white-space:nowrap;}
+  .sidebar.collapsed .sidebar-brand{display:none;}
+
+  .sidebar-toggle{
+    flex:none;margin-left:auto;width:24px;height:24px;border-radius:7px;border:1px solid #333A45;
+    background:#242A35;color:#9AA5B1;cursor:pointer;font-size:0.8rem;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sidebar-toggle:hover{background:#2C333F;color:#fff;}
+  .sidebar.collapsed .sidebar-toggle{margin-left:0;}
+
+  .sidebar-who{
+    color:#8A94A6;font-size:0.76rem;margin:12px 0;padding-bottom:12px;border-bottom:1px solid #2A303B;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .sidebar.collapsed .sidebar-who{display:none;}
+
+  .sidebar-nav{display:flex;flex-direction:column;gap:2px;}
   .sidebar-link{
-    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
-    color:#C7CDD6;text-decoration:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.86rem;
-    background:none;border:none;cursor:pointer;text-align:left;width:100%;
+    position:relative;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;
+    color:#B7BFCC;text-decoration:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.83rem;
+    background:none;border:none;cursor:pointer;text-align:left;width:100%;white-space:nowrap;
   }
-  .sidebar-link:hover{background:#2C313A;color:#fff;}
-  .sidebar-divider{height:1px;background:#333A45;margin:10px 4px;}
+  .sidebar-link .ic{flex:none;width:20px;text-align:center;font-size:0.98rem;}
+  .sidebar-link .txt{overflow:hidden;text-overflow:ellipsis;}
+  .sidebar.collapsed .sidebar-link{justify-content:center;padding:10px 0;}
+  .sidebar.collapsed .sidebar-link .txt{display:none;}
+  .sidebar-link:hover{background:#262C38;color:#fff;}
+  .sidebar-link.active{background:rgba(91,103,241,0.18);color:#fff;}
+  .sidebar-link.active::before{
+    content:'';position:absolute;left:-10px;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--accent);
+  }
+  .sidebar.collapsed .sidebar-link.active::before{left:0;}
+  .sidebar.collapsed .sidebar-link[data-label]:hover::after{
+    content:attr(data-label);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
+    background:#1A1E27;color:#fff;padding:6px 10px;border-radius:8px;font-size:0.78rem;white-space:nowrap;
+    box-shadow:0 6px 18px rgba(0,0,0,0.35);z-index:20;pointer-events:none;
+  }
+  .sidebar-divider{height:1px;background:#2A303B;margin:9px 4px;}
 
   .main-area{flex:1;min-width:0;}
   .table-scroll{overflow-x:auto;}
@@ -84,6 +126,9 @@
   .msg-compose{display:flex;flex-direction:column;gap:4px;max-width:520px;}
   .msg-compose label{font-size:0.78rem;font-weight:700;color:#7A7B7D;margin-top:8px;}
   .msg-compose select{align-self:flex-start;}
+  .msg-compose-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .msg-compose-row select{flex:none;width:auto;}
+  .msg-compose-row input{flex:1;min-width:200px;}
   .sent-msg-row{padding:12px 0;border-bottom:1px solid var(--line);}
   .sent-msg-row:last-child{border-bottom:none;}
   .sent-msg-row .name{font-weight:700;}
@@ -129,37 +174,57 @@
   }
 
   .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+
+  .accounts-compact{padding:16px 20px;}
+  .accounts-compact h2{font-size:1rem;margin-bottom:2px;}
+  .accounts-compact .lead{font-size:0.82rem;margin-bottom:10px;}
+  .accounts-compact .pending-row{padding:9px 0;gap:8px;}
+  .accounts-compact table.accounts-table{font-size:0.8rem;}
+  .accounts-compact table.accounts-table th{padding:6px 8px;font-size:0.68rem;}
+  .accounts-compact table.accounts-table td{padding:6px 8px;}
+  .accounts-compact .table-scroll{max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;}
+  .accounts-compact #searchInput{margin-bottom:10px;padding:6px 10px;font-size:0.82rem;}
+  .btn-toggle-accounts{
+    margin-left:auto;font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.72rem;
+    border:1.5px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer;
+    background:#fff;color:var(--blue-dark);
+  }
+  .btn-toggle-accounts:hover{border-color:var(--blue);}
 </style>
 </head>
 <body>
 
 <div class="wrap" id="app" style="display:none;">
   <div class="app-shell">
-    <nav class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-name">Edu Flow Academy</div>
-        <div class="brand-sub">Administration</div>
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="brand-mark">EF</div>
+        <div class="sidebar-brand">
+          <div class="brand-name">Edu Flow Academy</div>
+          <div class="brand-sub">Administration</div>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" title="Reduire / agrandir le menu">‹</button>
       </div>
       <div class="sidebar-who" id="whoLabel"></div>
       <div class="sidebar-nav">
-        <a href="#accounts" class="sidebar-link">👤 Comptes</a>
-        <a href="students.html" class="sidebar-link">🎓 Eleves</a>
-        <a href="classes.html" class="sidebar-link">📚 Classes</a>
-        <a href="timetable.html" class="sidebar-link">🗓️ Emploi du temps</a>
-        <a href="attendance.html" class="sidebar-link">✅ Presence</a>
-        <a href="payments.html" class="sidebar-link">💳 Paiements eleves</a>
-        <a href="staff-payments.html" class="sidebar-link">💰 Salaires</a>
-        <a href="workshops.html" class="sidebar-link">🎪 Ateliers</a>
-        <button class="sidebar-link" id="openResultsBtn">📊 Resultats des tests</button>
-        <a href="statistics.html" class="sidebar-link">📈 Statistiques</a>
-        <a href="#messaging" class="sidebar-link">📨 Notifications</a>
-        <a href="inbox.html" class="sidebar-link">📥 Declarations de suppression<span id="inboxBadge" class="count-badge" style="display:none;margin-left:6px;background:var(--danger);"></span></a>
+        <a href="#accounts" class="sidebar-link" data-label="Comptes"><span class="ic">👤</span><span class="txt">Comptes</span></a>
+        <a href="students.html" class="sidebar-link" data-label="Eleves"><span class="ic">🎓</span><span class="txt">Eleves</span></a>
+        <a href="classes.html" class="sidebar-link" data-label="Classes"><span class="ic">📚</span><span class="txt">Classes</span></a>
+        <a href="timetable.html" class="sidebar-link" data-label="Emploi du temps"><span class="ic">🗓️</span><span class="txt">Emploi du temps</span></a>
+        <a href="attendance.html" class="sidebar-link" data-label="Presence"><span class="ic">✅</span><span class="txt">Presence</span></a>
+        <a href="payments.html" class="sidebar-link" data-label="Paiements eleves"><span class="ic">💳</span><span class="txt">Paiements eleves</span></a>
+        <a href="staff-payments.html" class="sidebar-link" data-label="Salaires"><span class="ic">💰</span><span class="txt">Salaires</span></a>
+        <a href="workshops.html" class="sidebar-link" data-label="Ateliers"><span class="ic">🎪</span><span class="txt">Ateliers</span></a>
+        <button class="sidebar-link" id="openResultsBtn" data-label="Resultats des tests"><span class="ic">📊</span><span class="txt">Resultats des tests</span></button>
+        <a href="statistics.html" class="sidebar-link" data-label="Statistiques"><span class="ic">📈</span><span class="txt">Statistiques</span></a>
+        <a href="#messaging" class="sidebar-link" data-label="Notifications"><span class="ic">📨</span><span class="txt">Notifications</span></a>
+        <a href="inbox.html" class="sidebar-link" data-label="Declarations de suppression"><span class="ic">📥</span><span class="txt">Declarations de suppression</span><span id="inboxBadge" class="count-badge" style="display:none;margin-left:6px;background:var(--danger);"></span></a>
         <div class="sidebar-divider"></div>
-        <a href="staff-dashboard.html" class="sidebar-link">👩‍🏫 Espace enseignant</a>
-        <a href="reception-dashboard.html" class="sidebar-link">💁 Espace reception</a>
+        <a href="staff-dashboard.html" class="sidebar-link" data-label="Espace enseignant"><span class="ic">👩‍🏫</span><span class="txt">Espace enseignant</span></a>
+        <a href="reception-dashboard.html" class="sidebar-link" data-label="Espace reception"><span class="ic">💁</span><span class="txt">Espace reception</span></a>
         <div class="sidebar-divider"></div>
-        <a href="index.html" class="sidebar-link">🏠 Accueil</a>
-        <button class="sidebar-link" id="logoutBtn">🚪 Deconnexion</button>
+        <a href="index.html" class="sidebar-link" data-label="Accueil"><span class="ic">🏠</span><span class="txt">Accueil</span></a>
+        <button class="sidebar-link" id="logoutBtn" data-label="Deconnexion"><span class="ic">🚪</span><span class="txt">Deconnexion</span></button>
       </div>
     </nav>
 
@@ -200,25 +265,31 @@
         <a href="statistics.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Voir les statistiques</a>
       </div>
 
-      <div class="card card-blue" id="messaging">
+      <div class="card card-blue accounts-compact" id="messaging">
         <h2>📨 Notifications au personnel</h2>
-        <p class="lead">Envoyer un message a la reception, au personnel enseignant, ou aux deux — chacun le voit dans sa boite de reception. Envoi par SMS pas encore actif (necessite un fournisseur SMS payant) — les numeros de telephone sont deja collectes a l'inscription et prets pour quand vous en aurez un.</p>
-        <div class="msg-compose">
-          <label for="msgTargetRole">Destinataires</label>
+        <p class="lead">SMS pas encore actif — envoi via la boite de reception de chacun uniquement.</p>
+        <div class="msg-compose-row">
           <select id="msgTargetRole">
             <option value="all">Tout le personnel</option>
             <option value="staff">Personnel enseignant</option>
             <option value="receptionist">Reception</option>
           </select>
-          <label for="msgSubject">Sujet</label>
-          <input type="text" id="msgSubject" placeholder="Ex. : Reunion vendredi">
-          <label for="msgBody">Message</label>
-          <textarea id="msgBody" rows="4" placeholder="Votre message..."></textarea>
-          <button class="btn-sm btn-approve" id="sendMsgBtn" style="margin-top:12px;align-self:flex-start;">Envoyer</button>
+          <input type="text" id="msgSubject" placeholder="Sujet, ex. : Reunion vendredi">
         </div>
-        <h3 style="font-size:0.92rem;margin:22px 0 4px;">Messages envoyes</h3>
-        <div id="sentMessagesList"></div>
-        <div class="empty-msg" id="sentMessagesEmpty" style="display:none;">Aucun message envoye.</div>
+        <textarea id="msgBody" rows="2" placeholder="Votre message..." style="width:100%;margin-top:6px;"></textarea>
+        <button class="btn-sm btn-approve" id="sendMsgBtn" style="margin-top:8px;">Envoyer</button>
+
+        <div style="display:flex;align-items:center;gap:10px;margin:16px 0 0;">
+          <h3 style="font-size:0.86rem;margin:0;">Messages envoyes <span class="count-badge" id="sentMsgCount">0</span></h3>
+          <button class="btn-toggle-accounts" id="toggleSentMsgBtn">Afficher</button>
+        </div>
+        <div id="sentMessagesPanel" style="display:none;margin-top:8px;">
+          <div style="text-align:right;margin-bottom:6px;">
+            <button class="btn-sm btn-reject" id="deleteAllMsgBtn" style="font-size:0.72rem;padding:5px 12px;">Tout supprimer</button>
+          </div>
+          <div id="sentMessagesList"></div>
+          <div class="empty-msg" id="sentMessagesEmpty" style="display:none;">Aucun message envoye.</div>
+        </div>
       </div>
 
       <div class="card">
@@ -238,23 +309,26 @@
         </div>
       </div>
 
-      <div class="card card-blue" id="accounts">
+      <div class="card card-blue accounts-compact" id="accounts">
         <h2>Comptes en attente <span class="count-badge" id="pendingCount">0</span></h2>
         <p class="lead">Nouvelles inscriptions a valider avant qu'elles puissent se connecter.</p>
         <div id="pendingList"></div>
         <div class="empty-msg" id="pendingEmpty" style="display:none;">Aucun compte en attente.</div>
       </div>
 
-      <div class="card card-blue">
-        <h2>Tous les comptes</h2>
-        <input type="text" id="searchInput" placeholder="Rechercher par nom ou email...">
-        <div class="table-scroll">
-          <table class="accounts-table">
-            <thead>
-              <tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Statut</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="accountsBody"></tbody>
-          </table>
+      <div class="card card-blue accounts-compact">
+        <h2>Tous les comptes <span class="count-badge" id="allAccountsCount">0</span><button class="btn-toggle-accounts" id="toggleAccountsBtn">Afficher</button></h2>
+        <p class="lead">Recherche, roles et statut de tous les comptes.</p>
+        <div id="accountsPanel" style="display:none;">
+          <input type="text" id="searchInput" placeholder="Rechercher par nom ou email...">
+          <div class="table-scroll">
+            <table class="accounts-table">
+              <thead>
+                <tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Statut</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="accountsBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -369,8 +443,9 @@ function renderAccounts(){
   const body = document.getElementById('accountsBody');
   body.innerHTML = '';
 
-  const visible = allProfiles
-    .filter(p => p.role !== 'pending' || p.status !== 'active')
+  const allVisible = allProfiles.filter(p => p.role !== 'pending' || p.status !== 'active');
+  document.getElementById('allAccountsCount').textContent = allVisible.length;
+  const visible = allVisible
     .filter(p => !search || (p.full_name||'').toLowerCase().includes(search) || (p.email||'').toLowerCase().includes(search));
 
   visible.forEach(p => {
@@ -471,17 +546,32 @@ async function loadSentMessages(){
   if (error){ return; }
   const list = document.getElementById('sentMessagesList');
   const empty = document.getElementById('sentMessagesEmpty');
+  document.getElementById('sentMsgCount').textContent = (data||[]).length;
   list.innerHTML = '';
   empty.style.display = (data && data.length) ? 'none' : 'block';
   (data||[]).forEach(m => {
     const row = document.createElement('div');
     row.className = 'sent-msg-row';
     row.innerHTML = `
-      <div class="name">${m.subject}</div>
-      <div class="meta">${MSG_TARGET_LABELS[m.target_role] || m.target_role} · ${fmtDate(m.created_at)}</div>
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <div class="name">${m.subject}</div>
+          <div class="meta">${MSG_TARGET_LABELS[m.target_role] || m.target_role} · ${fmtDate(m.created_at)}</div>
+        </div>
+        <button class="btn-sm btn-reject delete-msg-btn" data-id="${m.id}" style="font-size:0.72rem;padding:5px 10px;">Supprimer</button>
+      </div>
       <div class="body-text">${m.body}</div>
     `;
     list.appendChild(row);
+  });
+  list.querySelectorAll('.delete-msg-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Supprimer cette notification ? Elle disparaitra de la boite de reception de tous les destinataires.')) return;
+      btn.disabled = true;
+      const { error } = await eduflowClient.from('messages').delete().eq('id', btn.dataset.id);
+      if (error){ alert('Erreur : ' + error.message); btn.disabled = false; return; }
+      await loadSentMessages();
+    });
   });
 }
 
@@ -500,8 +590,47 @@ document.getElementById('sendMsgBtn').addEventListener('click', async () => {
   await loadSentMessages();
 });
 
+document.getElementById('deleteAllMsgBtn').addEventListener('click', async () => {
+  if (!confirm('Supprimer TOUTES les notifications envoyees ? Cette action est irreversible.')) return;
+  const btn = document.getElementById('deleteAllMsgBtn');
+  btn.disabled = true;
+  const { error } = await eduflowClient.from('messages').delete().not('id', 'is', null);
+  btn.disabled = false;
+  if (error){ alert('Erreur : ' + error.message); return; }
+  await loadSentMessages();
+});
+
 document.getElementById('searchInput').addEventListener('input', renderAccounts);
 document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+document.getElementById('toggleAccountsBtn').addEventListener('click', () => {
+  const panel = document.getElementById('accountsPanel');
+  const btn = document.getElementById('toggleAccountsBtn');
+  const show = panel.style.display === 'none';
+  panel.style.display = show ? 'block' : 'none';
+  btn.textContent = show ? 'Masquer' : 'Afficher';
+});
+
+document.getElementById('toggleSentMsgBtn').addEventListener('click', () => {
+  const panel = document.getElementById('sentMessagesPanel');
+  const btn = document.getElementById('toggleSentMsgBtn');
+  const show = panel.style.display === 'none';
+  panel.style.display = show ? 'block' : 'none';
+  btn.textContent = show ? 'Masquer' : 'Afficher';
+});
+
+// Sidebar collapse/expand, persisted so the choice sticks across visits.
+(function initSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('sidebarToggle');
+  const collapsed = localStorage.getItem('eduflow_sidebar_collapsed') === '1';
+  if (collapsed){ sidebar.classList.add('collapsed'); toggle.textContent = '›'; }
+  toggle.addEventListener('click', () => {
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    toggle.textContent = isCollapsed ? '›' : '‹';
+    localStorage.setItem('eduflow_sidebar_collapsed', isCollapsed ? '1' : '0');
+  });
+})();
 
 // Admin is already authenticated through the real login system, so skip the
 // legacy shared-passphrase gate on the results archive rather than asking

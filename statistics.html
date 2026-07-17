@@ -80,6 +80,18 @@
   .trend-down{color:var(--danger);}
   .trend-flat{color:#9A9B9C;}
 
+  #paymentSearchInput{width:100%;margin-bottom:12px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);}
+  #paymentSearchInput:focus{outline:none;border-color:var(--blue);}
+  .table-scroll{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;}
+  table.payments-table{width:100%;border-collapse:collapse;font-size:0.84rem;min-width:560px;}
+  table.payments-table th{
+    position:sticky;top:0;background:#FAFBFB;text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:.04em;
+    color:#9A9B9C;padding:9px 12px;border-bottom:1.5px solid var(--line);
+  }
+  table.payments-table td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  table.payments-table tr:last-child td{border-bottom:none;}
+  .method-pill{display:inline-block;font-size:0.7rem;font-weight:700;border-radius:999px;padding:2px 9px;background:#F0F4F3;color:#6C7A76;}
+
   .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
 </style>
 </head>
@@ -119,6 +131,7 @@
           <div class="kpi-card"><div class="num" id="kpiClasses">—</div><div class="lbl">Classes actives</div></div>
           <div class="kpi-card"><div class="num" id="kpiCollected">—</div><div class="lbl">Encaisse (MAD)</div></div>
           <div class="kpi-card"><div class="num" id="kpiRate">—</div><div class="lbl">Taux de recouvrement</div></div>
+          <div class="kpi-card"><div class="num" id="kpiPaymentCount">—</div><div class="lbl">Paiements enregistres</div></div>
         </div>
       </div>
 
@@ -139,6 +152,33 @@
         <h2>Statut des paiements</h2>
         <p class="lead">Repartition des eleves selon leur statut de paiement.</p>
         <div class="chart-box"><canvas id="paymentDonutChart"></canvas></div>
+      </div>
+
+      <div class="card card-gold">
+        <h2>Paiements encaisses par mois</h2>
+        <p class="lead">Montant total encaisse, 6 derniers mois.</p>
+        <div class="chart-box"><canvas id="paymentMonthlyChart"></canvas></div>
+      </div>
+
+      <div class="card card-gold">
+        <h2>Paiements par methode</h2>
+        <p class="lead">Montant total encaisse, par moyen de paiement.</p>
+        <div class="chart-box"><canvas id="paymentMethodChart"></canvas></div>
+      </div>
+
+      <div class="card card-gold">
+        <h2>Historique des paiements <span class="count-badge" id="paymentHistoryCount" style="background:var(--blue);color:#fff;font-size:0.72rem;font-weight:700;border-radius:999px;padding:2px 9px;">0</span></h2>
+        <p class="lead">Detail de tous les paiements valides enregistres.</p>
+        <input type="text" id="paymentSearchInput" placeholder="Rechercher par eleve, matiere ou periode...">
+        <div class="table-scroll">
+          <table class="payments-table">
+            <thead>
+              <tr><th>Eleve</th><th>Montant</th><th>Methode</th><th>Matiere</th><th>Periode</th><th>Date</th></tr>
+            </thead>
+            <tbody id="paymentHistoryBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-msg" id="paymentHistoryEmpty" style="display:none;color:#9A9B9C;font-size:0.88rem;padding:16px 0;text-align:center;">Aucun paiement enregistre.</div>
       </div>
 
       <div class="card">
@@ -171,7 +211,7 @@ async function loadStats(){
     eduflowClient.from('students').select('id, birth_date, status'),
     eduflowClient.from('enrollments').select('id, student_id, class_id, status, enrolled_at, expected_amount, classes(subject)'),
     eduflowClient.from('classes').select('id, subject, status').eq('status', 'active'),
-    eduflowClient.from('payments').select('student_id, amount, status')
+    eduflowClient.from('payments').select('id, student_id, amount, method, subject, period, paid_at, status, students(full_name, student_code)').order('paid_at', { ascending: false })
   ]);
   if (sErr || eErr || cErr || pErr){
     alert('Erreur de chargement des statistiques : ' + (sErr||eErr||cErr||pErr).message);
@@ -186,10 +226,12 @@ async function loadStats(){
   document.getElementById('kpiStudents').textContent = activeStudents.length;
   document.getElementById('kpiClasses').textContent = activeClasses.length;
 
+  const activePayments = (payments||[]).filter(p=>p.status==='active');
   const totalExpected = activeEnrollments.reduce((sum,e)=> sum + (e.expected_amount ? Number(e.expected_amount) : 0), 0);
-  const totalPaid = (payments||[]).filter(p=>p.status==='active').reduce((sum,p)=> sum + Number(p.amount), 0);
+  const totalPaid = activePayments.reduce((sum,p)=> sum + Number(p.amount), 0);
   document.getElementById('kpiCollected').textContent = totalPaid.toLocaleString('fr-FR') + ' MAD';
   document.getElementById('kpiRate').textContent = totalExpected > 0 ? Math.round(Math.min(totalPaid/totalExpected,1)*100) + '%' : '—';
+  document.getElementById('kpiPaymentCount').textContent = activePayments.length;
 
   // ---- Students per subject (distinct students) ----
   const studentsBySubject = {};
@@ -237,6 +279,32 @@ async function loadStats(){
   });
   const trendSubjects = Object.keys(trendData).sort();
 
+  // ---- Monthly payments collected, last 6 months ----
+  const paidByMonth = {};
+  activePayments.forEach(p => {
+    if (!p.paid_at) return;
+    const key = monthKey(new Date(p.paid_at + 'T00:00:00'));
+    if (!months.includes(key)) return;
+    paidByMonth[key] = (paidByMonth[key] || 0) + Number(p.amount);
+  });
+  new Chart(document.getElementById('paymentMonthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: months.map(monthLabel),
+      datasets: [{
+        label: 'Encaisse (MAD)',
+        data: months.map(m => paidByMonth[m] || 0),
+        backgroundColor: '#D9A441',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
   new Chart(document.getElementById('trendLineChart'), {
     type: 'line',
     data: {
@@ -283,14 +351,20 @@ async function loadStats(){
     expectedByStudent[e.student_id] = (expectedByStudent[e.student_id] || 0) + (e.expected_amount ? Number(e.expected_amount) : 0);
   });
   const paidByStudent = {};
-  (payments||[]).filter(p=>p.status==='active').forEach(p => {
+  activePayments.forEach(p => {
     paidByStudent[p.student_id] = (paidByStudent[p.student_id] || 0) + Number(p.amount);
   });
   let paidCount = 0, partialCount = 0, unpaidCount = 0, noneCount = 0;
   activeStudents.forEach(s => {
     const expected = expectedByStudent[s.id] || 0;
-    if (expected <= 0){ noneCount++; return; }
     const paid = paidByStudent[s.id] || 0;
+    if (expected <= 0){
+      // No expected fee set yet — still count a student who has actually
+      // paid something as "Paye" instead of hiding their payment under
+      // "Pas de frais defini", so every logged payment shows up somewhere.
+      if (paid > 0) paidCount++; else noneCount++;
+      return;
+    }
     if (paid >= expected) paidCount++;
     else if (paid > 0) partialCount++;
     else unpaidCount++;
@@ -307,6 +381,67 @@ async function loadStats(){
     },
     options: { responsive: true, maintainAspectRatio: false }
   });
+
+  // ---- Payments by method ----
+  const METHOD_LABELS = { especes:'Especes', carte:'Carte', virement:'Virement', autre:'Autre' };
+  const amountByMethod = {};
+  activePayments.forEach(p => {
+    const key = p.method || 'autre';
+    amountByMethod[key] = (amountByMethod[key] || 0) + Number(p.amount);
+  });
+  const methodKeys = Object.keys(amountByMethod).sort();
+  new Chart(document.getElementById('paymentMethodChart'), {
+    type: 'bar',
+    data: {
+      labels: methodKeys.map(k => METHOD_LABELS[k] || k),
+      datasets: [{
+        label: 'Montant (MAD)',
+        data: methodKeys.map(k => amountByMethod[k]),
+        backgroundColor: '#D9A441',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // ---- Full payment history table ----
+  function fmtPaymentDate(iso){
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('fr-FR', { year:'numeric', month:'short', day:'numeric' });
+  }
+  document.getElementById('paymentHistoryCount').textContent = activePayments.length;
+  function renderPaymentHistory(){
+    const search = document.getElementById('paymentSearchInput').value.trim().toLowerCase();
+    const body = document.getElementById('paymentHistoryBody');
+    const empty = document.getElementById('paymentHistoryEmpty');
+    body.innerHTML = '';
+    const visible = activePayments.filter(p => {
+      if (!search) return true;
+      const name = (p.students?.full_name || '').toLowerCase();
+      const subj = (p.subject || '').toLowerCase();
+      const period = (p.period || '').toLowerCase();
+      return name.includes(search) || subj.includes(search) || period.includes(search);
+    });
+    empty.style.display = visible.length ? 'none' : 'block';
+    visible.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.students?.full_name || '—'}</td>
+        <td>${Number(p.amount).toLocaleString('fr-FR')} MAD</td>
+        <td><span class="method-pill">${METHOD_LABELS[p.method] || p.method || '—'}</span></td>
+        <td>${p.subject ? (EDUFLOW_SUBJECT_LABELS[p.subject] || p.subject) : '—'}</td>
+        <td>${p.period || '—'}</td>
+        <td>${fmtPaymentDate(p.paid_at)}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+  renderPaymentHistory();
+  document.getElementById('paymentSearchInput').addEventListener('input', renderPaymentHistory);
 
   // ---- Age category distribution ----
   function ageCategory(birthDate){

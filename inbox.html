@@ -66,6 +66,19 @@
   }
   .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:16px 0;text-align:center;}
   .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+  .btn-delete-msg{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.72rem;
+    border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:#fff;background:var(--danger);
+    flex:none;
+  }
+  .btn-delete-msg:hover{opacity:0.88;}
+  .btn-delete-all{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.78rem;
+    border:1.5px solid var(--danger);border-radius:12px;padding:7px 14px;cursor:pointer;
+    background:#fff;color:var(--danger);margin-left:auto;
+  }
+  .btn-delete-all:hover{background:var(--danger);color:#fff;}
+  .card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 </style>
 </head>
 <body>
@@ -81,7 +94,10 @@
   </div>
 
   <div class="card">
-    <h2>📨 Boite de reception</h2>
+    <div class="card-head">
+      <h2>📨 Boite de reception</h2>
+      <button class="btn-delete-all" id="deleteAllBtn" style="display:none;">Tout supprimer</button>
+    </div>
     <p class="lead">Messages envoyes par l'administration. Cliquez pour ouvrir.</p>
     <div id="msgList"></div>
     <div class="empty-msg" id="msgEmpty" style="display:none;">Aucun message pour le moment.</div>
@@ -96,6 +112,7 @@
 let myId = null;
 let myRole = null;
 let readIds = new Set();
+let currentRelevantIds = [];
 
 const TARGET_LABELS = { all: 'Tout le personnel', staff: 'Personnel enseignant', receptionist: 'Reception', admin: 'Administration' };
 
@@ -115,6 +132,7 @@ async function loadMessages(){
   // role); this personal inbox should only show what's actually addressed
   // to this viewer, same as staff/receptionist already get from RLS.
   const relevant = (messages||[]).filter(m => m.target_role === myRole || m.target_role === 'all');
+  currentRelevantIds = relevant.map(m => m.id);
 
   const list = document.getElementById('msgList');
   const empty = document.getElementById('msgEmpty');
@@ -129,6 +147,7 @@ async function loadMessages(){
       <div class="msg-top">
         <div class="msg-subject">${isUnread ? '<span class="unread-dot"></span>' : ''}${m.subject}</div>
         <span class="target-pill">${TARGET_LABELS[m.target_role] || m.target_role}</span>
+        ${myRole === 'admin' ? `<button class="btn-delete-msg" data-id="${m.id}">Supprimer</button>` : ''}
       </div>
       <div class="msg-meta">${fmtDate(m.created_at)}</div>
       <div class="msg-body">${m.body}</div>
@@ -142,11 +161,33 @@ async function loadMessages(){
         await eduflowClient.from('message_reads').insert({ message_id: m.id, reader_id: myId });
       }
     });
+    row.querySelector('.btn-delete-msg')?.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      if (!confirm('Supprimer cette notification pour tout le monde ?')) return;
+      const { error } = await eduflowClient.from('messages').delete().eq('id', m.id);
+      if (error){ alert('Erreur : ' + error.message); return; }
+      await loadMessages();
+    });
     list.appendChild(row);
   });
+
+  const deleteAllBtn = document.getElementById('deleteAllBtn');
+  if (myRole === 'admin' && relevant.length){
+    deleteAllBtn.style.display = 'inline-block';
+  } else {
+    deleteAllBtn.style.display = 'none';
+  }
 }
 
 document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+document.getElementById('deleteAllBtn').addEventListener('click', async () => {
+  if (!currentRelevantIds.length) return;
+  if (!confirm(`Supprimer les ${currentRelevantIds.length} notifications affichees ici ? Cette action est irreversible.`)) return;
+  const { error } = await eduflowClient.from('messages').delete().in('id', currentRelevantIds);
+  if (error){ alert('Erreur : ' + error.message); return; }
+  await loadMessages();
+});
 
 (async () => {
   const result = await eduflowRequireRole(['staff', 'receptionist', 'admin']);
