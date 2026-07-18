@@ -54,6 +54,29 @@
   }
   #searchInput:focus{outline:none;border-color:var(--blue);}
 
+  .card-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .card-head-row h2{margin:0;}
+  label{display:block;font-weight:600;font-size:0.82rem;margin-bottom:5px;color:var(--ink);}
+  .field{margin-bottom:14px;}
+  input[type=text]{
+    width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:0.9rem;background:#FAFBFB;color:var(--ink);
+  }
+  input[type=text]:focus{outline:none;border-color:var(--blue);}
+  .form-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+  .table-scroll{overflow-x:auto;}
+  table.history-table{width:100%;border-collapse:collapse;font-size:0.86rem;}
+  table.history-table th{
+    text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:.04em;
+    color:#9A9B9C;padding:8px 10px;border-bottom:1.5px solid var(--line);
+  }
+  table.history-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  table.history-table tr:last-child td{border-bottom:none;}
+  .history-actions{display:flex;gap:4px;}
+  .btn-icon{border:none;background:none;cursor:pointer;font-size:1rem;padding:5px 8px;border-radius:8px;line-height:1;}
+  .btn-icon:hover{background:#F0F3F2;}
+
   .student-row{
     display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;
     padding:16px 0;border-bottom:1px solid var(--line);
@@ -180,11 +203,43 @@
   <!-- LIST VIEW -->
   <div id="listView">
     <div class="card">
-      <h2>🎖️ Diplomes <span class="count-badge" id="studentCount">0</span></h2>
+      <div class="card-head-row">
+        <h2>🎖️ Diplomes <span class="count-badge" id="studentCount">0</span></h2>
+        <button class="btn-sm" id="addStudentBtn">➕ Ajouter un eleve</button>
+      </div>
       <p class="lead">Tous les eleves actifs et leurs matieres — generez et imprimez un diplome en un clic.</p>
       <input type="text" id="searchInput" placeholder="Rechercher par nom ou code eleve...">
       <div id="studentList"></div>
       <div class="empty-msg" id="studentEmpty" style="display:none;">Aucun eleve ne correspond a cette recherche.</div>
+    </div>
+
+    <div class="card" id="addStudentCard" style="display:none;">
+      <h2>➕ Ajouter un eleve</h2>
+      <p class="lead">Pour un eleve absent de la liste ci-dessus — saisissez son nom et la matiere/formation a indiquer sur le diplome.</p>
+      <div class="field">
+        <label for="addStudentName">Nom complet</label>
+        <input type="text" id="addStudentName" placeholder="Ex. : Yassine El Amrani">
+      </div>
+      <div class="field">
+        <label for="addStudentSubject">Matiere / formation</label>
+        <input type="text" id="addStudentSubject" placeholder="Ex. : Anglais General">
+      </div>
+      <div class="form-actions">
+        <button class="btn-sm" id="addStudentGenerateBtn">🎖️ Generer le diplome</button>
+        <button class="btn-sm btn-ghost" id="addStudentCancelBtn">Annuler</button>
+      </div>
+    </div>
+
+    <div class="card" id="historyCard">
+      <h2>📜 Historique des diplomes <span class="count-badge" id="historyCount">0</span></h2>
+      <p class="lead">Diplomes deja imprimes — reimprimez ou supprimez une entree.</p>
+      <div class="table-scroll">
+        <table class="history-table">
+          <thead><tr><th>Eleve</th><th>Matiere</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-msg" id="historyEmpty" style="display:none;">Aucun diplome imprime pour l'instant.</div>
     </div>
   </div>
 
@@ -259,6 +314,9 @@
 <script>
 let allStudents = [];
 let enrollmentsByStudent = {}; // student_id -> [{subject}] deduped
+let diplomaHistory = [];
+let pendingDiplomaRecord = null; // set when a diploma is opened; logged to history on print
+let currentAdminId = null;
 
 function fmtDateLong(d){
   return d.toLocaleDateString('fr-FR', { year:'numeric', month:'long', day:'numeric' });
@@ -339,13 +397,117 @@ function openDiploma(student, subjectCode){
   document.getElementById('listView').style.display = 'none';
   document.getElementById('diplomaView').style.display = 'block';
   window.scrollTo(0, 0);
+  pendingDiplomaRecord = { student_id: student.id, student_name: student.full_name, subject_code: subjectCode, subject_label: label };
+}
+
+function openDiplomaCustom(name, label){
+  document.getElementById('diplomaStage').style.setProperty('--diploma-color', '#3FAEDD');
+  document.getElementById('diplomaIcon').textContent = '🎓';
+  document.getElementById('diplomaName').textContent = name;
+  document.getElementById('diplomaSubject').textContent = label;
+  document.getElementById('diplomaDate').textContent = 'Delivre le ' + fmtDateLong(new Date());
+  document.getElementById('listView').style.display = 'none';
+  document.getElementById('diplomaView').style.display = 'block';
+  window.scrollTo(0, 0);
+  pendingDiplomaRecord = { student_id: null, student_name: name, subject_code: null, subject_label: label };
+}
+
+function reprintDiploma(rec){
+  const theme = rec.subject_code ? subjectTheme(rec.subject_code) : { color:'#3FAEDD', icon:'🎓' };
+  document.getElementById('diplomaStage').style.setProperty('--diploma-color', theme.color);
+  document.getElementById('diplomaIcon').textContent = theme.icon;
+  document.getElementById('diplomaName').textContent = rec.student_name;
+  document.getElementById('diplomaSubject').textContent = rec.subject_label;
+  document.getElementById('diplomaDate').textContent = 'Delivre le ' + fmtDateLong(new Date(rec.issued_at));
+  document.getElementById('listView').style.display = 'none';
+  document.getElementById('diplomaView').style.display = 'block';
+  window.scrollTo(0, 0);
+  pendingDiplomaRecord = null; // already logged — reprinting shouldn't add a duplicate history row
+}
+
+async function loadHistory(){
+  const { data, error } = await eduflowClient
+    .from('diplomas').select('*').order('issued_at', { ascending:false }).limit(200);
+  if (error){ console.error(error); return; }
+  diplomaHistory = data || [];
+  renderHistory();
+}
+
+function renderHistory(){
+  const body = document.getElementById('historyBody');
+  const empty = document.getElementById('historyEmpty');
+  document.getElementById('historyCount').textContent = diplomaHistory.length;
+  body.innerHTML = '';
+  empty.style.display = diplomaHistory.length ? 'none' : 'block';
+
+  diplomaHistory.forEach(rec => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${rec.student_name}</td>
+      <td>${rec.subject_label}</td>
+      <td>${fmtDateLong(new Date(rec.issued_at))}</td>
+      <td class="history-actions">
+        <button class="btn-icon" data-action="reprint" data-id="${rec.id}" title="Reimprimer">🖨️</button>
+        <button class="btn-icon" data-action="delete" data-id="${rec.id}" title="Supprimer">🗑️</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+
+  body.querySelectorAll('[data-action="reprint"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rec = diplomaHistory.find(r => r.id === btn.dataset.id);
+      if (rec) reprintDiploma(rec);
+    });
+  });
+  body.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteHistoryRecord(btn.dataset.id));
+  });
+}
+
+async function deleteHistoryRecord(id){
+  if (!confirm('Supprimer cette entree de l\'historique ? Cette action est definitive.')) return;
+  const { error } = await eduflowClient.from('diplomas').delete().eq('id', id);
+  if (error){ alert('Erreur de suppression : ' + error.message); return; }
+  diplomaHistory = diplomaHistory.filter(r => r.id !== id);
+  renderHistory();
 }
 
 document.getElementById('backBtn').addEventListener('click', () => {
   document.getElementById('diplomaView').style.display = 'none';
   document.getElementById('listView').style.display = 'block';
 });
-document.getElementById('printBtn').addEventListener('click', () => window.print());
+document.getElementById('printBtn').addEventListener('click', async () => {
+  if (pendingDiplomaRecord){
+    const { error } = await eduflowClient.from('diplomas').insert({
+      student_id: pendingDiplomaRecord.student_id,
+      student_name: pendingDiplomaRecord.student_name,
+      subject_code: pendingDiplomaRecord.subject_code,
+      subject_label: pendingDiplomaRecord.subject_label,
+      issued_by: currentAdminId
+    });
+    if (!error) await loadHistory();
+    pendingDiplomaRecord = null;
+  }
+  window.print();
+});
+
+document.getElementById('addStudentBtn').addEventListener('click', () => {
+  document.getElementById('addStudentCard').style.display = 'block';
+  document.getElementById('addStudentName').value = '';
+  document.getElementById('addStudentSubject').value = '';
+  document.getElementById('addStudentName').focus();
+});
+document.getElementById('addStudentCancelBtn').addEventListener('click', () => {
+  document.getElementById('addStudentCard').style.display = 'none';
+});
+document.getElementById('addStudentGenerateBtn').addEventListener('click', () => {
+  const name = document.getElementById('addStudentName').value.trim();
+  const subject = document.getElementById('addStudentSubject').value.trim();
+  if (!name || !subject){ alert('Merci de renseigner le nom et la matiere/formation.'); return; }
+  document.getElementById('addStudentCard').style.display = 'none';
+  openDiplomaCustom(name, subject);
+});
 
 document.getElementById('searchInput').addEventListener('input', renderList);
 document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
@@ -354,10 +516,12 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   const result = await eduflowRequireRole(['admin']);
   if (!result) return;
   eduflowShowDeniedBanner();
+  currentAdminId = result.session.user.id;
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   await loadAll();
+  await loadHistory();
 })();
 </script>
 </body>
