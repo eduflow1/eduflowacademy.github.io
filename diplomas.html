@@ -9,7 +9,7 @@
   :root{
     --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
     --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
-    --gold:#C9A24B;
+    --gold:#C9A24B; --ma-red:#C1272D; --ma-green:#006233;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -87,48 +87,80 @@
 
   .diploma-stage{
     width:100%;aspect-ratio:1.42/1;max-width:1000px;margin:0 auto;position:relative;
-    background:linear-gradient(160deg,#fff,#FBFAF6);
-    border-radius:14px;box-shadow:0 20px 50px rgba(30,50,60,0.16);
-    border:10px solid var(--diploma-color, var(--gold));
-    padding:14px;
+    background:var(--ma-red);
+    border-radius:16px;box-shadow:0 20px 50px rgba(30,50,60,0.20);
+    border:8px solid var(--ma-red);
+    padding:5px;
   }
   .diploma-inner{
-    height:100%;border:1.5px solid var(--diploma-color, var(--gold));border-radius:6px;
+    height:100%;border:3px solid var(--ma-green);border-radius:8px;
+    outline:1.5px solid var(--gold);outline-offset:-9px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
-    padding:5% 8%;position:relative;overflow:hidden;
+    padding:0.4% 7% 0.4%;position:relative;overflow:hidden;
+    background:linear-gradient(160deg,#fff,#FBFAF6);
   }
   .diploma-watermark{
-    position:absolute;inset:0;background:url('media/logo.jpg') center/45% no-repeat;
-    opacity:0.05;pointer-events:none;
+    position:absolute;inset:0;background:url('media/logo.jpg') center/40% no-repeat;
+    opacity:0.045;pointer-events:none;
   }
-  .diploma-logo{width:56px;height:56px;border-radius:14px;object-fit:cover;margin-bottom:10px;box-shadow:0 4px 12px rgba(0,0,0,0.12);}
-  .diploma-academy{font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.95rem;color:var(--diploma-color, var(--gold));text-transform:uppercase;letter-spacing:.08em;}
-  .diploma-title{font-family:'Playfair Display',serif;font-weight:700;font-size:2.1rem;color:var(--ink);margin:10px 0 4px;}
-  .diploma-icon{font-size:2.4rem;margin:4px 0;}
-  .diploma-line{font-size:0.95rem;color:#7A7B7D;margin:6px 0;}
+  .diploma-star-watermark{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;
+  }
+  .diploma-star-watermark svg{width:52%;height:52%;opacity:0.05;}
+  .diploma-corner-star{position:absolute;width:22px;height:22px;opacity:0.6;pointer-events:none;}
+  .diploma-corner-star.tl{top:12px;left:12px;}
+  .diploma-corner-star.tr{top:12px;right:12px;}
+  .diploma-corner-star.bl{bottom:12px;left:12px;}
+  .diploma-corner-star.br{bottom:12px;right:12px;}
+  .diploma-logo-row{position:relative;display:inline-block;margin-bottom:2px;}
+  .diploma-logo{width:44px;height:44px;border-radius:11px;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.16);border:2px solid #fff;}
+  .diploma-emblem-badge{
+    position:absolute;bottom:-3px;right:-6px;width:20px;height:20px;border-radius:50%;
+    background:var(--ma-red);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.25);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .diploma-emblem-badge svg{width:11px;height:11px;}
+  .diploma-header-row{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;}
+  .diploma-kingdom-text{
+    display:flex;align-items:center;gap:5px;font-family:'Quicksand',sans-serif;font-weight:700;
+    font-size:0.56rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ma-red);
+  }
+  .diploma-kingdom-text .flag-chip{width:14px;height:9px;border-radius:2px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,0.08);flex:none;}
+  .diploma-header-sep{color:#C7CAC8;font-size:0.7rem;}
+  .diploma-academy{font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;color:var(--diploma-color, var(--gold));text-transform:uppercase;letter-spacing:.08em;}
+  .diploma-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1.6rem;color:var(--ink);margin:4px 0 1px;}
+  .diploma-icon{font-size:1.4rem;margin:0;}
+  .diploma-line{font-size:0.78rem;color:#7A7B7D;margin:1px 0;}
   .diploma-name{
-    font-family:'Playfair Display',serif;font-weight:700;font-size:1.9rem;color:var(--ink);
-    margin:8px 0;padding-bottom:8px;border-bottom:2px solid var(--diploma-color, var(--gold));
+    font-family:'Playfair Display',serif;font-weight:700;font-size:1.35rem;color:var(--ink);
+    margin:3px 0;padding-bottom:3px;border-bottom:2px solid var(--diploma-color, var(--gold));
     display:inline-block;min-width:50%;
   }
-  .diploma-subject{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.25rem;color:var(--diploma-color, var(--gold));margin:4px 0 14px;}
-  .diploma-footer{display:flex;justify-content:space-between;width:100%;margin-top:auto;padding-top:18px;}
-  .diploma-sign{text-align:center;font-size:0.8rem;color:#7A7B7D;}
-  .diploma-sign .sig-line{width:150px;border-top:1.5px solid #B8BCBA;margin:0 auto 6px;padding-top:6px;}
-  .diploma-date{font-size:0.8rem;color:#9A9B9C;margin-top:10px;}
+  .diploma-subject{font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.95rem;color:var(--diploma-color, var(--gold));margin:1px 0 4px;}
+  .diploma-footer{display:flex;justify-content:space-between;align-items:flex-end;width:100%;margin-top:auto;padding-top:4px;}
+  .diploma-sign{text-align:center;font-size:0.72rem;color:#7A7B7D;position:relative;min-width:130px;}
+  .diploma-sign .sig-line{width:130px;border-top:1.5px solid #B8BCBA;margin:0 auto 3px;padding-top:4px;}
+  .diploma-stamp{position:absolute;top:-44px;left:50%;transform:translateX(-50%) rotate(-9deg);opacity:0.82;pointer-events:none;}
+  .diploma-stamp svg{width:70px;height:70px;}
+  .diploma-date{font-size:0.68rem;color:#9A9B9C;margin-top:2px;}
 
   @media (max-width:700px){
-    .diploma-title{font-size:1.4rem;}
-    .diploma-name{font-size:1.2rem;}
-    .diploma-subject{font-size:1rem;}
-    .diploma-footer{flex-direction:column;gap:10px;align-items:center;}
+    .diploma-title{font-size:1.2rem;}
+    .diploma-name{font-size:1.05rem;}
+    .diploma-subject{font-size:0.85rem;}
+    .diploma-sign{min-width:auto;font-size:0.6rem;}
+    .diploma-sign .sig-line{width:90px;}
+    .diploma-kingdom-text{font-size:0.48rem;}
+    .diploma-stamp{top:-34px;}
+    .diploma-stamp svg{width:60px;height:60px;}
   }
 
   @media print{
     .no-print{display:none !important;}
     body{background:#fff;padding:0;}
     .wrap{max-width:none;}
-    .diploma-stage{box-shadow:none;max-width:none;width:100%;aspect-ratio:auto;height:100vh;}
+    .diploma-stage{box-shadow:none;max-width:none;width:100%;aspect-ratio:auto;height:100vh;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
     @page{ size: landscape; margin: 0.3in; }
   }
 </style>
@@ -165,8 +197,26 @@
     <div class="diploma-stage" id="diplomaStage">
       <div class="diploma-inner">
         <div class="diploma-watermark"></div>
-        <img class="diploma-logo" id="diplomaLogoImg" src="media/logo.jpg" alt="Edu Flow Academy">
-        <div class="diploma-academy">Edu Flow Academy</div>
+        <div class="diploma-star-watermark">
+          <svg viewBox="0 0 100 100"><path d="M50,10 L73.52,82.36 L11.96,37.64 L88.04,37.64 L26.48,82.36 Z" fill="none" stroke="#006233" stroke-width="2.5"/></svg>
+        </div>
+        <div class="diploma-corner-star tl"><svg viewBox="0 0 100 100"><path d="M50,10 L73.52,82.36 L11.96,37.64 L88.04,37.64 L26.48,82.36 Z" fill="#006233"/></svg></div>
+        <div class="diploma-corner-star tr"><svg viewBox="0 0 100 100"><path d="M50,10 L73.52,82.36 L11.96,37.64 L88.04,37.64 L26.48,82.36 Z" fill="#006233"/></svg></div>
+        <div class="diploma-corner-star bl"><svg viewBox="0 0 100 100"><path d="M50,10 L73.52,82.36 L11.96,37.64 L88.04,37.64 L26.48,82.36 Z" fill="#006233"/></svg></div>
+        <div class="diploma-corner-star br"><svg viewBox="0 0 100 100"><path d="M50,10 L73.52,82.36 L11.96,37.64 L88.04,37.64 L26.48,82.36 Z" fill="#006233"/></svg></div>
+
+        <div class="diploma-logo-row">
+          <img class="diploma-logo" id="diplomaLogoImg" src="media/logo.jpg" alt="Edu Flow Academy">
+          <span class="diploma-emblem-badge"><svg viewBox="0 0 100 100"><path d="M50,10 L73.52,82.36 L11.96,37.64 L88.04,37.64 L26.48,82.36 Z" fill="#fff"/></svg></span>
+        </div>
+        <div class="diploma-header-row">
+          <div class="diploma-academy">Edu Flow Academy</div>
+          <div class="diploma-header-sep">•</div>
+          <div class="diploma-kingdom-text">
+            <svg class="flag-chip" viewBox="0 0 300 200"><rect width="300" height="200" fill="#C1272D"/><path d="M150,60 L173.52,132.36 L111.96,87.64 L188.04,87.64 L126.48,132.36 Z" fill="none" stroke="#006233" stroke-width="6"/></svg>
+            Royaume du Maroc
+          </div>
+        </div>
         <div class="diploma-title">Certificat de Reussite</div>
         <div class="diploma-icon" id="diplomaIcon">🎓</div>
         <div class="diploma-line">Ce certificat est decerne a</div>
@@ -174,7 +224,26 @@
         <div class="diploma-line">pour avoir suivi avec succes la formation en</div>
         <div class="diploma-subject" id="diplomaSubject">—</div>
         <div class="diploma-footer">
-          <div class="diploma-sign"><div class="sig-line">La Direction</div>Edu Flow Academy</div>
+          <div class="diploma-sign">
+            <div class="diploma-stamp" style="color:var(--ma-red);">
+              <svg viewBox="0 0 140 140">
+                <defs>
+                  <path id="stampTop" d="M20,72 A50,50 0 1,1 120,72" fill="none"/>
+                  <path id="stampBot" d="M120,74 A50,50 0 1,1 20,74" fill="none"/>
+                </defs>
+                <circle cx="70" cy="70" r="63" fill="none" stroke="currentColor" stroke-width="2"/>
+                <circle cx="70" cy="70" r="53" fill="none" stroke="currentColor" stroke-width="1"/>
+                <text font-size="9" font-family="Quicksand,sans-serif" font-weight="700" fill="currentColor" letter-spacing="2">
+                  <textPath href="#stampTop" startOffset="50%" text-anchor="middle">EDU FLOW ACADEMY</textPath>
+                </text>
+                <text font-size="8" font-family="Quicksand,sans-serif" font-weight="700" fill="currentColor" letter-spacing="3">
+                  <textPath href="#stampBot" startOffset="50%" text-anchor="middle">CACHET OFFICIEL</textPath>
+                </text>
+                <path d="M70,48 L82.94,87.80 L49.08,63.20 L90.92,63.20 L57.06,87.80 Z" fill="none" stroke="currentColor" stroke-width="2.2"/>
+              </svg>
+            </div>
+            <div class="sig-line">La Direction</div>Edu Flow Academy
+          </div>
           <div class="diploma-sign"><div class="sig-line">Formateur(trice)</div>Signature</div>
         </div>
         <div class="diploma-date" id="diplomaDate">—</div>

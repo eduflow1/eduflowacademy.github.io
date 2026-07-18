@@ -101,37 +101,64 @@
   .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
   @media print{
     .no-print{display:none !important;}
-    .receipt-letterhead{background:#fff !important;color:var(--ink) !important;border-bottom:3px solid var(--blue);}
-    .receipt-contact,.receipt-doc-num{color:#7A7B7D !important;}
+    .receipt-letterhead{background:linear-gradient(135deg,var(--blue),var(--green)) !important;color:#fff !important;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .receipt-stamp{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .receipt-watermark span{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
 
-  .logo-wrap{width:56px;height:56px;border-radius:16px;overflow:hidden;flex:none;box-shadow:0 4px 14px rgba(0,0,0,0.08);}
+  .logo-wrap{width:88px;height:88px;border-radius:20px;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(0,0,0,0.10);border:2px solid rgba(255,255,255,0.7);}
   .logo-wrap img{width:100%;height:100%;object-fit:cover;}
-  .receipt-card{max-width:640px;margin:0 auto;padding:0;overflow:hidden;}
+  .receipt-card{max-width:680px;margin:0 auto;padding:0;overflow:hidden;position:relative;}
   .receipt-letterhead{
     background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
-    padding:24px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:28px 30px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    position:relative;overflow:hidden;
   }
-  .receipt-brand{display:flex;align-items:center;gap:14px;}
-  .receipt-letterhead .logo-wrap{box-shadow:0 4px 14px rgba(0,0,0,0.2);}
-  .receipt-brand-name{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.15rem;}
-  .receipt-contact{font-size:0.78rem;color:rgba(255,255,255,0.88);margin-top:3px;}
-  .receipt-doc-meta{text-align:right;}
-  .receipt-doc-title{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;}
+  .receipt-letterhead::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background-image:radial-gradient(circle at 92% -10%, rgba(255,255,255,0.18), transparent 55%);
+  }
+  .receipt-brand{display:flex;align-items:center;gap:16px;position:relative;}
+  .receipt-letterhead .logo-wrap{box-shadow:0 6px 18px rgba(0,0,0,0.22);}
+  .receipt-brand-name{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.4rem;}
+  .receipt-contact{font-size:0.78rem;color:rgba(255,255,255,0.88);margin-top:4px;}
+  .receipt-address{font-size:0.78rem;color:rgba(255,255,255,0.78);margin-top:2px;}
+  .receipt-doc-meta{text-align:right;position:relative;}
+  .receipt-doc-title{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:.04em;text-transform:uppercase;}
   .receipt-doc-num{font-size:0.85rem;color:rgba(255,255,255,0.92);margin-top:6px;}
-  .receipt-body{padding:26px 28px 4px;}
-  .receipt-table-wrap{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;}
+  .receipt-paid-pill{
+    display:inline-block;margin-top:10px;background:rgba(255,255,255,0.92);color:var(--green-dark);
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.72rem;letter-spacing:.06em;
+    border-radius:999px;padding:4px 12px;
+  }
+  .receipt-body{padding:28px 30px 4px;position:relative;}
+  .receipt-watermark{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    pointer-events:none;overflow:hidden;z-index:0;
+  }
+  .receipt-watermark span{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:4.5rem;color:var(--green);
+    opacity:0.06;transform:rotate(-22deg);white-space:nowrap;text-transform:uppercase;letter-spacing:.1em;
+  }
+  .receipt-table-wrap{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;position:relative;z-index:1;background:#fff;}
   table.receipt-table{width:100%;border-collapse:collapse;font-size:0.92rem;}
   table.receipt-table td{padding:11px 14px;border-bottom:1px solid var(--line);}
   table.receipt-table tr:last-child td{border-bottom:none;}
   table.receipt-table td:first-child{color:#7A7B7D;width:42%;background:#FAFBFB;font-weight:600;}
   table.receipt-table td:last-child{font-weight:600;text-align:right;}
   .receipt-amount{font-size:1.25rem;color:var(--green-dark);font-weight:700 !important;}
-  .receipt-thanks{text-align:center;color:#7A7B7D;font-size:0.86rem;margin:22px 0 0;line-height:1.6;}
-  .receipt-signature{margin-top:30px;display:flex;justify-content:flex-end;}
-  .receipt-signature .signature-block{text-align:center;width:220px;}
+  .receipt-thanks{text-align:center;color:#7A7B7D;font-size:0.86rem;margin:22px 0 0;line-height:1.6;position:relative;z-index:1;}
+  .receipt-signature{margin-top:26px;display:flex;justify-content:flex-end;position:relative;z-index:1;}
+  .receipt-signature .signature-block{text-align:center;width:220px;position:relative;}
   .receipt-signature .signature-label{font-size:0.8rem;color:#8A8B8D;margin-bottom:38px;}
   .signature-line{width:100%;border-top:1.5px solid var(--ink);}
+  .receipt-stamp{position:absolute;top:-70px;left:50%;transform:translateX(-50%) rotate(-9deg);opacity:0.85;pointer-events:none;}
+  .receipt-stamp svg{width:100px;height:100px;}
+  .receipt-footer-strip{
+    margin-top:20px;padding:12px 30px;background:#FAFBFB;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:0.72rem;color:#9A9B9C;
+  }
 </style>
 </head>
 <body>
@@ -227,34 +254,58 @@
         <div>
           <div class="receipt-brand-name">Edu Flow Academy</div>
           <div class="receipt-contact">0521406510 · 0665688128 · 0669313643</div>
+          <div class="receipt-address">Casablanca, Maroc</div>
         </div>
         </div>
         <div class="receipt-doc-meta">
           <div class="receipt-doc-title">Reçu de paiement</div>
           <div class="receipt-doc-num" id="receiptRef"></div>
+          <div class="receipt-paid-pill">✓ PAYÉ</div>
         </div>
       </div>
       <div class="receipt-body">
+      <div class="receipt-watermark"><span>Payé</span></div>
       <div class="receipt-table-wrap">
       <table class="receipt-table">
-        <tr><td>Eleve</td><td id="receiptStudent"></td></tr>
-        <tr><td>Code eleve</td><td id="receiptCode"></td></tr>
-        <tr><td>Date</td><td id="receiptDate"></td></tr>
-        <tr id="receiptPeriodRow" style="display:none;"><td>Periode</td><td id="receiptPeriod"></td></tr>
-        <tr id="receiptSubjectRow" style="display:none;"><td>Matiere</td><td id="receiptSubject"></td></tr>
-        <tr><td>Montant</td><td id="receiptAmount" class="receipt-amount"></td></tr>
-        <tr><td>Methode</td><td id="receiptMethod"></td></tr>
+        <tr><td>Élève</td><td id="receiptStudent"></td></tr>
+        <tr><td>Code élève</td><td id="receiptCode"></td></tr>
+        <tr><td>Date de paiement</td><td id="receiptDate"></td></tr>
+        <tr id="receiptPeriodRow" style="display:none;"><td>Période concernée</td><td id="receiptPeriod"></td></tr>
+        <tr id="receiptSubjectRow" style="display:none;"><td>Matière</td><td id="receiptSubject"></td></tr>
+        <tr><td>Montant payé</td><td id="receiptAmount" class="receipt-amount"></td></tr>
+        <tr><td>Méthode</td><td id="receiptMethod"></td></tr>
         <tr><td>Note</td><td id="receiptNote"></td></tr>
-        <tr><td>Recu par</td><td id="receiptRecordedBy"></td></tr>
-        <tr id="receiptRemainingRow" style="display:none;"><td>Reste a payer</td><td id="receiptRemaining"></td></tr>
+        <tr><td>Reçu par</td><td id="receiptRecordedBy"></td></tr>
+        <tr id="receiptRemainingRow" style="display:none;"><td>Reste à payer</td><td id="receiptRemaining"></td></tr>
       </table>
       </div>
-      <p class="receipt-thanks">Merci pour votre confiance.<br>Delivre par Edu Flow Academy.</p>
+      <p class="receipt-thanks">Merci pour votre confiance.<br>Délivré par Edu Flow Academy.</p>
       <div class="receipt-signature">
         <div class="signature-block">
+          <div class="receipt-stamp">
+            <svg viewBox="0 0 140 140" style="color:var(--blue-dark)">
+              <defs>
+                <path id="rcStampTop" d="M20,72 A50,50 0 1,1 120,72" fill="none"/>
+                <path id="rcStampBot" d="M120,74 A50,50 0 1,1 20,74" fill="none"/>
+              </defs>
+              <circle cx="70" cy="70" r="63" fill="none" stroke="currentColor" stroke-width="2"/>
+              <circle cx="70" cy="70" r="53" fill="none" stroke="currentColor" stroke-width="1"/>
+              <text font-size="9" font-family="Quicksand,sans-serif" font-weight="700" fill="currentColor" letter-spacing="2">
+                <textPath href="#rcStampTop" startOffset="50%" text-anchor="middle">EDU FLOW ACADEMY</textPath>
+              </text>
+              <text font-size="8" font-family="Quicksand,sans-serif" font-weight="700" fill="currentColor" letter-spacing="3">
+                <textPath href="#rcStampBot" startOffset="50%" text-anchor="middle">CACHET OFFICIEL</textPath>
+              </text>
+              <path d="M70,48 L82.94,87.80 L49.08,63.20 L90.92,63.20 L57.06,87.80 Z" fill="none" stroke="currentColor" stroke-width="2.2"/>
+            </svg>
+          </div>
           <div class="signature-label">Cachet et signature</div>
           <div class="signature-line"></div>
         </div>
+      </div>
+      <div class="receipt-footer-strip">
+        <span id="receiptIssuedOn"></span>
+        <span>Edu Flow Academy — Document généré électroniquement</span>
       </div>
       </div>
       <div class="form-actions no-print" style="margin:0 28px 24px;">
@@ -383,6 +434,7 @@ async function openReceipt(p){
   document.getElementById('receiptMethod').textContent = METHOD_LABELS[p.method] || p.method || '—';
   document.getElementById('receiptNote').textContent = p.note || '—';
   document.getElementById('receiptRecordedBy').textContent = (p.recorder && p.recorder.full_name) || 'Edu Flow Academy';
+  document.getElementById('receiptIssuedOn').textContent = 'Émis le ' + fmtDate(new Date());
 
   document.getElementById('receiptPeriodRow').style.display = p.period ? '' : 'none';
   document.getElementById('receiptPeriod').textContent = p.period || '';
