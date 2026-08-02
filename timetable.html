@@ -120,6 +120,9 @@
         <option value="enfants_autistes">Accompagnement enfants autistes</option>
         <option value="enfants_trisomiques">Accompagnement enfants trisomiques</option>
       </select>
+      <select id="teacherFilter" style="display:none;">
+        <option value="">Tous les enseignants</option>
+      </select>
       <button class="btn-home" id="printGridBtn" type="button">🖨️ Imprimer</button>
     </div>
     <div class="week-grid" id="weekGrid"></div>
@@ -134,8 +137,20 @@
 const WEEKDAYS = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
 let currentProfile = null;
 let allClasses = [];
+let allTeachers = [];
 
 function subjectLabel(code){ return EDUFLOW_SUBJECT_LABELS[code] || code; }
+
+async function loadTeachers(){
+  const { data, error } = await eduflowClient
+    .from('profiles').select('id, full_name').eq('role', 'staff').eq('status', 'active').order('full_name');
+  if (error){ console.error(error); return; }
+  allTeachers = data || [];
+  const sel = document.getElementById('teacherFilter');
+  sel.innerHTML = '<option value="">Tous les enseignants</option>' +
+    allTeachers.map(t => `<option value="${t.id}">${t.full_name}</option>`).join('');
+  sel.style.display = '';
+}
 
 async function loadClasses(){
   const { data, error } = await eduflowClient.from('classes').select('*').eq('status', 'active').order('name');
@@ -146,14 +161,25 @@ async function loadClasses(){
 
 function renderGrid(){
   const subjectFilter = document.getElementById('subjectFilter').value;
+  const teacherFilter = document.getElementById('teacherFilter').value;
   const grid = document.getElementById('weekGrid');
   grid.innerHTML = '';
+
+  if (currentProfile.role !== 'staff'){
+    if (teacherFilter){
+      const t = allTeachers.find(x => x.id === teacherFilter);
+      document.getElementById('lead').textContent = 'Emploi du temps de ' + (t ? t.full_name : '—') + '.';
+    } else {
+      document.getElementById('lead').textContent = 'Toutes les classes actives, par jour.';
+    }
+  }
 
   // Flatten each class's schedule slots into per-day entries.
   const byDay = {};
   WEEKDAYS.forEach(d => byDay[d] = []);
   allClasses.forEach(c => {
     if (currentProfile.role === 'staff' && c.teacher_id !== currentProfile.id) return;
+    if (teacherFilter && c.teacher_id !== teacherFilter) return;
     if (subjectFilter && c.subject !== subjectFilter) return;
     (c.schedule || []).forEach(slot => {
       if (byDay[slot.day]){
@@ -183,6 +209,7 @@ function renderGrid(){
 }
 
 document.getElementById('subjectFilter').addEventListener('change', renderGrid);
+document.getElementById('teacherFilter').addEventListener('change', renderGrid);
 document.getElementById('printGridBtn').addEventListener('click', () => window.print());
 document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
 
@@ -197,6 +224,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
     : 'Toutes les classes actives, par jour.';
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  if (currentProfile.role !== 'staff') await loadTeachers();
   await loadClasses();
 })();
 </script>

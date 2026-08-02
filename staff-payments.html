@@ -99,6 +99,44 @@
   .total-line{font-size:0.9rem;color:var(--green-dark);font-weight:700;margin-bottom:16px;}
 
   .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+
+  /* ---- Receipt document ---- */
+  .receipt-doc{max-width:720px;margin:0 auto;}
+  .receipt-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+  .receipt-logo{width:52px;height:52px;border-radius:13px;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.12);}
+  .receipt-academy{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.1rem;color:var(--ink);}
+  .receipt-academy-sub{font-size:0.78rem;color:#9A9B9C;}
+  .receipt-title{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.3rem;margin:6px 0 18px;text-align:center;color:var(--blue-dark);}
+  .receipt-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:20px;font-size:0.88rem;}
+  .receipt-meta .row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding:6px 0;}
+  .receipt-meta .row span:first-child{color:#9A9B9C;}
+  .receipt-meta .row span:last-child{font-weight:600;}
+  .receipt-count{font-size:0.9rem;font-weight:700;color:var(--green-dark);margin:14px 0 8px;}
+  .receipt-table-wrap{max-height:320px;overflow-y:auto;margin-bottom:8px;}
+  table.receipt-table{width:100%;border-collapse:collapse;font-size:0.84rem;}
+  table.receipt-table th{
+    text-align:left;font-size:0.7rem;text-transform:uppercase;letter-spacing:.04em;
+    color:#9A9B9C;padding:6px 8px;border-bottom:1.5px solid var(--line);
+  }
+  table.receipt-table td{padding:8px;border-bottom:1px solid var(--line);}
+  .receipt-amount-line{
+    display:flex;justify-content:space-between;align-items:center;margin:18px 0;
+    padding:12px 16px;background:#EEF7F1;border-radius:12px;border:1px solid var(--line);
+  }
+  .receipt-amount-line .label{font-weight:600;}
+  .receipt-amount-line .value{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.2rem;color:var(--green-dark);}
+  .receipt-signatures{display:flex;justify-content:space-between;gap:20px;margin-top:56px;}
+  .receipt-sign{flex:1;text-align:center;font-size:0.8rem;color:#7A7B7D;}
+  .receipt-sign .sig-line{border-top:1.5px solid #B8BCBA;margin:38px 10px 6px;padding-top:6px;}
+  .receipt-empty{color:#B8BCBA;font-size:0.85rem;text-align:center;padding:16px 0;}
+
+  @media print{
+    .no-print{display:none !important;}
+    body{background:#fff;padding:0;}
+    .wrap{max-width:none;}
+    .card{box-shadow:none;border:none;}
+    @page{ size: portrait; margin: 0.5in; }
+  }
 </style>
 </head>
 <body>
@@ -177,6 +215,31 @@
       </div>
     </div>
   </div>
+
+  <!-- RECEIPT VIEW -->
+  <div id="receiptView" style="display:none;">
+    <a class="back-link no-print" id="receiptBackLink">← Retour a la liste</a>
+    <div class="card no-print">
+      <h2>Periode des seances a inclure</h2>
+      <p class="lead">Les seances marquees "terminee" pour ce membre du personnel, sur cette periode, seront listees sur le recu.</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="rFromInput">Du</label>
+          <input type="date" id="rFromInput">
+        </div>
+        <div class="field">
+          <label for="rToInput">Au</label>
+          <input type="date" id="rToInput">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-sm btn-primary-sm" id="rRecalcBtn">Recalculer les seances</button>
+        <button class="btn-sm btn-ghost-sm" id="rPrintBtn">🖨️ Imprimer le recu</button>
+      </div>
+    </div>
+
+    <div class="card receipt-doc" id="receiptDoc"></div>
+  </div>
 </div>
 
 <div class="loading-msg" id="loadingMsg">Chargement...</div>
@@ -234,6 +297,13 @@ function renderTable(){
       <td></td>
     `;
     if (p.status === 'active'){
+      const receiptBtn = document.createElement('button');
+      receiptBtn.className = 'btn-sm btn-ghost-sm';
+      receiptBtn.textContent = '🖨️ Recu';
+      receiptBtn.style.marginRight = '6px';
+      receiptBtn.addEventListener('click', () => openReceipt(p));
+      tr.lastElementChild.appendChild(receiptBtn);
+
       const voidBtn = document.createElement('button');
       voidBtn.className = 'btn-sm btn-reject';
       voidBtn.textContent = 'Annuler';
@@ -254,7 +324,100 @@ document.getElementById('searchInput').addEventListener('input', renderTable);
 function showView(name){
   document.getElementById('listView').style.display = name === 'list' ? 'block' : 'none';
   document.getElementById('formView').style.display = name === 'form' ? 'block' : 'none';
+  document.getElementById('receiptView').style.display = name === 'receipt' ? 'block' : 'none';
 }
+
+let currentReceiptPayment = null;
+
+function monthRange(dateStr){
+  const d = new Date(dateStr);
+  const from = new Date(d.getFullYear(), d.getMonth(), 1);
+  const to = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  const iso = x => x.toISOString().slice(0, 10);
+  return { from: iso(from), to: iso(to) };
+}
+
+function openReceipt(p){
+  currentReceiptPayment = p;
+  const range = monthRange(p.paid_at);
+  document.getElementById('rFromInput').value = range.from;
+  document.getElementById('rToInput').value = range.to;
+  showView('receipt');
+  window.scrollTo(0, 0);
+  computeAndRenderReceipt();
+}
+
+async function computeAndRenderReceipt(){
+  const p = currentReceiptPayment;
+  if (!p) return;
+  const from = document.getElementById('rFromInput').value;
+  const to = document.getElementById('rToInput').value;
+  const doc = document.getElementById('receiptDoc');
+  doc.innerHTML = '<p class="loading-msg">Chargement des seances...</p>';
+
+  const { data: sessions, error } = await eduflowClient
+    .from('class_sessions')
+    .select('session_date, classes!inner(name, subject, teacher_id)')
+    .eq('classes.teacher_id', p.staff_id)
+    .eq('status', 'completed')
+    .gte('session_date', from)
+    .lte('session_date', to)
+    .order('session_date');
+
+  if (error){ doc.innerHTML = '<p class="empty-msg">Erreur de chargement des seances : ' + error.message + '</p>'; return; }
+
+  const rows = sessions || [];
+  const staffName = p.profiles ? p.profiles.full_name : '—';
+  const tableRows = rows.length
+    ? rows.map(s => `
+        <tr>
+          <td>${fmtDate(s.session_date)}</td>
+          <td>${s.classes.name}</td>
+          <td>${EDUFLOW_SUBJECT_LABELS[s.classes.subject] || s.classes.subject}</td>
+        </tr>
+      `).join('')
+    : '';
+
+  doc.innerHTML = `
+    <div class="receipt-header">
+      <img class="receipt-logo" src="media/logo.jpg" alt="Edu Flow Academy">
+      <div>
+        <div class="receipt-academy">Edu Flow Academy</div>
+        <div class="receipt-academy-sub">Recu de paiement — Personnel enseignant</div>
+      </div>
+    </div>
+    <div class="receipt-title">Recu de paiement</div>
+    <div class="receipt-meta">
+      <div class="row"><span>Personnel</span><span>${staffName}</span></div>
+      <div class="row"><span>Periode declaree</span><span>${p.period || '—'}</span></div>
+      <div class="row"><span>Seances du</span><span>${fmtDate(from)} au ${fmtDate(to)}</span></div>
+      <div class="row"><span>Methode</span><span>${METHOD_LABELS[p.method] || p.method || '—'}</span></div>
+      <div class="row"><span>Date de paiement</span><span>${fmtDate(p.paid_at)}</span></div>
+    </div>
+    <div class="receipt-count">${rows.length} seance${rows.length === 1 ? '' : 's'} sur cette periode</div>
+    ${rows.length ? `
+      <div class="receipt-table-wrap">
+        <table class="receipt-table">
+          <thead><tr><th>Date</th><th>Classe</th><th>Matiere</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    ` : '<div class="receipt-empty">Aucune seance terminee trouvee sur cette periode.</div>'}
+    <div class="receipt-amount-line">
+      <span class="label">Montant verse</span>
+      <span class="value">${Number(p.amount).toFixed(2)} ${p.currency}</span>
+    </div>
+    ${p.note ? `<p style="font-size:0.85rem;color:#7A7B7D;">Note : ${p.note}</p>` : ''}
+    <div class="receipt-signatures">
+      <div class="receipt-sign"><div class="sig-line">Signature de l'enseignant(e)</div>${staffName}</div>
+      <div class="receipt-sign"><div class="sig-line">Signature de la Direction</div>Edu Flow Academy</div>
+    </div>
+  `;
+}
+
+document.getElementById('rRecalcBtn').addEventListener('click', computeAndRenderReceipt);
+document.getElementById('rPrintBtn').addEventListener('click', () => window.print());
+document.getElementById('receiptBackLink').addEventListener('click', () => showView('list'));
 
 document.getElementById('newPaymentBtn').addEventListener('click', () => {
   document.getElementById('fStaffInput').innerHTML = staffOptions.map(s =>
