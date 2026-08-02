@@ -10,7 +10,8 @@
     --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
     --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
     --accent:#5B67F1; --accent-dark:#4650D6;
-    --side-bg-1:#161A23; --side-bg-2:#1E2430; --side-w:230px; --side-w-collapsed:76px;
+    --gold:#D9A441; --gold-dark:#B98A2E; --teal:#2FA891; --teal-dark:#22876F;
+    --side-bg-1:#161A23; --side-bg-2:#1E2430; --side-w:240px; --side-w-collapsed:76px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -23,11 +24,12 @@
     display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
   }
   h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
-  .wrap{width:100%;max-width:1360px;}
+  .wrap{width:100%;max-width:1380px;}
 
   .app-shell{display:flex;gap:24px;align-items:flex-start;}
   @media (max-width:860px){.app-shell{flex-direction:column;}}
 
+  /* ---- Sidebar ---- */
   .sidebar{
     width:var(--side-w);flex:none;background:linear-gradient(165deg,var(--side-bg-2),var(--side-bg-1));
     border-radius:var(--radius);padding:18px 14px;position:sticky;top:20px;
@@ -41,6 +43,7 @@
   .sidebar-nav{
     overflow-y:auto;flex:1;min-height:0;
     scrollbar-width:thin;scrollbar-color:#3A4150 transparent;
+    display:flex;flex-direction:column;gap:2px;
   }
   .sidebar-nav::-webkit-scrollbar{width:6px;}
   .sidebar-nav::-webkit-scrollbar-thumb{background:#3A4150;border-radius:999px;}
@@ -48,10 +51,11 @@
 
   .sidebar-head{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
   .brand-mark{
-    flex:none;width:34px;height:34px;border-radius:10px;
+    flex:none;width:36px;height:36px;border-radius:11px;
     background:linear-gradient(135deg,var(--accent),var(--blue));
-    color:#fff;font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    color:#fff;font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.88rem;
     display:flex;align-items:center;justify-content:center;letter-spacing:-0.02em;
+    box-shadow:0 6px 16px rgba(91,103,241,0.35);
   }
   .sidebar-brand{min-width:0;overflow:hidden;}
   .sidebar-brand .brand-name{color:#fff;font-size:0.98rem;font-weight:700;white-space:nowrap;}
@@ -72,18 +76,34 @@
   }
   .sidebar.collapsed .sidebar-who{display:none;}
 
-  .sidebar-nav{display:flex;flex-direction:column;gap:2px;}
+  .sidebar-group{display:flex;flex-direction:column;gap:2px;}
+  .sidebar-group-label{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.64rem;letter-spacing:.09em;
+    text-transform:uppercase;color:#5C6577;padding:12px 10px 5px;white-space:nowrap;
+  }
+  .sidebar.collapsed .sidebar-group-label{display:none;}
+
   .sidebar-link{
-    position:relative;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;
+    position:relative;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;
     color:#B7BFCC;text-decoration:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.83rem;
     background:none;border:none;cursor:pointer;text-align:left;width:100%;white-space:nowrap;
+    transition:background .12s ease, color .12s ease;
   }
-  .sidebar-link .ic{flex:none;width:20px;text-align:center;font-size:0.98rem;}
+  .sidebar-link .ic{
+    flex:none;width:26px;height:26px;border-radius:8px;font-size:0.9rem;
+    background:rgba(255,255,255,0.05);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ic-blue{background:rgba(63,174,221,0.22);}
+  .ic-gold{background:rgba(217,164,65,0.22);}
+  .ic-teal{background:rgba(47,168,145,0.22);}
+  .ic-violet{background:rgba(91,103,241,0.24);}
   .sidebar-link .txt{overflow:hidden;text-overflow:ellipsis;}
-  .sidebar.collapsed .sidebar-link{justify-content:center;padding:10px 0;}
+  .sidebar.collapsed .sidebar-link{justify-content:center;padding:9px 0;}
   .sidebar.collapsed .sidebar-link .txt{display:none;}
   .sidebar-link:hover{background:#262C38;color:#fff;}
-  .sidebar-link.active{background:rgba(91,103,241,0.18);color:#fff;}
+  .sidebar-link.active{background:linear-gradient(90deg, rgba(91,103,241,0.24), rgba(91,103,241,0.05));color:#fff;}
+  .sidebar-link.active .ic{background:rgba(255,255,255,0.18);}
   .sidebar-link.active::before{
     content:'';position:absolute;left:-10px;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--accent);
   }
@@ -99,12 +119,39 @@
   .table-scroll{overflow-x:auto;}
   .table-scroll table{min-width:480px;}
 
+  /* ---- Page header ---- */
+  .page-header{margin:2px 0 18px;}
+  .page-header h1{margin:0;font-size:1.55rem;color:var(--ink);}
+  .page-header .page-sub{color:#8A8B8D;font-size:0.9rem;margin:4px 0 0;}
+
+  /* ---- Hero stat tiles ---- */
+  .hero-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  @media (max-width:760px){.hero-row{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:420px){.hero-row{grid-template-columns:1fr;}}
+  .stat-tile{
+    background:var(--card);border-radius:16px;padding:16px 18px;border:1px solid var(--line);
+    box-shadow:0 8px 24px rgba(30,50,60,0.06);display:flex;align-items:center;gap:13px;
+    transition:box-shadow .15s ease;
+  }
+  .stat-tile:hover{box-shadow:0 12px 30px rgba(30,50,60,0.10);}
+  .stat-tile .stat-icon{
+    flex:none;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;
+  }
+  .stat-tile .stat-num{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.45rem;line-height:1;color:var(--ink);}
+  .stat-tile .stat-label{font-size:0.76rem;color:#8A8B8D;margin-top:3px;}
+  .stat-blue .stat-icon{background:rgba(63,174,221,0.15);}
+  .stat-green .stat-icon{background:rgba(123,196,107,0.15);}
+  .stat-gold .stat-icon{background:rgba(217,164,65,0.15);}
+  .stat-violet .stat-icon{background:rgba(91,103,241,0.15);}
+
+  /* ---- Cards ---- */
   .card{
     background:var(--card);border-radius:var(--radius);padding:26px 26px;
     box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);border-left:4px solid var(--line);
-    margin-bottom:20px;
+    margin-bottom:20px;transition:box-shadow .15s ease;
   }
-  .card h2{margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:10px;}
+  .card:hover{box-shadow:0 14px 40px rgba(30,50,60,0.12);}
+  .card h2{margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:12px;}
   .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
   .count-badge{
     background:var(--blue);color:#fff;font-size:0.72rem;font-weight:700;
@@ -112,8 +159,19 @@
   }
   .card-blue{border-left-color:var(--blue);}
   .card-green{border-left-color:var(--green);}
-  .card-gold{border-left-color:#D9A441;}
-  .card-teal{border-left-color:#2FA891;}
+  .card-gold{border-left-color:var(--gold);}
+  .card-teal{border-left-color:var(--teal);}
+
+  .card-icon{
+    flex:none;width:36px;height:36px;border-radius:11px;font-size:1.05rem;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .icon-green{background:rgba(123,196,107,0.16);}
+  .icon-gold{background:rgba(217,164,65,0.16);}
+  .icon-teal{background:rgba(47,168,145,0.16);}
+  .icon-blue{background:rgba(63,174,221,0.16);}
+  .icon-violet{background:rgba(91,103,241,0.16);}
+  .icon-neutral{background:#F0F3F2;}
 
   .pending-row{
     display:flex;align-items:center;gap:12px;flex-wrap:wrap;
@@ -147,14 +205,25 @@
   .btn-sm{
     font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;
     border:none;border-radius:10px;padding:8px 14px;cursor:pointer;color:#fff;
+    transition:background .12s ease, opacity .12s ease, transform .12s ease;
   }
+  .btn-sm:active{transform:translateY(1px);}
   .btn-approve{background:var(--green);}
   .btn-approve:hover{background:var(--green-dark);}
   .btn-reject{background:var(--danger);}
   .btn-reject:hover{opacity:0.88;}
   .btn-reset{background:var(--blue);}
   .btn-reset:hover{background:var(--blue-dark);}
+  .btn-gold{background:var(--gold);}
+  .btn-gold:hover{background:var(--gold-dark);}
+  .btn-teal{background:var(--teal);}
+  .btn-teal:hover{background:var(--teal-dark);}
+  .btn-violet{background:var(--accent);}
+  .btn-violet:hover{background:var(--accent-dark);}
+  .btn-outline{background:#fff;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-outline:hover{border-color:var(--blue);color:var(--blue-dark);}
   .btn-sm:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-link{text-decoration:none;display:inline-block;}
 
   .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:8px 0;}
 
@@ -241,74 +310,121 @@
       </div>
       <div class="sidebar-who" id="whoLabel"></div>
       <div class="sidebar-nav">
-        <a href="#accounts" class="sidebar-link" data-label="Comptes"><span class="ic">👤</span><span class="txt">Comptes</span></a>
-        <button class="sidebar-link" id="openCodesBtn" data-label="Codes d'acces"><span class="ic">🔑</span><span class="txt">Codes d'acces</span></button>
-        <a href="students.html" class="sidebar-link" data-label="Eleves"><span class="ic">🎓</span><span class="txt">Eleves</span></a>
-        <a href="classes.html" class="sidebar-link" data-label="Classes"><span class="ic">📚</span><span class="txt">Classes</span></a>
-        <a href="timetable.html" class="sidebar-link" data-label="Emploi du temps"><span class="ic">🗓️</span><span class="txt">Emploi du temps</span></a>
-        <a href="attendance.html" class="sidebar-link" data-label="Presence"><span class="ic">✅</span><span class="txt">Presence</span></a>
-        <a href="payments.html" class="sidebar-link" data-label="Paiements eleves"><span class="ic">💳</span><span class="txt">Paiements eleves</span></a>
-        <a href="staff-payments.html" class="sidebar-link" data-label="Salaires"><span class="ic">💰</span><span class="txt">Salaires</span></a>
-        <a href="workshops.html" class="sidebar-link" data-label="Ateliers"><span class="ic">🎪</span><span class="txt">Ateliers</span></a>
-        <button class="sidebar-link" id="openResultsBtn" data-label="Resultats des tests"><span class="ic">📊</span><span class="txt">Resultats des tests</span></button>
-        <a href="statistics.html" class="sidebar-link" data-label="Statistiques"><span class="ic">📈</span><span class="txt">Statistiques</span></a>
-        <a href="diplomas.html" class="sidebar-link" data-label="Diplomes"><span class="ic">🎖️</span><span class="txt">Diplomes</span></a>
-        <a href="#messaging" class="sidebar-link" data-label="Notifications"><span class="ic">📨</span><span class="txt">Notifications</span></a>
-        <a href="inbox.html" class="sidebar-link" data-label="Declarations de suppression"><span class="ic">📥</span><span class="txt">Declarations de suppression</span><span id="inboxBadge" class="count-badge" style="display:none;margin-left:6px;background:var(--danger);"></span></a>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">Comptes</div>
+          <a href="#accounts" class="sidebar-link" data-label="Comptes"><span class="ic ic-violet">👤</span><span class="txt">Comptes</span></a>
+          <button class="sidebar-link" id="openCodesBtn" data-label="Codes d'acces"><span class="ic ic-violet">🔑</span><span class="txt">Codes d'acces</span></button>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">Pedagogie</div>
+          <a href="students.html" class="sidebar-link" data-label="Eleves"><span class="ic ic-blue">🎓</span><span class="txt">Eleves</span></a>
+          <a href="classes.html" class="sidebar-link" data-label="Classes"><span class="ic ic-blue">📚</span><span class="txt">Classes</span></a>
+          <a href="timetable.html" class="sidebar-link" data-label="Emploi du temps"><span class="ic ic-blue">🗓️</span><span class="txt">Emploi du temps</span></a>
+          <a href="attendance.html" class="sidebar-link" data-label="Presence"><span class="ic ic-blue">✅</span><span class="txt">Presence</span></a>
+          <a href="workshops.html" class="sidebar-link" data-label="Ateliers"><span class="ic ic-blue">🎪</span><span class="txt">Ateliers</span></a>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">Finances</div>
+          <a href="payments.html" class="sidebar-link" data-label="Paiements eleves"><span class="ic ic-gold">💳</span><span class="txt">Paiements eleves</span></a>
+          <a href="staff-payments.html" class="sidebar-link" data-label="Salaires"><span class="ic ic-gold">💰</span><span class="txt">Salaires</span></a>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">Resultats</div>
+          <button class="sidebar-link" id="openResultsBtn" data-label="Resultats des tests"><span class="ic ic-teal">📊</span><span class="txt">Resultats des tests</span></button>
+          <a href="statistics.html" class="sidebar-link" data-label="Statistiques"><span class="ic ic-teal">📈</span><span class="txt">Statistiques</span></a>
+          <a href="diplomas.html" class="sidebar-link" data-label="Diplomes"><span class="ic ic-teal">🎖️</span><span class="txt">Diplomes</span></a>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-group-label">Communication</div>
+          <a href="#messaging" class="sidebar-link" data-label="Notifications"><span class="ic ic-violet">📨</span><span class="txt">Notifications</span></a>
+          <a href="inbox.html" class="sidebar-link" data-label="Declarations de suppression"><span class="ic ic-violet">📥</span><span class="txt">Declarations de suppression</span><span id="inboxBadge" class="count-badge" style="display:none;margin-left:6px;background:var(--danger);"></span></a>
+        </div>
+
         <div class="sidebar-divider"></div>
-        <a href="staff-dashboard.html" class="sidebar-link" data-label="Espace enseignant"><span class="ic">👩‍🏫</span><span class="txt">Espace enseignant</span></a>
-        <a href="reception-dashboard.html" class="sidebar-link" data-label="Espace reception"><span class="ic">💁</span><span class="txt">Espace reception</span></a>
+        <div class="sidebar-group">
+          <a href="staff-dashboard.html" class="sidebar-link" data-label="Espace enseignant"><span class="ic">👩‍🏫</span><span class="txt">Espace enseignant</span></a>
+          <a href="reception-dashboard.html" class="sidebar-link" data-label="Espace reception"><span class="ic">💁</span><span class="txt">Espace reception</span></a>
+        </div>
+
         <div class="sidebar-divider"></div>
-        <a href="index.html" class="sidebar-link" data-label="Accueil"><span class="ic">🏠</span><span class="txt">Accueil</span></a>
-        <button class="sidebar-link" id="logoutBtn" data-label="Deconnexion"><span class="ic">🚪</span><span class="txt">Deconnexion</span></button>
+        <div class="sidebar-group">
+          <a href="index.html" class="sidebar-link" data-label="Accueil"><span class="ic">🏠</span><span class="txt">Accueil</span></a>
+          <button class="sidebar-link" id="logoutBtn" data-label="Deconnexion"><span class="ic">🚪</span><span class="txt">Deconnexion</span></button>
+        </div>
+
       </div>
     </nav>
 
     <main class="main-area">
 
-      <div class="card card-green">
-        <h2>Eleves &amp; Classes</h2>
-        <p class="lead">Fiches eleves, catalogue des classes et inscriptions.</p>
-        <div class="coming-soon-grid" style="margin-bottom:16px;">
-          <div class="coming-soon-item" style="border-style:solid;color:var(--blue-dark);"><span class="count-badge" id="studentsCountBadge">—</span><br>Eleves actifs</div>
-          <div class="coming-soon-item" style="border-style:solid;color:var(--green-dark);"><span class="count-badge" id="classesCountBadge" style="background:var(--green);">—</span><br>Classes actives</div>
+      <div class="page-header">
+        <h1>Tableau de bord</h1>
+        <p class="page-sub">Vue d'ensemble de l'academie — donnees en direct.</p>
+      </div>
+
+      <div class="hero-row">
+        <div class="stat-tile stat-blue">
+          <div class="stat-icon">🎓</div>
+          <div><div class="stat-num" id="studentsCountBadge">—</div><div class="stat-label">Eleves actifs</div></div>
         </div>
+        <div class="stat-tile stat-green">
+          <div class="stat-icon">📚</div>
+          <div><div class="stat-num" id="classesCountBadge">—</div><div class="stat-label">Classes actives</div></div>
+        </div>
+        <div class="stat-tile stat-gold">
+          <div class="stat-icon">⏳</div>
+          <div><div class="stat-num" id="heroPendingBadge">—</div><div class="stat-label">Comptes en attente</div></div>
+        </div>
+        <div class="stat-tile stat-violet">
+          <div class="stat-icon">📨</div>
+          <div><div class="stat-num" id="heroMessagesBadge">—</div><div class="stat-label">Messages non lus</div></div>
+        </div>
+      </div>
+
+      <div class="card card-green">
+        <h2><span class="card-icon icon-green">🎓</span> Eleves &amp; Classes</h2>
+        <p class="lead">Fiches eleves, catalogue des classes et inscriptions.</p>
         <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
-          <a href="students.html" class="btn-sm btn-approve" style="text-decoration:none;display:inline-block;">Gerer les eleves</a>
-          <a href="classes.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les classes</a>
-          <a href="timetable.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Emploi du temps</a>
-          <a href="attendance.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Presence</a>
-          <a href="payments.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Paiements eleves</a>
-          <a href="workshops.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Ateliers &amp; formations</a>
+          <a href="students.html" class="btn-sm btn-approve btn-link">Gerer les eleves</a>
+          <a href="classes.html" class="btn-sm btn-reset btn-link">Gerer les classes</a>
+          <a href="timetable.html" class="btn-sm btn-reset btn-link">Emploi du temps</a>
+          <a href="attendance.html" class="btn-sm btn-reset btn-link">Presence</a>
+          <a href="payments.html" class="btn-sm btn-reset btn-link">Paiements eleves</a>
+          <a href="workshops.html" class="btn-sm btn-reset btn-link">Ateliers &amp; formations</a>
         </div>
       </div>
 
       <div class="card card-gold">
-        <h2>💰 Salaires du personnel</h2>
+        <h2><span class="card-icon icon-gold">💰</span> Salaires du personnel</h2>
         <p class="lead">Reserve a l'administration — pas visible par la reception ni par le personnel lui-meme.</p>
-        <a href="staff-payments.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Gerer les salaires</a>
+        <a href="staff-payments.html" class="btn-sm btn-gold btn-link">Gerer les salaires</a>
       </div>
 
       <div class="card card-teal">
-        <h2>📊 Resultats des tests</h2>
+        <h2><span class="card-icon icon-teal">📊</span> Resultats des tests</h2>
         <p class="lead">Historique des tests de positionnement passes par les eleves — recherche, impression, export et suppression individuelle.</p>
-        <button class="btn-sm btn-reset" id="openResultsBtnCard">Ouvrir les resultats</button>
+        <button class="btn-sm btn-teal" id="openResultsBtnCard">Ouvrir les resultats</button>
       </div>
 
       <div class="card card-blue">
-        <h2>📈 Statistiques</h2>
+        <h2><span class="card-icon icon-blue">📈</span> Statistiques</h2>
         <p class="lead">Eleves par matiere, evolution des inscriptions, statut des paiements et repartition par age — avec graphiques.</p>
-        <a href="statistics.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Voir les statistiques</a>
+        <a href="statistics.html" class="btn-sm btn-reset btn-link">Voir les statistiques</a>
       </div>
 
       <div class="card card-gold">
-        <h2>🎖️ Diplomes</h2>
+        <h2><span class="card-icon icon-gold">🎖️</span> Diplomes</h2>
         <p class="lead">Generez et imprimez un diplome pour n'importe quel eleve, dans n'importe quelle matiere — tous les eleves actifs sont charges automatiquement.</p>
-        <a href="diplomas.html" class="btn-sm btn-reset" style="text-decoration:none;display:inline-block;">Ouvrir les diplomes</a>
+        <a href="diplomas.html" class="btn-sm btn-gold btn-link">Ouvrir les diplomes</a>
       </div>
 
       <div class="card card-blue accounts-compact" id="messaging">
-        <h2>📨 Notifications au personnel</h2>
+        <h2><span class="card-icon icon-violet">📨</span> Notifications au personnel</h2>
         <p class="lead">SMS pas encore actif — envoi via la boite de reception de chacun uniquement.</p>
         <div class="msg-compose-row">
           <select id="msgTargetRole">
@@ -335,16 +451,16 @@
       </div>
 
       <div class="card">
-        <h2>🚪 Visiter un espace</h2>
+        <h2><span class="card-icon icon-neutral">🚪</span> Visiter un espace</h2>
         <p class="lead">Acces direct a n'importe quel espace, sans mot de passe supplementaire — votre session admin y donne deja acces.</p>
         <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
-          <a href="staff-dashboard.html" class="btn-sm" style="text-decoration:none;display:inline-block;border:1.5px solid var(--line);background:#fff;color:var(--ink);">👩‍🏫 Espace enseignant</a>
-          <a href="reception-dashboard.html" class="btn-sm" style="text-decoration:none;display:inline-block;border:1.5px solid var(--line);background:#fff;color:var(--ink);">💁 Espace reception</a>
+          <a href="staff-dashboard.html" class="btn-sm btn-outline btn-link">👩‍🏫 Espace enseignant</a>
+          <a href="reception-dashboard.html" class="btn-sm btn-outline btn-link">💁 Espace reception</a>
         </div>
       </div>
 
       <div class="card">
-        <h2>A venir</h2>
+        <h2><span class="card-icon icon-neutral">🧭</span> A venir</h2>
         <p class="lead">Ces modules s'ajouteront a la plateforme dans une prochaine phase.</p>
         <div class="coming-soon-grid">
           <div class="coming-soon-item">💳 Paiement gateway en ligne</div>
@@ -352,14 +468,14 @@
       </div>
 
       <div class="card card-blue accounts-compact" id="accounts">
-        <h2>Comptes en attente <span class="count-badge" id="pendingCount">0</span></h2>
+        <h2><span class="card-icon icon-violet">👤</span> Comptes en attente <span class="count-badge" id="pendingCount">0</span></h2>
         <p class="lead">Nouvelles inscriptions a valider avant qu'elles puissent se connecter.</p>
         <div id="pendingList"></div>
         <div class="empty-msg" id="pendingEmpty" style="display:none;">Aucun compte en attente.</div>
       </div>
 
       <div class="card card-blue accounts-compact">
-        <h2>Tous les comptes <span class="count-badge" id="allAccountsCount">0</span><button class="btn-toggle-accounts" id="toggleAccountsBtn">Afficher</button></h2>
+        <h2><span class="card-icon icon-violet">📋</span> Tous les comptes <span class="count-badge" id="allAccountsCount">0</span><button class="btn-toggle-accounts" id="toggleAccountsBtn">Afficher</button></h2>
         <p class="lead">Recherche, roles et statut de tous les comptes.</p>
         <div id="accountsPanel" style="display:none;">
           <input type="text" id="searchInput" placeholder="Rechercher par nom ou email...">
@@ -442,6 +558,8 @@ async function refreshProfiles(){
 function renderPending(){
   const pending = allProfiles.filter(p => p.role === 'pending' && p.status === 'active');
   document.getElementById('pendingCount').textContent = pending.length;
+  const heroPending = document.getElementById('heroPendingBadge');
+  if (heroPending) heroPending.textContent = pending.length;
   const list = document.getElementById('pendingList');
   const empty = document.getElementById('pendingEmpty');
   list.innerHTML = '';
@@ -783,6 +901,8 @@ document.getElementById('openResultsBtnCard').addEventListener('click', openResu
   ]);
   const readMsgIds = new Set((adminReads || []).map(r => r.message_id));
   const unreadCount = (adminMessages || []).filter(m => !readMsgIds.has(m.id)).length;
+  const heroMessages = document.getElementById('heroMessagesBadge');
+  if (heroMessages) heroMessages.textContent = unreadCount;
   if (unreadCount > 0){
     const badge = document.getElementById('inboxBadge');
     badge.textContent = unreadCount;
