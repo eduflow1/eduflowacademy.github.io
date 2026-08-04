@@ -1,0 +1,67 @@
+/* EduFlow Academy — shared animation layer, included on every page.
+   Page load fade-in, page-to-page transition, scroll reveal, micro-interactions. */
+
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    opacity: 0;
+    transition: opacity .35s ease, transform .35s ease;
+  }
+  body.eduflow-loaded {
+    opacity: 1;
+  }
+  body.eduflow-leaving {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  .eduflow-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .55s cubic-bezier(.22,.61,.36,1),
+                transform .55s cubic-bezier(.22,.61,.36,1);
+    transition-delay: var(--eduflow-delay, 0s);
+  }
+  .eduflow-reveal.eduflow-in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Micro-interactions */
+button, .btn, input[type="submit"], input[type="button"], a.button, a.btn {
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+button:hover, .btn:hover, input[type="submit"]:hover, input[type="button"]:hover,
+a.button:hover, a.btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+}
+button:active, .btn:active, input[type="submit"]:active, input[type="button"]:active,
+a.button:active, a.btn:active {
+  transform: translateY(0) scale(.96);
+}
+
+a:not(.btn):not(.button) {
+  transition: color .15s ease, opacity .15s ease;
+}
+
+table tbody tr {
+  transition: background-color .15s ease;
+}
+
+[class*="card"], [class*="panel"], [class*="tile"] {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+[class*="card"]:hover, [class*="panel"]:hover, [class*="tile"]:hover {
+  transform: translateY(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  body { opacity: 1 !important; transform: none !important; }
+}
