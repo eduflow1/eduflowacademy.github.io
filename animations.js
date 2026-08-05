@@ -52,25 +52,34 @@
 
   function collectRevealTargets() {
     var skipTags = { SCRIPT: 1, STYLE: 1, LINK: 1, NOSCRIPT: 1, META: 1 };
+    var atomicTags = { NAV: 1, HEADER: 1, FOOTER: 1, ASIDE: 1 };
+    var maxDepth = 3;
+    var maxTargets = 60;
+
+    function expand(el, depth) {
+      if (atomicTags[el.tagName] || depth >= maxDepth) return [el];
+      var kids = Array.prototype.filter.call(el.children, function (c) {
+        return !skipTags[c.tagName];
+      });
+      if (kids.length >= 2 && kids.length <= 60) {
+        var out = [];
+        kids.forEach(function (k) {
+          out = out.concat(expand(k, depth + 1));
+        });
+        return out;
+      }
+      return [el];
+    }
+
     var top = Array.prototype.filter.call(document.body.children, function (el) {
       return !skipTags[el.tagName];
     });
 
     var targets = [];
-    if (top.length <= 3) {
-      top.forEach(function (el) {
-        if (el.children && el.children.length > 1 && el.children.length < 40) {
-          Array.prototype.forEach.call(el.children, function (c) {
-            if (!skipTags[c.tagName]) targets.push(c);
-          });
-        } else {
-          targets.push(el);
-        }
-      });
-    } else {
-      targets = top;
-    }
-    return targets.slice(0, 40);
+    top.forEach(function (el) {
+      targets = targets.concat(expand(el, 0));
+    });
+    return targets.slice(0, maxTargets);
   }
 
   function setupReveal() {
