@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Test de Français Thématique (6-12 ans)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --blue:#3FAEDD;
+    --blue-dark:#2E8FBD;
+    --green:#7BC46B;
+    --green-dark:#5FA850;
+    --ink:#4A4B4D;
+    --bg:#EEF1F0;
+    --card:#FFFFFF;
+    --line:#DDE3E1;
+    --danger:#E0654F;
+    --radius:18px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 60px;
+  }
+  h1,h2,h3,.brand-name{font-family:'Quicksand',sans-serif;}
+  .screen{width:100%;max-width:1300px;display:none;}
+  .screen.active{display:block;animation:fadeIn .5s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  .topbar{display:flex;align-items:center;gap:14px;width:100%;max-width:1300px;margin-bottom:22px;}
+  .logo-wrap{width:52px;height:52px;border-radius:14px;overflow:hidden;flex:none;box-shadow:0 4px 14px rgba(0,0,0,0.08);background:#fff;}
+  .logo-wrap img{width:100%;height:100%;object-fit:cover;}
+  .brand-name{font-weight:700;font-size:1.15rem;color:var(--ink);line-height:1.1;}
+  .brand-sub{font-size:0.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-dark);font-weight:600;}
+
+  .wave{width:100%;height:34px;margin:6px 0 18px;position:relative;overflow:hidden;}
+  .wave svg{width:200%;height:100%;animation:waveMove 9s linear infinite;}
+  @keyframes waveMove{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  @media (prefers-reduced-motion: reduce){.wave svg{animation:none;}}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:32px 30px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    max-width:860px;margin-left:auto;margin-right:auto;
+  }
+  .card + .card{margin-top:18px;}
+
+  h2{margin:0 0 6px;font-size:1.5rem;color:var(--ink);}
+  .lead{color:#7A7B7D;font-size:0.96rem;margin-bottom:22px;line-height:1.5;}
+
+  label{display:block;font-weight:600;font-size:0.85rem;margin-bottom:6px;color:var(--ink);}
+  input[type=text],input[type=number],select{
+    width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:1rem;font-family:'Inter',sans-serif;margin-bottom:18px;background:#FAFBFB;
+    transition:border-color .15s;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--blue);}
+
+  .rules{list-style:none;padding:0;margin:0 0 24px;}
+  .rules li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--line);font-size:0.92rem;color:#5B5C5E;}
+  .rules li:last-child{border-bottom:none;}
+  .rules .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:6px;background:linear-gradient(135deg,var(--blue),var(--green));}
+
+  button{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;border:none;border-radius:14px;padding:14px 26px;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;}
+  button:active{transform:scale(0.98);}
+  .btn-primary{background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;box-shadow:0 8px 20px rgba(63,174,221,0.30);}
+  .btn-primary:hover{box-shadow:0 10px 26px rgba(63,174,221,0.4);}
+  .btn-primary:disabled{opacity:0.45;cursor:not-allowed;box-shadow:none;}
+  .btn-row{display:flex;justify-content:flex-end;gap:12px;margin-top:6px;flex-wrap:wrap;}
+  .btn-ghost{background:transparent;color:var(--blue-dark);border:1.5px solid var(--line);}
+
+  .error-msg{color:var(--danger);font-size:0.85rem;margin:-10px 0 14px;display:none;}
+  footer.mini{margin-top:26px;font-size:0.75rem;color:#9A9B9C;text-align:center;}
+
+  /* Theme picker */
+  .theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:8px;}
+  .theme-card{border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;background:#FCFDFD;transition:border-color .15s,background .15s;}
+  .theme-card:hover{border-color:var(--blue);}
+  .theme-card.selected{border-color:var(--blue);background:rgba(63,174,221,0.08);}
+  .theme-card .t-name{font-weight:700;font-family:'Quicksand',sans-serif;font-size:0.98rem;margin-bottom:4px;}
+  .theme-card .t-desc{font-size:0.8rem;color:#7A7B7D;line-height:1.4;}
+  .theme-card .t-count{font-size:0.72rem;color:var(--blue-dark);font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.03em;}
+  .check-box{width:18px;height:18px;border-radius:6px;border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;margin-right:8px;vertical-align:-4px;}
+  .theme-card.selected .check-box{background:var(--blue);border-color:var(--blue);}
+  .theme-card.selected .check-box::after{content:'✓';color:#fff;font-size:12px;font-weight:700;}
+
+  /* Test screen */
+  .test-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+  .skill-chip{font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.78rem;padding:6px 14px;border-radius:999px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--green));}
+  .theme-chip{font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.78rem;padding:6px 14px;border-radius:999px;color:var(--blue-dark);background:#F0F6FB;border:1px solid #BFE3F5;}
+  .stopwatch{font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.95rem;padding:8px 16px;border-radius:12px;background:#fff;border:1.5px solid var(--line);color:#9A9B9C;}
+  .progress-outer{width:100%;height:8px;border-radius:999px;background:#E4E9E7;overflow:hidden;margin-bottom:22px;}
+  .progress-inner{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px;transition:width .3s ease;}
+  .q-index{font-size:0.78rem;color:#9A9B9C;font-weight:600;margin-bottom:6px;letter-spacing:.03em;text-transform:uppercase;}
+  .q-passage{background:#F6F8F7;border-left:4px solid var(--blue);padding:14px 16px;border-radius:10px;font-size:0.98rem;line-height:1.55;margin-bottom:16px;}
+  .q-text{font-size:1.12rem;font-weight:600;margin-bottom:18px;color:var(--ink);}
+  .options{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;}
+  .opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:12px;border:1.5px solid var(--line);cursor:pointer;font-size:0.96rem;background:#FCFDFD;transition:border-color .15s, background .15s;}
+  .opt:hover{border-color:var(--blue);}
+  .opt.selected{border-color:var(--blue);background:rgba(63,174,221,0.08);}
+  .opt .bullet{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;position:relative;}
+  .opt.selected .bullet{border-color:var(--blue);}
+  .opt.selected .bullet::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--blue);}
+  .audio-btn{display:inline-flex;align-items:center;gap:10px;padding:11px 18px;border-radius:12px;background:#F0F6FB;border:1.5px solid var(--blue);color:var(--blue-dark);font-weight:700;cursor:pointer;margin-bottom:18px;font-family:'Quicksand',sans-serif;}
+  .audio-btn:hover{background:#E4F1FA;}
+  .audio-btn.playing{background:var(--blue);color:#fff;}
+  .hint-audio{font-size:0.78rem;color:#9A9B9C;margin:-12px 0 16px;}
+  .replay-count{font-size:0.75rem;color:#9A9B9C;margin:-14px 0 16px;}
+  .record-box{background:#F6F8F7;border-radius:14px;padding:20px;text-align:center;margin-bottom:16px;}
+  .rec-btn{width:64px;height:64px;border-radius:50%;background:var(--danger);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;border:none;box-shadow:0 6px 18px rgba(224,101,79,0.35);}
+  .rec-btn.recording{animation:pulse 1.2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(224,101,79,0.5);}70%{box-shadow:0 0 0 16px rgba(224,101,79,0);}100%{box-shadow:0 0 0 0 rgba(224,101,79,0);}}
+  .rec-status{margin-top:10px;font-size:0.85rem;color:#7A7B7D;}
+  .rec-playback{margin-top:14px;}
+  .skip-note{font-size:0.78rem;color:#9A9B9C;margin-top:10px;}
+  .fill-input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font-size:1rem;margin-bottom:8px;}
+
+  /* Results */
+  .report-header{display:flex;align-items:center;gap:16px;margin-bottom:6px;}
+  .report-logo{width:64px;height:64px;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.1);flex:none;background:#fff;}
+  .report-logo img{width:100%;height:100%;object-fit:cover;}
+  .score-badge{display:inline-block;font-family:'Quicksand',sans-serif;font-weight:700;font-size:2.4rem;padding:10px 30px;border-radius:16px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--green));margin:14px 0;}
+  .score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:20px 0;}
+  .score-card{background:#F6F8F7;border-radius:14px;padding:16px;text-align:center;}
+  .score-card .num{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.5rem;color:var(--blue-dark);}
+  .score-card .lbl{font-size:0.78rem;color:#7A7B7D;text-transform:uppercase;letter-spacing:.04em;margin-top:4px;}
+  .bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .bar-row .lbl{width:190px;font-size:0.85rem;font-weight:600;flex:none;}
+  .bar-outer{flex:1;height:12px;background:#E4E9E7;border-radius:999px;overflow:hidden;}
+  .bar-inner{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));}
+  .bar-pct{width:44px;text-align:right;font-size:0.82rem;color:#7A7B7D;flex:none;}
+  .note-box{background:#FFF8EE;border:1px solid #F0DFB8;border-radius:12px;padding:14px 16px;font-size:0.85rem;color:#8A6D2F;margin-top:10px;}
+  .review-item{padding:12px 0;border-bottom:1px dashed var(--line);font-size:0.88rem;}
+  .review-item:last-child{border-bottom:none;}
+  .review-item .rq{font-weight:600;margin-bottom:4px;}
+  .review-item .ra-wrong{color:var(--danger);}
+  .review-item .ra-right{color:var(--green-dark);}
+  @media print{
+    .no-print{display:none !important;}
+    body{background:#fff;padding:0;}
+    .card{box-shadow:none;border:1px solid #ccc;}
+  }
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="logo-wrap"><img src="media/logo.jpg" alt="Edu Flow Academy" onerror="this.style.display='none'"></div>
+    <div>
+      <div class="brand-name">Edu Flow Academy</div>
+      <div class="brand-sub">Test de français thématique — Enfants (6-12 ans)</div>
+    </div>
+  </div>
+
+  <div class="wave">
+    <svg viewBox="0 0 800 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 20 Q 50 0 100 20 T 200 20 T 300 20 T 400 20 T 500 20 T 600 20 T 700 20 T 800 20 L800 40 L0 40 Z" fill="url(#g1)"/>
+      <path d="M800 20 Q 850 0 900 20 T 1000 20 T 1100 20 T 1200 20 T 1300 20 T 1400 20 T 1500 20 T 1600 20 L1600 40 L800 40 Z" fill="url(#g1)"/>
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#7BC46B"/>
+          <stop offset="1" stop-color="#3FAEDD"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- SCREEN: INTRO / THEMES / STUDENT INFO -->
+  <div class="screen active" id="screen-login">
+    <div class="card">
+      <h2>Mon test de français 🌟</h2>
+      <p class="lead">Ce test est fait pour les enfants de 6 à 12 ans. Choisis un ou plusieurs thèmes, indique le nombre de questions que tu veux, puis écris ton prénom et ton âge pour commencer. Il y a des mots à lire, des sons à écouter, des jeux de grammaire et même un peu de parole avec le micro !</p>
+
+      <label>Choisis un ou plusieurs thèmes</label>
+      <div class="theme-grid" id="themeGrid"></div>
+      <div class="error-msg" id="errTheme">Choisis au moins un thème.</div>
+
+      <label for="qCount" style="margin-top:8px;">Nombre de questions</label>
+      <select id="qCount">
+        <option value="10" selected>10 questions (rapide)</option>
+        <option value="20">20 questions</option>
+        <option value="30">30 questions</option>
+        <option value="50">50 questions</option>
+        <option value="all">Toutes les questions des thèmes choisis</option>
+      </select>
+
+      <label for="studentName">Ton prénom et ton nom</label>
+      <input type="text" id="studentName" placeholder="Ex. : Adam Idrissi">
+      <div class="error-msg" id="errName">N'oublie pas d'écrire ton nom.</div>
+
+      <label for="studentAge">Ton âge</label>
+      <input type="number" id="studentAge" min="6" max="12" placeholder="Ex. : 9">
+      <div class="error-msg" id="errAge">Indique ton âge (entre 6 et 12 ans).</div>
+
+      <h3 style="font-size:1rem;margin:22px 0 10px;">Avant de commencer</h3>
+      <ul class="rules">
+        <li><span class="dot"></span>Les questions arrivent dans un ordre <strong>tout mélangé</strong> : lecture, écoute, grammaire, écriture et un peu de parole.</li>
+        <li><span class="dot"></span>Pour les questions avec un haut-parleur 🔊, tu peux réécouter autant de fois que tu veux avant de répondre.</li>
+        <li><span class="dot"></span>Pour les questions de parole, ton micro enregistre ta voix ; une correction automatique te donne un score.</li>
+        <li><span class="dot"></span>Une fois ta réponse validée, tu ne peux plus revenir en arrière — réfléchis bien avant de valider !</li>
+        <li><span class="dot"></span>À la fin, ton résultat s'affiche automatiquement. Tu pourras l'imprimer ou l'enregistrer.</li>
+        <li><span class="dot"></span>Demande à un adulte de t'aider si le micro ne fonctionne pas.</li>
+      </ul>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="btnStart">C'est parti ! 🚀</button>
+      </div>
+    </div>
+    <footer class="mini">Edu Flow Academy — Plateforme d'évaluation linguistique</footer>
+  </div>
+
+  <!-- SCREEN: TEST (populated by JS) -->
+  <div class="screen" id="screen-test"></div>
+
+  <!-- SCREEN: RESULTS (populated by JS) -->
+  <div class="screen" id="screen-results"></div>
+
+<script src="french-test-data-enfant.js"></script>
+<script src="french-test-engine.js"></script>
+  <script src="animations.js" defer></script>
+</body>
+</html>
