@@ -46,7 +46,7 @@
       e.preventDefault();
       document.body.classList.remove('eduflow-loaded');
       document.body.classList.add('eduflow-leaving');
-      setTimeout(function () { window.location.href = href; }, reduceMotion ? 0 : 180);
+      setTimeout(function () { window.location.href = href; }, reduceMotion ? 0 : 280);
     }, true);
   }
 
@@ -88,7 +88,7 @@
 
     targets.forEach(function (el, i) {
       el.classList.add('eduflow-reveal');
-      el.style.setProperty('--eduflow-delay', Math.min(i * 0.06, 0.48) + 's');
+      el.style.setProperty('--eduflow-delay', Math.min(i * 0.1, 0.7) + 's');
     });
 
     if (!('IntersectionObserver' in window) || reduceMotion) {
