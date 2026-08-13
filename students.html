@@ -336,6 +336,37 @@
         <select id="classPicker"></select>
         <button class="btn-sm btn-primary-sm" id="enrollBtn">+ Inscrire a cette classe</button>
       </div>
+      <div id="newGroupForm" class="no-print" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+        <div class="field-row">
+          <div class="field">
+            <label for="newGroupSubject">Matiere</label>
+            <select id="newGroupSubject"></select>
+          </div>
+          <div class="field">
+            <label for="newGroupLevel">Niveau</label>
+            <input type="text" id="newGroupLevel" list="newGroupLevelSuggestions" placeholder="Ex. : A1">
+            <datalist id="newGroupLevelSuggestions">
+              <option value="Pre-A1"><option value="A1"><option value="A2">
+              <option value="B1"><option value="B2"><option value="C1"><option value="C2">
+              <option value="Junior">
+            </datalist>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="newGroupName">Nom de la classe (optionnel)</label>
+            <input type="text" id="newGroupName" placeholder="Ex. : Anglais A1 - Soir">
+          </div>
+          <div class="field">
+            <label for="newGroupCapacity">Capacite</label>
+            <input type="number" id="newGroupCapacity" min="1" value="12">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-sm btn-primary-sm" id="createGroupBtn">Creer le groupe et inscrire</button>
+          <button class="btn-sm btn-ghost-sm" id="cancelNewGroupBtn">Annuler</button>
+        </div>
+      </div>
     </div>
     <div class="card" id="paymentsCard" style="display:none;">
       <h2>Paiements</h2>
@@ -942,14 +973,51 @@ function renderEnrollments(){
 
   const wrap = document.getElementById('enrollActionWrap');
   wrap.style.display = canWrite() ? 'flex' : 'none';
+  document.getElementById('newGroupForm').style.display = 'none';
   if (canWrite()){
     const enrolledIds = enrollments.map(e => e.class_id);
     const picker = document.getElementById('classPicker');
     const available = activeClasses.filter(c => !enrolledIds.includes(c.id));
-    picker.innerHTML = available.map(c =>
-      `<option value="${c.id}">${c.name} — ${subjectLabel(c.subject)} ${c.level||''}</option>`
-    ).join('') || '<option value="">Aucune classe disponible</option>';
+
+    const bySubject = {};
+    available.forEach(c => {
+      if (!bySubject[c.subject]) bySubject[c.subject] = [];
+      bySubject[c.subject].push(c);
+    });
+
+    let html = '<option value="__new__">+ Nouveau groupe…</option>';
+    Object.keys(bySubject)
+      .sort((a, b) => subjectLabel(a).localeCompare(subjectLabel(b)))
+      .forEach(subject => {
+        const classes = bySubject[subject].slice().sort((a, b) => {
+          const ia = ENROLL_LEVEL_ORDER.indexOf(a.level);
+          const ib = ENROLL_LEVEL_ORDER.indexOf(b.level);
+          if (ia === -1 && ib === -1) return a.name.localeCompare(b.name);
+          if (ia === -1) return 1;
+          if (ib === -1) return -1;
+          return ia - ib;
+        });
+        html += `<optgroup label="${subjectLabel(subject)}">` +
+          classes.map(c => `<option value="${c.id}">${c.level ? c.level + ' — ' : ''}${c.name}</option>`).join('') +
+          '</optgroup>';
+      });
+    if (!available.length){
+      html += '<option value="" disabled selected>Aucune classe disponible</option>';
+    }
+    picker.innerHTML = html;
+
+    document.getElementById('newGroupSubject').innerHTML =
+      Object.keys(EDUFLOW_SUBJECT_LABELS).map(code =>
+        `<option value="${code}">${EDUFLOW_SUBJECT_LABELS[code]}</option>`
+      ).join('');
+    syncNewGroupVisibility();
   }
+}
+
+function syncNewGroupVisibility(){
+  const isNew = document.getElementById('classPicker').value === '__new__';
+  document.getElementById('newGroupForm').style.display = isNew ? 'block' : 'none';
+  document.getElementById('enrollBtn').style.display = isNew ? 'none' : 'inline-block';
 }
 
 document.getElementById('detailBackLink').addEventListener('click', () => showView('list'));
@@ -972,6 +1040,61 @@ document.getElementById('enrollBtn').addEventListener('click', async () => {
     alert(error.code === '23505' ? 'Cet eleve est deja inscrit a cette classe.' : 'Erreur : ' + error.message);
     return;
   }
+  await loadAll();
+  currentDetailStudent = allStudents.find(x => x.id === currentDetailStudent.id);
+  renderDetail();
+});
+
+document.getElementById('classPicker').addEventListener('change', syncNewGroupVisibility);
+
+document.getElementById('cancelNewGroupBtn').addEventListener('click', () => {
+  const picker = document.getElementById('classPicker');
+  const firstReal = Array.from(picker.options).find(o => o.value && o.value !== '__new__');
+  picker.value = firstReal ? firstReal.value : '__new__';
+  document.getElementById('newGroupLevel').value = '';
+  document.getElementById('newGroupName').value = '';
+  document.getElementById('newGroupCapacity').value = '12';
+  syncNewGroupVisibility();
+});
+
+document.getElementById('createGroupBtn').addEventListener('click', async () => {
+  const subject = document.getElementById('newGroupSubject').value;
+  const level = document.getElementById('newGroupLevel').value.trim();
+  const capacity = Number(document.getElementById('newGroupCapacity').value) || 12;
+  if (!level){
+    alert('Merci de saisir un niveau pour ce nouveau groupe (ex. : A1).');
+    return;
+  }
+  const name = document.getElementById('newGroupName').value.trim() || `${subjectLabel(subject)} ${level}`;
+
+  const btn = document.getElementById('createGroupBtn');
+  btn.disabled = true;
+
+  const { data: newClass, error: classError } = await eduflowClient
+    .from('classes')
+    .insert({ name, subject, level, capacity, created_by: currentProfile.id })
+    .select()
+    .single();
+
+  if (classError){
+    alert('Erreur lors de la creation du groupe : ' + classError.message);
+    btn.disabled = false;
+    return;
+  }
+
+  const { error: enrollError } = await eduflowClient.from('enrollments').insert({
+    student_id: currentDetailStudent.id, class_id: newClass.id, created_by: currentProfile.id
+  });
+
+  btn.disabled = false;
+  if (enrollError){
+    alert('Le groupe a ete cree, mais l\'inscription a echoue : ' + enrollError.message);
+    return;
+  }
+
+  document.getElementById('newGroupLevel').value = '';
+  document.getElementById('newGroupName').value = '';
+  document.getElementById('newGroupCapacity').value = '12';
   await loadAll();
   currentDetailStudent = allStudents.find(x => x.id === currentDetailStudent.id);
   renderDetail();
