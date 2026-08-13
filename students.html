@@ -273,6 +273,13 @@
         </select>
       </div>
 
+      <div class="field" id="fGroupField">
+        <label for="fGroupInput">Groupe (optionnel)</label>
+        <select id="fGroupInput">
+          <option value="">— Aucun (choisir plus tard) —</option>
+        </select>
+      </div>
+
       <div class="lookup-box" id="lookupBox" style="display:none;">
         <strong>Resultats de test trouves pour ce nom :</strong>
         <div id="lookupHits"></div>
@@ -631,10 +638,46 @@ function clearForm(){
   document.getElementById('lookupBox').style.display = 'none';
 }
 
+// Builds <optgroup> options (subject -> level-sorted classes) for a
+// class picker. Shared shape with the enroll-a-class picker on the
+// student detail page, so groups read the same everywhere.
+function buildGroupOptionsHTML(){
+  const bySubject = {};
+  activeClasses.forEach(c => {
+    if (!bySubject[c.subject]) bySubject[c.subject] = [];
+    bySubject[c.subject].push(c);
+  });
+  let html = '';
+  Object.keys(bySubject)
+    .sort((a, b) => subjectLabel(a).localeCompare(subjectLabel(b)))
+    .forEach(subject => {
+      const classes = bySubject[subject].slice().sort((a, b) => {
+        const ia = ENROLL_LEVEL_ORDER.indexOf(a.level);
+        const ib = ENROLL_LEVEL_ORDER.indexOf(b.level);
+        if (ia === -1 && ib === -1) return a.name.localeCompare(b.name);
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+      html += `<optgroup label="${subjectLabel(subject)}">` +
+        classes.map(c => `<option value="${c.id}">${c.level ? c.level + ' — ' : ''}${c.name}</option>`).join('') +
+        '</optgroup>';
+    });
+  return html;
+}
+
+function populateGroupPicker(){
+  document.getElementById('fGroupInput').innerHTML =
+    '<option value="">— Aucun (choisir plus tard) —</option>' + buildGroupOptionsHTML();
+}
+
 function openNewForm(){
   editingStudentId = null;
   clearForm();
   document.getElementById('formTitle').textContent = 'Nouvel eleve';
+  document.getElementById('fGroupField').style.display = 'block';
+  populateGroupPicker();
+  document.getElementById('fGroupInput').value = '';
   showView('form');
 }
 
@@ -648,6 +691,7 @@ function openEditForm(student){
   document.getElementById('fGuardianPhoneInput').value = student.guardian_phone || '';
   document.getElementById('fNotesInput').value = student.notes || '';
   document.getElementById('fStatusInput').value = student.status || 'active';
+  document.getElementById('fGroupField').style.display = 'none';
   document.getElementById('lookupBox').style.display = 'none';
   document.getElementById('formTitle').textContent = 'Modifier ' + student.full_name;
   showView('form');
@@ -710,8 +754,23 @@ document.getElementById('saveStudentBtn').addEventListener('click', async () => 
   }
   btn.disabled = false;
   if (error){ alert('Erreur : ' + error.message); return; }
+
+  const groupId = newId ? document.getElementById('fGroupInput').value : '';
+  let groupEnrollError = null;
+  if (newId && groupId){
+    const res = await eduflowClient.from('enrollments').insert({
+      student_id: newId, class_id: groupId, created_by: currentProfile.id
+    });
+    groupEnrollError = res.error;
+    if (groupEnrollError){
+      alert("Eleve enregistre, mais l'inscription au groupe a echoue : " + groupEnrollError.message);
+    }
+  }
+
   await loadAll();
-  if (newId){
+  if (newId && groupId && !groupEnrollError){
+    await openDetail(newId);
+  } else if (newId){
     openEnrollStep(newId);
   } else {
     showView('list');

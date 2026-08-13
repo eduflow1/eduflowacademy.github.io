@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Certificate Verification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --green:#7BC46B; --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF;
+    --line:#DDE3E1; --danger:#E0654F; --gold:#C9A24B; --navy:#1B2A4A; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(201,162,75,0.14), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:28px 16px 60px;
+  }
+  .wrap{width:100%;max-width:480px;}
+  .card{background:var(--card);border-radius:var(--radius);padding:34px 30px;box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);text-align:center;}
+  .logo-row{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:6px;}
+  .logo-row img{width:56px;height:56px;border-radius:14px;object-fit:cover;border:2px solid var(--gold);}
+  .brand-name{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.05rem;color:var(--ink);}
+  h1{font-family:'Cinzel',serif;font-size:1.05rem;letter-spacing:.08em;color:var(--navy);margin:14px 0 20px;text-transform:uppercase;}
+
+  .status-badge{
+    display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:22px;
+  }
+  .status-valid{background:#EAF6E9;color:#2E7D32;}
+  .status-revoked{background:#FCE9E6;color:#B3261E;}
+  .status-notfound{background:#F0F0F5;color:#6B6C8A;}
+
+  .detail-table{width:100%;border-collapse:collapse;text-align:left;font-size:0.9rem;}
+  .detail-table td{padding:9px 4px;border-bottom:1px solid var(--line);}
+  .detail-table td:first-child{color:#9A9B9C;font-weight:600;width:42%;}
+  .detail-table td:last-child{font-weight:600;text-align:right;}
+  .detail-table tr:last-child td{border-bottom:none;}
+
+  .not-found-msg{color:#7A7B7D;font-size:0.9rem;line-height:1.6;}
+  .loading-msg{color:#9A9B9C;font-size:0.9rem;padding:20px 0;}
+  .footer-note{margin-top:22px;font-size:0.76rem;color:#B8BCBA;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card">
+    <div class="logo-row">
+      <img src="media/logo.jpg" alt="Edu Flow Academy">
+      <div class="brand-name">Edu Flow Academy</div>
+    </div>
+    <h1>Certificate Verification</h1>
+
+    <div id="loadingMsg" class="loading-msg">Checking certificate…</div>
+
+    <div id="resultBox" style="display:none;">
+      <div id="statusBadge" class="status-badge"></div>
+      <table class="detail-table" id="detailTable" style="display:none;"></table>
+      <div id="notFoundMsg" class="not-found-msg" style="display:none;">
+        We couldn't find a certificate matching this code. Please check the link or QR code and try again, or contact Edu Flow Academy directly.
+      </div>
+    </div>
+
+    <div class="footer-note">Issued by Edu Flow Academy</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+function fmtDateShort(d){
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-GB');
+}
+function fmtDateTime(d){
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+}
+
+(async () => {
+  const code = new URLSearchParams(window.location.search).get('code');
+  const loading = document.getElementById('loadingMsg');
+  const resultBox = document.getElementById('resultBox');
+  const badge = document.getElementById('statusBadge');
+  const table = document.getElementById('detailTable');
+  const notFound = document.getElementById('notFoundMsg');
+
+  if (!code){
+    loading.style.display = 'none';
+    resultBox.style.display = 'block';
+    badge.className = 'status-badge status-notfound';
+    badge.textContent = 'NO CERTIFICATE CODE PROVIDED';
+    notFound.style.display = 'block';
+    return;
+  }
+
+  const { data, error } = await eduflowClient.rpc('verify_diploma', { p_code: code });
+  loading.style.display = 'none';
+  resultBox.style.display = 'block';
+
+  const cert = Array.isArray(data) ? data[0] : data;
+  if (error || !cert){
+    badge.className = 'status-badge status-notfound';
+    badge.textContent = '✕ CERTIFICATE NOT FOUND';
+    notFound.style.display = 'block';
+    return;
+  }
+
+  if (cert.verification_status === 'revoked'){
+    badge.className = 'status-badge status-revoked';
+    badge.textContent = '⚠ CERTIFICATE REVOKED';
+  } else {
+    badge.className = 'status-badge status-valid';
+    badge.textContent = '✓ VALID CERTIFICATE';
+  }
+
+  const levelLabels = { A1:'A1 (Beginner)', A2:'A2 (Elementary)', B1:'B1 (Intermediate)', B2:'B2 (Upper-Intermediate)', C1:'C1 (Advanced)', C2:'C2 (Proficiency)' };
+  table.innerHTML = `
+    <tr><td>Certificate Code</td><td>${cert.certificate_code}</td></tr>
+    <tr><td>Student</td><td>${cert.student_name}</td></tr>
+    <tr><td>Course</td><td>${cert.course || '—'}</td></tr>
+    <tr><td>Level</td><td>${levelLabels[cert.level] || cert.level || '—'}</td></tr>
+    <tr><td>Duration</td><td>${fmtDateShort(cert.start_date)} – ${fmtDateShort(cert.end_date)}</td></tr>
+    <tr><td>Instructor</td><td>${cert.instructor_1 || '—'}</td></tr>
+    <tr><td>Instructor</td><td>${cert.instructor_2 || '—'}</td></tr>
+    <tr><td>Issued</td><td>${fmtDateTime(cert.issued_at)}</td></tr>
+  `;
+  table.style.display = 'table';
+})();
+</script>
+</body>
+</html>

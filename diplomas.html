@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Edu Flow Academy — Diplomes</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Great+Vibes&family=Cinzel:wght@500;600;700&display=swap');
   :root{
     --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
     --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
@@ -190,15 +190,91 @@
     .diploma-stamp svg{width:60px;height:60px;}
   }
 
+  /* ---- Certificate of Completion (English diploma) ---- */
+  #completionFormCard{}
+  .cert-search-wrap{position:relative;}
+  .cert-search-results{
+    position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--line);
+    border-radius:12px;margin-top:4px;max-height:220px;overflow-y:auto;z-index:5;
+    box-shadow:0 10px 24px rgba(30,50,60,0.14);display:none;
+  }
+  .cert-search-results.open{display:block;}
+  .cert-search-hit{padding:9px 14px;cursor:pointer;font-size:0.88rem;}
+  .cert-search-hit:hover{background:#F6F8F7;}
+  .cert-search-hit .code{color:#9A9B9C;font-size:0.78rem;margin-left:6px;}
+  .cert-selected-chip{
+    display:none;align-items:center;gap:8px;background:#F6F8F7;border:1.5px solid var(--line);
+    border-radius:12px;padding:8px 12px;margin-top:8px;font-size:0.88rem;font-weight:600;
+  }
+  .cert-selected-chip.open{display:inline-flex;}
+  .cert-selected-chip button{border:none;background:none;cursor:pointer;color:var(--danger);font-weight:700;}
+
+  #completionView{display:none;}
+  #completionSuccessCard{display:none;}
+  .cert-actions{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+
+  .cert-stage{
+    width:100%;aspect-ratio:1.414/1;max-width:1050px;margin:0 auto;position:relative;
+    background:#FBF8EF;border-radius:6px;box-shadow:0 20px 50px rgba(30,50,60,0.20);
+    padding:14px;border:2px solid var(--gold);
+  }
+  .cert-inner{
+    height:100%;border:2.5px solid var(--gold);border-radius:2px;
+    outline:1px solid #1B2A4A;outline-offset:-7px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    padding:2.2% 6% 1.6%;position:relative;overflow:hidden;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(201,162,75,0.07), transparent 55%),
+      linear-gradient(160deg,#FDFBF3,#F8F3E4);
+  }
+  .cert-corner-flag{position:absolute;top:16px;width:52px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.18));}
+  .cert-corner-flag.left{left:16px;}
+  .cert-corner-flag.right{right:16px;}
+  .cert-emblem{width:54px;height:54px;margin:0 auto 2px;}
+  .cert-kingdom-fr{font-family:'Cinzel',serif;font-weight:600;font-size:0.68rem;letter-spacing:.12em;color:#1B2A4A;text-transform:uppercase;}
+  .cert-kingdom-ar{font-family:'Inter',sans-serif;font-weight:700;font-size:0.72rem;color:#1B2A4A;margin-top:1px;direction:rtl;}
+  .cert-title{font-family:'Cinzel',serif;font-weight:700;font-size:1.7rem;color:#1B2A4A;letter-spacing:.06em;margin:8px 0 0;line-height:1.15;}
+  .cert-title small{display:block;font-size:0.62em;letter-spacing:.14em;color:var(--gold);margin-top:1px;}
+  .cert-line{font-family:'Playfair Display',serif;font-style:italic;font-size:0.86rem;color:#5B5C5E;margin:9px 0 0;}
+  .cert-name{
+    font-family:'Great Vibes',cursive;font-size:2.7rem;line-height:1.2;color:#1B2A4A;
+    margin:2px 0;padding:0 12px 4px;border-bottom:1.5px solid var(--gold);display:inline-block;min-width:55%;max-width:92%;
+  }
+  .cert-course{font-family:'Cinzel',serif;font-weight:700;font-size:1.02rem;color:#1B2A4A;text-transform:uppercase;letter-spacing:.03em;margin:8px 0 0;}
+  .cert-meta-row{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin:7px 0 0;font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.76rem;color:var(--gold);letter-spacing:.03em;}
+  .cert-desc{font-size:0.72rem;color:#7A7B7D;max-width:74%;margin:9px auto 0;line-height:1.5;}
+  .cert-academy-row{margin-top:auto;padding-top:8px;display:flex;align-items:center;gap:9px;}
+  .cert-academy-logo{width:34px;height:34px;border-radius:8px;object-fit:cover;border:1.5px solid var(--gold);}
+  .cert-academy-name{font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;color:#1B2A4A;text-align:left;}
+  .cert-academy-motto{font-family:'Playfair Display',serif;font-style:italic;font-size:0.62rem;color:#9A9B9C;text-align:left;}
+  .cert-footer{display:flex;align-items:flex-end;justify-content:space-between;width:100%;margin-top:8px;gap:6px;}
+  .cert-sign{text-align:center;font-size:0.62rem;color:#7A7B7D;min-width:130px;flex:1;}
+  .cert-sign .sig-name{font-family:'Great Vibes',cursive;font-size:1.1rem;color:#1B2A4A;border-bottom:1.2px solid #B8BCBA;padding-bottom:2px;margin-bottom:2px;display:block;}
+  .cert-qr-block{text-align:center;flex:none;}
+  .cert-qr-block canvas{border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.14);}
+  .cert-code{font-family:'Inter',sans-serif;font-size:0.62rem;color:#1B2A4A;font-weight:700;letter-spacing:.03em;margin-top:3px;}
+
+  @media (max-width:760px){
+    .cert-title{font-size:1.15rem;}
+    .cert-name{font-size:1.7rem;}
+    .cert-course{font-size:0.8rem;}
+    .cert-line,.cert-desc{font-size:0.66rem;}
+    .cert-meta-row{font-size:0.64rem;gap:12px;}
+    .cert-footer{flex-wrap:wrap;justify-content:center;}
+    .cert-corner-flag{width:32px;}
+  }
+
   @media print{
     .no-print{display:none !important;}
     body{background:#fff;padding:0;}
     .wrap{max-width:none;}
     .diploma-stage{box-shadow:none;max-width:none;width:100%;aspect-ratio:auto;height:100vh;
       -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .cert-stage{box-shadow:none;max-width:none;width:100%;aspect-ratio:auto;height:100vh;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
     .batch-diploma-item{page-break-after:always;}
     .batch-diploma-item:last-child{page-break-after:auto;}
-    @page{ size: landscape; margin: 0.3in; }
+    @page{ size: A4 landscape; margin: 0.3in; }
   }
 </style>
   <link rel="stylesheet" href="animations.css">
@@ -257,6 +333,100 @@
       <div class="form-actions">
         <button class="btn-sm" id="classGenBtn" disabled>🎖️ Generer et imprimer toute la classe</button>
       </div>
+    </div>
+
+    <div class="card" id="completionFormCard">
+      <h2>🏆 Diplome de completion (Anglais)</h2>
+      <p class="lead">Certificat officiel avec code unique, QR de verification et signatures — pour une session terminee.</p>
+
+      <div class="field cert-search-wrap">
+        <label for="certStudentSearch">Eleve</label>
+        <input type="text" id="certStudentSearch" placeholder="Rechercher un eleve par nom ou code..." autocomplete="off">
+        <div class="cert-search-results" id="certStudentResults"></div>
+        <div class="cert-selected-chip" id="certStudentChip">
+          <span id="certStudentChipName"></span>
+          <button type="button" id="certStudentChipClear" title="Changer d'eleve">✕</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="certCourse">Cours</label>
+        <input type="text" id="certCourse" value="One Month Communication Sessions">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="certLevel">Niveau</label>
+          <select id="certLevel">
+            <option value="A1">A1 (Beginner)</option>
+            <option value="A2">A2 (Elementary)</option>
+            <option value="B1">B1 (Intermediate)</option>
+            <option value="B2">B2 (Upper-Intermediate)</option>
+            <option value="C1">C1 (Advanced)</option>
+            <option value="C2">C2 (Proficiency)</option>
+          </select>
+        </div>
+        <div class="field"></div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="certStartDate">Date de debut</label>
+          <input type="date" id="certStartDate">
+        </div>
+        <div class="field">
+          <label for="certEndDate">Date de fin</label>
+          <input type="date" id="certEndDate">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="certInstructor1">Instructeur 1</label>
+          <input type="text" id="certInstructor1" value="Brahim Azzoui">
+        </div>
+        <div class="field">
+          <label for="certInstructor2">Instructeur 2</label>
+          <input type="text" id="certInstructor2" value="Zakaria Alehiane">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="certAdmin">Administration</label>
+        <input type="text" id="certAdmin" value="Administration">
+      </div>
+
+      <div class="form-actions" style="margin-bottom:16px;">
+        <button class="btn-sm btn-ghost" id="certPreviewBtn">🔍 Apercu</button>
+        <button class="btn-sm" id="certGenerateBtn">🏆 Generer le certificat</button>
+      </div>
+
+      <div id="certPreviewWrap" style="display:none;">
+        <div class="cert-stage" id="certPreviewStage" style="max-width:720px;"></div>
+      </div>
+    </div>
+
+    <div class="card" id="completionSuccessCard">
+      <h2>✅ Certificat genere avec succes</h2>
+      <p class="lead">Code du certificat : <strong id="successCode"></strong></p>
+      <div class="form-actions">
+        <button class="btn-sm" id="successViewBtn">👁️ Voir le certificat</button>
+        <button class="btn-sm btn-ghost" id="successPrintBtn">🖨️ Imprimer</button>
+        <button class="btn-sm btn-ghost" id="successPdfBtn">📥 Telecharger en PDF</button>
+        <button class="btn-sm btn-ghost" id="successCopyBtn">🔗 Copier le lien de verification</button>
+      </div>
+    </div>
+
+    <div class="card" id="completionHistoryCard">
+      <h2>📜 Diplomes de completion emis <span class="count-badge" id="completionHistoryCount">0</span></h2>
+      <p class="lead">Historique des certificats generes — consultez, reimprimez ou revoquez un certificat.</p>
+      <div class="table-scroll">
+        <table class="history-table">
+          <thead><tr><th>Eleve</th><th>Code</th><th>Niveau</th><th>Cours</th><th>Debut</th><th>Fin</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="completionHistoryBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-msg" id="completionHistoryEmpty" style="display:none;">Aucun certificat de completion genere pour l'instant.</div>
     </div>
 
     <div class="card" id="historyCard">
@@ -344,11 +514,23 @@
       </div>
     </div>
   </div>
+
+  <!-- COMPLETION CERTIFICATE VIEW (full-screen, printable) -->
+  <div id="completionView">
+    <div class="cert-actions no-print">
+      <button class="btn-sm btn-ghost" id="completionBackBtn">← Retour a la liste</button>
+      <button class="btn-sm" id="completionPrintBtn">🖨️ Imprimer</button>
+      <button class="btn-sm btn-ghost" id="completionPdfBtn">📥 Telecharger en PDF</button>
+      <button class="btn-sm btn-ghost" id="completionCopyBtn">🔗 Copier le lien de verification</button>
+    </div>
+    <div class="cert-stage" id="completionStage"></div>
+  </div>
 </div>
 
 <div class="loading-msg" id="loadingMsg">Chargement...</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="eduflow-auth.js"></script>
 <script>
 let allStudents = [];
@@ -711,6 +893,347 @@ document.getElementById('searchHistoryInput').addEventListener('input', (e) => {
 });
 document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
 
+// ============================================================
+// Certificate of Completion (English diploma) — separate template
+// from the "Certificat de Reussite" above. Reuses the same
+// `diplomas` table (Phase 16, widened in Phase 19), the same
+// students list, and the same print pipeline (.cert-stage mirrors
+// .diploma-stage). Only rows with a `level` get a certificate_code
+// (assigned server-side by a trigger), so this never touches or
+// renumbers the plain diplomas generated above.
+// ============================================================
+
+const CERT_LEVEL_LABELS = {
+  A1: 'A1 (Beginner)', A2: 'A2 (Elementary)', B1: 'B1 (Intermediate)',
+  B2: 'B2 (Upper-Intermediate)', C1: 'C1 (Advanced)', C2: 'C2 (Proficiency)'
+};
+const VERIFY_BASE_URL = 'https://eduflow1.github.io/eduflowacademy.github.io/verify.html';
+
+let certSelectedStudent = null;
+let completionHistory = [];
+let lastGeneratedCert = null;
+let qrScriptReady = typeof QRCode !== 'undefined';
+
+function fmtDateShort(d){
+  if (!d) return '—';
+  const dt = (d instanceof Date) ? d : new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB'); // DD/MM/YYYY, matches the reference design
+}
+
+function verifyUrlFor(code){ return `${VERIFY_BASE_URL}?code=${encodeURIComponent(code)}`; }
+
+// ---- student search/select ----
+document.getElementById('certStudentSearch').addEventListener('input', () => {
+  const term = document.getElementById('certStudentSearch').value.trim().toLowerCase();
+  const box = document.getElementById('certStudentResults');
+  if (!term){ box.classList.remove('open'); box.innerHTML = ''; return; }
+  const hits = allStudents.filter(s =>
+    (s.full_name + ' ' + (s.student_code || '')).toLowerCase().includes(term)
+  ).slice(0, 8);
+  box.innerHTML = hits.map(s =>
+    `<div class="cert-search-hit" data-id="${s.id}">${s.full_name}<span class="code">${s.student_code || ''}</span></div>`
+  ).join('') || '<div class="cert-search-hit" style="color:#9A9B9C;cursor:default;">Aucun eleve trouve</div>';
+  box.classList.add('open');
+  box.querySelectorAll('.cert-search-hit[data-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      certSelectedStudent = allStudents.find(s => s.id === el.dataset.id) || null;
+      document.getElementById('certStudentChipName').textContent = certSelectedStudent ? certSelectedStudent.full_name : '';
+      document.getElementById('certStudentChip').classList.add('open');
+      document.getElementById('certStudentSearch').value = '';
+      box.classList.remove('open');
+      maybeRefreshCertPreview();
+    });
+  });
+});
+document.getElementById('certStudentChipClear').addEventListener('click', () => {
+  certSelectedStudent = null;
+  document.getElementById('certStudentChip').classList.remove('open');
+  maybeRefreshCertPreview();
+});
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.cert-search-wrap');
+  if (wrap && !wrap.contains(e.target)) document.getElementById('certStudentResults').classList.remove('open');
+});
+
+// ---- live preview ----
+function gatherCertFormData(){
+  return {
+    studentName: certSelectedStudent ? certSelectedStudent.full_name : null,
+    course: document.getElementById('certCourse').value.trim() || 'One Month Communication Sessions',
+    level: document.getElementById('certLevel').value,
+    startDate: document.getElementById('certStartDate').value,
+    endDate: document.getElementById('certEndDate').value,
+    instructor1: document.getElementById('certInstructor1').value.trim(),
+    instructor2: document.getElementById('certInstructor2').value.trim(),
+    administration: document.getElementById('certAdmin').value.trim() || 'Administration'
+  };
+}
+
+function certFlagsHTML(){
+  return `
+    <svg class="cert-corner-flag left" viewBox="0 0 60 30">
+      <rect width="60" height="30" fill="#00247D"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#CF142B" stroke-width="2"/>
+      <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>
+      <path d="M30,0 V30 M0,15 H60" stroke="#CF142B" stroke-width="6"/>
+    </svg>
+    <svg class="cert-corner-flag right" viewBox="0 0 60 30">
+      <rect width="60" height="30" fill="#00247D"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#CF142B" stroke-width="2"/>
+      <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>
+      <path d="M30,0 V30 M0,15 H60" stroke="#CF142B" stroke-width="6"/>
+    </svg>
+  `;
+}
+
+function certEmblemHTML(){
+  return `
+    <svg class="cert-emblem" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#C9A24B" stroke-width="2.5"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#1B2A4A" stroke-width="1"/>
+      <path d="M50,18 L61.76,54.18 L28.98,31.64 L71.02,31.64 L38.24,54.18 Z" fill="#C1272D" stroke="#006233" stroke-width="1.5"/>
+      <path d="M20,58 Q30,72 24,86" fill="none" stroke="#006233" stroke-width="3" stroke-linecap="round"/>
+      <path d="M80,58 Q70,72 76,86" fill="none" stroke="#006233" stroke-width="3" stroke-linecap="round"/>
+      <path d="M50,10 L45,18 L55,18 Z" fill="#C9A24B"/>
+    </svg>
+  `;
+}
+
+function buildCertInnerHTML(data, opts){
+  opts = opts || {};
+  const levelLabel = CERT_LEVEL_LABELS[data.level] || data.level;
+  const name = data.studentName || '— Selectionnez un eleve —';
+  const qrId = opts.qrId || ('qr-' + Math.random().toString(36).slice(2));
+  const qrBlock = opts.code
+    ? `<canvas id="${qrId}" width="76" height="76"></canvas><div class="cert-code">Certificate Code: ${opts.code}</div>`
+    : `<div style="width:76px;height:76px;border:1.5px dashed #C9A24B;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#B8A46A;padding:4px;">QR apres generation</div><div class="cert-code" style="visibility:hidden;">Certificate Code: ————</div>`;
+
+  return `
+    ${certFlagsHTML()}
+    ${certEmblemHTML()}
+    <div class="cert-kingdom-fr">Kingdom of Morocco</div>
+    <div class="cert-kingdom-ar">المملكة المغربية</div>
+    <div class="cert-title">Diploma<small>of Completion</small></div>
+    <div class="cert-line">This is to certify that</div>
+    <div class="cert-name">${name}</div>
+    <div class="cert-line">has successfully completed</div>
+    <div class="cert-course">${data.course}</div>
+    <div class="cert-meta-row">
+      <span>LEVEL: ${data.level} (${(levelLabel.match(/\((.*)\)/) || ['', ''])[1].toUpperCase()})</span>
+      <span>DURATION: ${fmtDateShort(data.startDate)} to ${fmtDateShort(data.endDate)}</span>
+    </div>
+    <div class="cert-desc">The program focused on improving English communication skills through interactive lessons, speaking practice, and real-life conversations.</div>
+    <div class="cert-academy-row">
+      <img class="cert-academy-logo" src="media/logo.jpg" alt="Edu Flow Academy">
+      <div>
+        <div class="cert-academy-name">EDU FLOW ACADEMY</div>
+        <div class="cert-academy-motto">Empowering Communication, Inspiring Success.</div>
+      </div>
+    </div>
+    <div class="cert-footer">
+      <div class="cert-sign"><span class="sig-name">${data.instructor1 || '—'}</span>Instructor</div>
+      <div class="cert-qr-block">${qrBlock}</div>
+      <div class="cert-sign"><span class="sig-name">${data.instructor2 || '—'}</span>Instructor</div>
+    </div>
+    <div class="cert-footer" style="margin-top:2px;">
+      <div class="cert-sign" style="flex:none;margin:0 auto;"><span class="sig-name">${data.administration || 'Administration'}</span>Administration</div>
+    </div>
+  `;
+}
+
+async function renderQrInto(canvasId, text){
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || typeof QRCode === 'undefined') return;
+  await new Promise(resolve => {
+    QRCode.toCanvas(canvas, text, { width: 76, margin: 1, color: { dark: '#1B2A4A', light: '#FBF8EF' } }, () => resolve());
+  });
+}
+
+function maybeRefreshCertPreview(){
+  const wrap = document.getElementById('certPreviewWrap');
+  if (wrap.style.display === 'none') return;
+  document.getElementById('certPreviewStage').innerHTML = buildCertInnerHTML(gatherCertFormData(), {});
+}
+
+['certCourse','certLevel','certStartDate','certEndDate','certInstructor1','certInstructor2','certAdmin'].forEach(id => {
+  document.getElementById(id).addEventListener('input', maybeRefreshCertPreview);
+  document.getElementById(id).addEventListener('change', maybeRefreshCertPreview);
+});
+
+document.getElementById('certPreviewBtn').addEventListener('click', () => {
+  document.getElementById('certPreviewWrap').style.display = 'block';
+  maybeRefreshCertPreview();
+});
+
+// ---- generate (writes to Supabase; certificate_code assigned by DB trigger) ----
+document.getElementById('certGenerateBtn').addEventListener('click', async () => {
+  const data = gatherCertFormData();
+  if (!certSelectedStudent){ alert('Merci de selectionner un eleve.'); return; }
+  if (!data.startDate || !data.endDate){ alert('Merci de renseigner les dates de debut et de fin.'); return; }
+  if (data.endDate < data.startDate){ alert('La date de fin doit etre apres la date de debut.'); return; }
+
+  const btn = document.getElementById('certGenerateBtn');
+  btn.disabled = true;
+  const { data: row, error } = await eduflowClient
+    .from('diplomas')
+    .insert({
+      student_id: certSelectedStudent.id,
+      student_name: certSelectedStudent.full_name,
+      subject_code: 'en',
+      subject_label: EDUFLOW_SUBJECT_LABELS['en'],
+      course: data.course,
+      level: data.level,
+      start_date: data.startDate,
+      end_date: data.endDate,
+      instructor_1: data.instructor1,
+      instructor_2: data.instructor2,
+      administration: data.administration,
+      issued_by: currentAdminId
+    })
+    .select()
+    .single();
+  btn.disabled = false;
+
+  if (error){
+    alert('Erreur lors de la generation du certificat : ' + error.message);
+    return;
+  }
+
+  lastGeneratedCert = Object.assign({}, data, { studentName: certSelectedStudent.full_name, code: row.certificate_code, issuedAt: row.issued_at });
+  document.getElementById('successCode').textContent = row.certificate_code;
+  document.getElementById('completionFormCard').style.display = 'none';
+  document.getElementById('completionSuccessCard').style.display = 'block';
+  window.scrollTo(0, 0);
+  await loadCompletionHistory();
+});
+
+function openCompletionView(certData){
+  const stage = document.getElementById('completionStage');
+  const qrId = 'qr-view-' + Date.now();
+  stage.innerHTML = buildCertInnerHTML(certData, { code: certData.code, qrId });
+  document.getElementById('listView').style.display = 'none';
+  document.getElementById('completionView').style.display = 'block';
+  window.scrollTo(0, 0);
+  renderQrInto(qrId, verifyUrlFor(certData.code));
+}
+
+document.getElementById('successViewBtn').addEventListener('click', () => openCompletionView(lastGeneratedCert));
+document.getElementById('successPrintBtn').addEventListener('click', async () => {
+  openCompletionView(lastGeneratedCert);
+  setTimeout(() => window.print(), 350);
+});
+document.getElementById('successPdfBtn').addEventListener('click', async () => {
+  openCompletionView(lastGeneratedCert);
+  alert('Dans la fenetre d\'impression, choisissez "Enregistrer au format PDF" comme imprimante.');
+  setTimeout(() => window.print(), 350);
+});
+document.getElementById('successCopyBtn').addEventListener('click', async () => {
+  try{
+    await navigator.clipboard.writeText(verifyUrlFor(lastGeneratedCert.code));
+    alert('Lien de verification copie.');
+  }catch(e){
+    prompt('Copiez ce lien :', verifyUrlFor(lastGeneratedCert.code));
+  }
+});
+
+document.getElementById('completionBackBtn').addEventListener('click', () => {
+  document.getElementById('completionView').style.display = 'none';
+  document.getElementById('listView').style.display = 'block';
+  document.getElementById('completionFormCard').style.display = 'block';
+  document.getElementById('completionSuccessCard').style.display = 'none';
+});
+document.getElementById('completionPrintBtn').addEventListener('click', () => window.print());
+document.getElementById('completionPdfBtn').addEventListener('click', () => {
+  alert('Dans la fenetre d\'impression, choisissez "Enregistrer au format PDF" comme imprimante.');
+  window.print();
+});
+document.getElementById('completionCopyBtn').addEventListener('click', async () => {
+  const code = document.querySelector('#completionStage .cert-code').textContent.replace('Certificate Code: ', '');
+  try{
+    await navigator.clipboard.writeText(verifyUrlFor(code));
+    alert('Lien de verification copie.');
+  }catch(e){
+    prompt('Copiez ce lien :', verifyUrlFor(code));
+  }
+});
+
+// ---- completion history (rows with a certificate_code only) ----
+async function loadCompletionHistory(){
+  const { data, error } = await eduflowClient
+    .from('diplomas')
+    .select('*')
+    .not('certificate_code', 'is', null)
+    .order('issued_at', { ascending: false })
+    .limit(200);
+  if (error){ console.error(error); return; }
+  completionHistory = data || [];
+  renderCompletionHistory();
+}
+
+function renderCompletionHistory(){
+  const body = document.getElementById('completionHistoryBody');
+  const empty = document.getElementById('completionHistoryEmpty');
+  document.getElementById('completionHistoryCount').textContent = completionHistory.length;
+  body.innerHTML = '';
+  empty.style.display = completionHistory.length ? 'none' : 'block';
+
+  completionHistory.forEach(rec => {
+    const tr = document.createElement('tr');
+    const revoked = rec.verification_status === 'revoked';
+    tr.innerHTML = `
+      <td>${rec.student_name}</td>
+      <td>${rec.certificate_code}</td>
+      <td>${rec.level || '—'}</td>
+      <td>${rec.course || rec.subject_label || '—'}</td>
+      <td>${fmtDateShort(rec.start_date)}</td>
+      <td>${fmtDateShort(rec.end_date)}</td>
+      <td>${revoked ? '⚠️ Revoque' : '✓ Valide'}</td>
+      <td class="history-actions">
+        <button class="btn-icon" data-action="cert-view" data-id="${rec.id}" title="Voir">👁️</button>
+        <button class="btn-icon" data-action="cert-copy" data-id="${rec.id}" title="Copier le lien">🔗</button>
+        <button class="btn-icon" data-action="cert-revoke" data-id="${rec.id}" title="${revoked ? 'Deja revoque' : 'Revoquer'}" ${revoked ? 'disabled' : ''}>🚫</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+
+  body.querySelectorAll('[data-action="cert-view"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rec = completionHistory.find(r => r.id === btn.dataset.id);
+      if (!rec) return;
+      openCompletionView({
+        studentName: rec.student_name, course: rec.course || rec.subject_label, level: rec.level,
+        startDate: rec.start_date, endDate: rec.end_date, instructor1: rec.instructor_1,
+        instructor2: rec.instructor_2, administration: rec.administration, code: rec.certificate_code
+      });
+    });
+  });
+  body.querySelectorAll('[data-action="cert-copy"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const rec = completionHistory.find(r => r.id === btn.dataset.id);
+      if (!rec) return;
+      try{
+        await navigator.clipboard.writeText(verifyUrlFor(rec.certificate_code));
+        alert('Lien de verification copie.');
+      }catch(e){
+        prompt('Copiez ce lien :', verifyUrlFor(rec.certificate_code));
+      }
+    });
+  });
+  body.querySelectorAll('[data-action="cert-revoke"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const rec = completionHistory.find(r => r.id === btn.dataset.id);
+      if (!rec) return;
+      if (!confirm(`Revoquer le certificat ${rec.certificate_code} ? Il apparaitra comme revoque sur la page de verification.`)) return;
+      const { error } = await eduflowClient.from('diplomas').update({ verification_status: 'revoked' }).eq('id', rec.id);
+      if (error){ alert('Erreur : ' + error.message); return; }
+      await loadCompletionHistory();
+    });
+  });
+}
+
 (async () => {
   const result = await eduflowRequireRole(['admin']);
   if (!result) return;
@@ -722,6 +1245,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   await loadAll();
   await loadHistory();
   await loadClasses();
+  await loadCompletionHistory();
 })();
 </script>
   <script src="animations.js" defer></script>
