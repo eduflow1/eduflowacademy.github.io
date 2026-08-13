@@ -103,8 +103,8 @@
     .no-print{display:none !important;}
     .receipt-letterhead{background:linear-gradient(135deg,var(--blue),var(--green)) !important;color:#fff !important;
       -webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    .receipt-stamp{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     .receipt-watermark span{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .receipt-footer-contact{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     .receipt-footer-contact span{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
 
@@ -150,16 +150,24 @@
   .receipt-thanks{text-align:center;color:#7A7B7D;font-size:0.86rem;margin:22px 0 0;line-height:1.6;position:relative;z-index:1;}
   .receipt-signature{margin-top:26px;display:flex;justify-content:flex-end;position:relative;z-index:1;}
   .receipt-signature .signature-block{text-align:center;width:220px;position:relative;}
-  .receipt-signature .signature-label{font-size:0.8rem;color:#8A8B8D;margin-bottom:38px;}
+  .receipt-signature .signature-label{font-size:0.8rem;color:#8A8B8D;margin-bottom:18px;}
   .signature-line{width:100%;border-top:1.5px solid var(--ink);}
-  .receipt-stamp{position:absolute;top:-70px;left:50%;transform:translateX(-50%) rotate(-9deg);opacity:0.85;pointer-events:none;}
-  .receipt-stamp svg{width:100px;height:100px;}
+  .receipt-stamp-space{height:44px;}
   .receipt-footer-strip{
     margin-top:20px;padding:14px 30px;background:#FAFBFB;border-top:1px solid var(--line);
     display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
     font-size:0.72rem;color:#9A9B9C;
   }
-  .receipt-footer-contact{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-weight:600;}
+  .receipt-footer-contact{
+    display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;
+    background:#F6F8F7;border:1px solid var(--line);border-radius:999px;
+    padding:7px 18px;font-weight:600;
+  }
+  .receipt-footer-contact span{white-space:nowrap;position:relative;padding-right:16px;}
+  .receipt-footer-contact span:last-child{padding-right:0;}
+  .receipt-footer-contact span:not(:last-child)::after{
+    content:'•';position:absolute;right:0;color:#C7CAC8;font-weight:400;
+  }
   .receipt-footer-contact span:nth-child(1){color:var(--blue-dark);}
   .receipt-footer-contact span:nth-child(2){color:var(--green-dark);}
   .receipt-footer-contact span:nth-child(3){color:var(--blue-dark);}
@@ -275,6 +283,7 @@
         <tr><td>Date de paiement</td><td id="receiptDate"></td></tr>
         <tr id="receiptPeriodRow" style="display:none;"><td>Période à payer</td><td id="receiptPeriod"></td></tr>
         <tr><td>Matière / formation</td><td id="receiptSubject"></td></tr>
+        <tr><td>Periode de formation</td><td id="receiptFormationPeriod">—</td></tr>
         <tr><td>Montant payé</td><td id="receiptAmount" class="receipt-amount"></td></tr>
         <tr><td>Note</td><td id="receiptNote"></td></tr>
         <tr><td>Reste à payer</td><td id="receiptRemaining"></td></tr>
@@ -283,23 +292,7 @@
       <p class="receipt-thanks">Merci pour votre confiance.</p>
       <div class="receipt-signature">
         <div class="signature-block">
-          <div class="receipt-stamp">
-            <svg viewBox="0 0 140 140" style="color:var(--blue-dark)">
-              <defs>
-                <path id="rcStampTop" d="M20,72 A50,50 0 1,1 120,72" fill="none"/>
-                <path id="rcStampBot" d="M120,74 A50,50 0 1,1 20,74" fill="none"/>
-              </defs>
-              <circle cx="70" cy="70" r="63" fill="none" stroke="currentColor" stroke-width="2"/>
-              <circle cx="70" cy="70" r="53" fill="none" stroke="currentColor" stroke-width="1"/>
-              <text font-size="9" font-family="Quicksand,sans-serif" font-weight="700" fill="currentColor" letter-spacing="2">
-                <textPath href="#rcStampTop" startOffset="50%" text-anchor="middle">EDU FLOW ACADEMY</textPath>
-              </text>
-              <text font-size="8" font-family="Quicksand,sans-serif" font-weight="700" fill="currentColor" letter-spacing="3">
-                <textPath href="#rcStampBot" startOffset="50%" text-anchor="middle">CACHET OFFICIEL</textPath>
-              </text>
-              <path d="M70,48 L82.94,87.80 L49.08,63.20 L90.92,63.20 L57.06,87.80 Z" fill="none" stroke="currentColor" stroke-width="2.2"/>
-            </svg>
-          </div>
+          <div class="receipt-stamp-space"></div>
           <div class="signature-label">Cachet et signature</div>
           <div class="signature-line"></div>
         </div>
@@ -446,11 +439,40 @@ async function openReceipt(p){
   showView('receipt');
 
   document.getElementById('receiptRemaining').textContent = '—';
+  document.getElementById('receiptFormationPeriod').textContent = '—';
   if (p.students){
     const [{ data: enrolls }, { data: paid }] = await Promise.all([
-      eduflowClient.from('enrollments').select('expected_amount').eq('student_id', p.students.id).eq('status', 'active'),
+      eduflowClient.from('enrollments').select('expected_amount, enrolled_at, classes(subject)').eq('student_id', p.students.id).eq('status', 'active'),
       eduflowClient.from('payments').select('amount').eq('student_id', p.students.id).eq('status', 'active')
     ]);
+
+    // Matiere/formation: if this specific payment had a subject picked on
+    // the form, respect that. Otherwise auto-fill from the student's real
+    // class registration(s) instead of leaving it blank — covers every
+    // payment where staff didn't bother re-picking it, and lists all of
+    // them if the student is registered in more than one subject.
+    if (!p.subject){
+      const enrolledSubjects = Array.from(new Set(
+        (enrolls || []).map(e => e.classes && e.classes.subject).filter(Boolean)
+      ));
+      document.getElementById('receiptSubject').textContent = enrolledSubjects.length
+        ? enrolledSubjects.map(code => EDUFLOW_SUBJECT_LABELS[code] || code).join(', ')
+        : '—';
+    }
+
+    // Periode de formation: fully automatic, no manual entry — from the
+    // earliest active enrollment date for this student to the date of
+    // this payment. No new field to fill in, derived from data that
+    // already exists (enrollments.enrolled_at + payments.paid_at).
+    if (enrolls && enrolls.length){
+      const earliest = enrolls.reduce((min, e) =>
+        (!min || new Date(e.enrolled_at) < new Date(min)) ? e.enrolled_at : min, null);
+      if (earliest){
+        document.getElementById('receiptFormationPeriod').textContent =
+          fmtDate(earliest) + ' à ' + fmtDate(p.paid_at);
+      }
+    }
+
     const expected = (enrolls || []).reduce((sum, e) => sum + (e.expected_amount ? Number(e.expected_amount) : 0), 0);
     if (expected > 0){
       const totalPaid = (paid || []).reduce((sum, x) => sum + Number(x.amount), 0);
