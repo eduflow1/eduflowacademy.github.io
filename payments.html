@@ -108,69 +108,67 @@
     .receipt-footer-contact span{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
 
-  .logo-wrap{width:88px;height:88px;border-radius:20px;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(0,0,0,0.10);border:2px solid rgba(255,255,255,0.7);}
+  .logo-wrap{width:64px;height:64px;border-radius:15px;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(0,0,0,0.10);border:2px solid rgba(255,255,255,0.7);}
   .logo-wrap img{width:100%;height:100%;object-fit:cover;}
-  .receipt-card{max-width:680px;margin:0 auto;padding:0;overflow:hidden;position:relative;}
+  .receipt-card{max-width:540px;margin:0 auto;padding:0;overflow:hidden;position:relative;}
   .receipt-letterhead{
     background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
-    padding:28px 30px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
     position:relative;overflow:hidden;
   }
   .receipt-letterhead::after{
     content:'';position:absolute;inset:0;pointer-events:none;
     background-image:radial-gradient(circle at 92% -10%, rgba(255,255,255,0.18), transparent 55%);
   }
-  .receipt-brand{display:flex;align-items:center;gap:16px;position:relative;}
+  .receipt-brand{display:flex;align-items:center;gap:12px;position:relative;}
   .receipt-letterhead .logo-wrap{box-shadow:0 6px 18px rgba(0,0,0,0.22);}
-  .receipt-brand-name{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.4rem;}
+  .receipt-brand-name{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.12rem;}
   .receipt-doc-meta{text-align:right;position:relative;}
-  .receipt-doc-title{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:.04em;text-transform:uppercase;}
-  .receipt-doc-num{font-size:0.85rem;color:rgba(255,255,255,0.92);margin-top:6px;}
+  .receipt-doc-title{font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:.04em;text-transform:uppercase;}
+  .receipt-doc-num{font-size:0.74rem;color:rgba(255,255,255,0.92);margin-top:4px;}
   .receipt-paid-pill{
-    display:inline-block;margin-top:10px;background:rgba(255,255,255,0.92);color:var(--green-dark);
-    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.72rem;letter-spacing:.06em;
-    border-radius:999px;padding:4px 12px;
+    display:inline-block;margin-top:7px;background:rgba(255,255,255,0.92);color:var(--green-dark);
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.64rem;letter-spacing:.06em;
+    border-radius:999px;padding:3px 10px;
   }
-  .receipt-body{padding:28px 30px 4px;position:relative;}
+  .receipt-body{padding:18px 20px 4px;position:relative;}
   .receipt-watermark{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     pointer-events:none;overflow:hidden;z-index:0;
   }
   .receipt-watermark span{
-    font-family:'Quicksand',sans-serif;font-weight:700;font-size:4.5rem;color:var(--green);
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:3.4rem;color:var(--green);
     opacity:0.06;transform:rotate(-22deg);white-space:nowrap;text-transform:uppercase;letter-spacing:.1em;
   }
   .receipt-table-wrap{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;position:relative;z-index:1;background:#fff;}
-  table.receipt-table{width:100%;border-collapse:collapse;font-size:0.92rem;}
-  table.receipt-table td{padding:11px 14px;border-bottom:1px solid var(--line);}
+  table.receipt-table{width:100%;border-collapse:collapse;font-size:0.8rem;}
+  table.receipt-table td{padding:8px 12px;border-bottom:1px solid var(--line);}
   table.receipt-table tr:last-child td{border-bottom:none;}
   table.receipt-table td:first-child{color:#7A7B7D;width:42%;background:#FAFBFB;font-weight:600;}
   table.receipt-table td:last-child{font-weight:600;text-align:right;}
-  .receipt-amount{font-size:1.25rem;color:var(--green-dark);font-weight:700 !important;}
-  .receipt-thanks{text-align:center;color:#7A7B7D;font-size:0.86rem;margin:22px 0 0;line-height:1.6;position:relative;z-index:1;}
-  .receipt-signature{margin-top:26px;display:flex;justify-content:flex-end;position:relative;z-index:1;}
-  .receipt-signature .signature-block{text-align:center;width:220px;position:relative;}
-  .receipt-signature .signature-label{font-size:0.8rem;color:#8A8B8D;margin-bottom:18px;}
+  .receipt-amount{font-size:1.05rem;color:var(--green-dark);font-weight:700 !important;}
+  .receipt-write-space{display:inline-block;width:60px;min-height:1em;border-bottom:1px dotted #B8BCBA;margin-left:8px;}
+  .receipt-thanks{text-align:center;color:#7A7B7D;font-size:0.76rem;margin:14px 0 0;line-height:1.5;position:relative;z-index:1;}
+  .receipt-signature{margin-top:16px;display:flex;justify-content:flex-end;position:relative;z-index:1;}
+  .receipt-signature .signature-block{text-align:center;width:170px;position:relative;}
+  .receipt-signature .signature-label{font-size:0.74rem;color:#8A8B8D;margin-bottom:14px;}
   .signature-line{width:100%;border-top:1.5px solid var(--ink);}
-  .receipt-stamp-space{height:44px;}
+  .receipt-stamp-space{height:30px;}
   .receipt-footer-strip{
-    margin-top:20px;padding:14px 30px;background:#FAFBFB;border-top:1px solid var(--line);
-    display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
-    font-size:0.72rem;color:#9A9B9C;
+    margin-top:14px;padding:12px 20px;background:#FAFBFB;border-top:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;
+    font-size:0.68rem;color:#9A9B9C;
   }
   .receipt-footer-contact{
-    display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;
-    background:#F6F8F7;border:1px solid var(--line);border-radius:999px;
-    padding:7px 18px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:14px;
+    background:linear-gradient(135deg,var(--blue),var(--green));border-radius:999px;
+    padding:8px 18px;font-weight:700;color:#fff;width:100%;
   }
-  .receipt-footer-contact span{white-space:nowrap;position:relative;padding-right:16px;}
+  .receipt-footer-contact span{white-space:nowrap;position:relative;padding-right:16px;color:#fff;}
   .receipt-footer-contact span:last-child{padding-right:0;}
   .receipt-footer-contact span:not(:last-child)::after{
-    content:'•';position:absolute;right:0;color:#C7CAC8;font-weight:400;
+    content:'•';position:absolute;right:0;color:rgba(255,255,255,0.6);font-weight:400;
   }
-  .receipt-footer-contact span:nth-child(1){color:var(--blue-dark);}
-  .receipt-footer-contact span:nth-child(2){color:var(--green-dark);}
-  .receipt-footer-contact span:nth-child(3){color:var(--blue-dark);}
 </style>
   <link rel="stylesheet" href="animations.css">
 </head>
@@ -283,9 +281,8 @@
         <tr><td>Date de paiement</td><td id="receiptDate"></td></tr>
         <tr id="receiptPeriodRow" style="display:none;"><td>Période à payer</td><td id="receiptPeriod"></td></tr>
         <tr><td>Matière / formation</td><td id="receiptSubject"></td></tr>
-        <tr><td>Periode de formation</td><td id="receiptFormationPeriod">—</td></tr>
+        <tr><td>Periode de formation</td><td><span id="receiptFormationPeriod">—</span><span class="receipt-write-space"></span></td></tr>
         <tr><td>Montant payé</td><td id="receiptAmount" class="receipt-amount"></td></tr>
-        <tr><td>Note</td><td id="receiptNote"></td></tr>
         <tr><td>Reste à payer</td><td id="receiptRemaining"></td></tr>
       </table>
       </div>
@@ -429,7 +426,6 @@ async function openReceipt(p){
   document.getElementById('receiptCode').textContent = p.students ? (p.students.student_code || '—') : '—';
   document.getElementById('receiptDate').textContent = fmtDate(p.paid_at);
   document.getElementById('receiptAmount').textContent = fmtAmount(p.amount, p.currency);
-  document.getElementById('receiptNote').textContent = p.note || '—';
   document.getElementById('receiptIssuedOn').textContent = 'Émis le ' + fmtDate(new Date());
 
   document.getElementById('receiptPeriodRow').style.display = p.period ? '' : 'none';
