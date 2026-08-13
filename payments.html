@@ -105,6 +105,7 @@
       -webkit-print-color-adjust:exact;print-color-adjust:exact;}
     .receipt-stamp{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     .receipt-watermark span{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .receipt-footer-contact span{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
 
   .logo-wrap{width:88px;height:88px;border-radius:20px;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(0,0,0,0.10);border:2px solid rgba(255,255,255,0.7);}
@@ -158,7 +159,10 @@
     display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
     font-size:0.72rem;color:#9A9B9C;
   }
-  .receipt-footer-contact{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;color:#7A7B7D;}
+  .receipt-footer-contact{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-weight:600;}
+  .receipt-footer-contact span:nth-child(1){color:var(--blue-dark);}
+  .receipt-footer-contact span:nth-child(2){color:var(--green-dark);}
+  .receipt-footer-contact span:nth-child(3){color:var(--blue-dark);}
 </style>
   <link rel="stylesheet" href="animations.css">
 </head>
@@ -270,10 +274,10 @@
         <tr><td>Code élève</td><td id="receiptCode"></td></tr>
         <tr><td>Date de paiement</td><td id="receiptDate"></td></tr>
         <tr id="receiptPeriodRow" style="display:none;"><td>Période à payer</td><td id="receiptPeriod"></td></tr>
-        <tr id="receiptSubjectRow" style="display:none;"><td>Matière / formation</td><td id="receiptSubject"></td></tr>
+        <tr><td>Matière / formation</td><td id="receiptSubject"></td></tr>
         <tr><td>Montant payé</td><td id="receiptAmount" class="receipt-amount"></td></tr>
         <tr><td>Note</td><td id="receiptNote"></td></tr>
-        <tr id="receiptRemainingRow" style="display:none;"><td>Reste à payer</td><td id="receiptRemaining"></td></tr>
+        <tr><td>Reste à payer</td><td id="receiptRemaining"></td></tr>
       </table>
       </div>
       <p class="receipt-thanks">Merci pour votre confiance.</p>
@@ -437,12 +441,11 @@ async function openReceipt(p){
 
   document.getElementById('receiptPeriodRow').style.display = p.period ? '' : 'none';
   document.getElementById('receiptPeriod').textContent = p.period || '';
-  document.getElementById('receiptSubjectRow').style.display = p.subject ? '' : 'none';
-  document.getElementById('receiptSubject').textContent = p.subject ? (EDUFLOW_SUBJECT_LABELS[p.subject] || p.subject) : '';
+  document.getElementById('receiptSubject').textContent = p.subject ? (EDUFLOW_SUBJECT_LABELS[p.subject] || p.subject) : '—';
 
   showView('receipt');
 
-  document.getElementById('receiptRemainingRow').style.display = 'none';
+  document.getElementById('receiptRemaining').textContent = '—';
   if (p.students){
     const [{ data: enrolls }, { data: paid }] = await Promise.all([
       eduflowClient.from('enrollments').select('expected_amount').eq('student_id', p.students.id).eq('status', 'active'),
@@ -453,7 +456,6 @@ async function openReceipt(p){
       const totalPaid = (paid || []).reduce((sum, x) => sum + Number(x.amount), 0);
       const remaining = Math.max(expected - totalPaid, 0);
       document.getElementById('receiptRemaining').textContent = fmtAmount(remaining, p.currency);
-      document.getElementById('receiptRemainingRow').style.display = '';
     }
   }
 }
