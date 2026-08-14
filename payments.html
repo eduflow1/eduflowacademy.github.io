@@ -332,6 +332,11 @@ function fmtDate(iso){
   return new Date(iso).toLocaleDateString('fr-FR', {year:'numeric', month:'short', day:'numeric'});
 }
 function fmtAmount(a, currency){ return Number(a).toFixed(2) + ' ' + (currency || 'MAD'); }
+function fmtMonthYear(iso){
+  if (!iso) return '—';
+  const s = new Date(iso).toLocaleDateString('fr-FR', {year:'numeric', month:'long'});
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 const METHOD_LABELS = { especes:'Especes', carte:'Carte', virement:'Virement', autre:'Autre' };
 
 async function loadAll(){
@@ -440,7 +445,10 @@ async function openReceipt(p){
   document.getElementById('receiptIssuedOn').textContent = 'Émis le ' + fmtDate(new Date());
 
   document.getElementById('receiptSubject').textContent = p.subject ? (EDUFLOW_SUBJECT_LABELS[p.subject] || p.subject) : '—';
-  document.getElementById('receiptPeriod').textContent = p.period || '—';
+  // Auto-fill: use the manually-typed period if staff entered one on the
+  // payment form, otherwise default automatically to the month/year of
+  // the payment date — so this row is always populated, never blank.
+  document.getElementById('receiptPeriod').textContent = p.period || fmtMonthYear(p.paid_at);
 
   showView('receipt');
 
