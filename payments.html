@@ -84,6 +84,8 @@
   table.data-table tr:last-child td{border-bottom:none;}
   .status-pill{display:inline-block;font-size:0.72rem;font-weight:700;border-radius:999px;padding:3px 10px;}
   .status-active{background:#E8F5E4;color:var(--green-dark);}
+  .archive-pill{display:inline-block;font-size:0.68rem;font-weight:700;border-radius:999px;padding:3px 9px;background:#EAF0FB;color:#3F5BA9;white-space:nowrap;}
+  .archive-none{color:#C4C7C6;font-size:0.72rem;}
   .status-voided{background:#FCE9E6;color:var(--danger);text-decoration:line-through;}
   .amount-cell{font-weight:700;}
 
@@ -199,7 +201,7 @@
       </div>
       <table class="data-table">
         <thead>
-          <tr><th>Date</th><th>Eleve</th><th>Montant</th><th>Methode</th><th>Statut</th><th>Actions</th></tr>
+          <tr><th>Date</th><th>Eleve</th><th>Montant</th><th>Methode</th><th>Statut</th><th>Archive</th><th>Actions</th></tr>
         </thead>
         <tbody id="paymentsBody"></tbody>
       </table>
@@ -281,9 +283,9 @@
         <tr><td>Élève</td><td id="receiptStudent"></td></tr>
         <tr><td>Code élève</td><td id="receiptCode"></td></tr>
         <tr><td>Date de paiement</td><td id="receiptDate"></td></tr>
-        <tr><td>Période à payer</td><td><span class="receipt-write-space-full"></span></td></tr>
+        <tr><td>Période à payer</td><td id="receiptPeriod">—</td></tr>
         <tr><td>Matière / formation</td><td id="receiptSubject"></td></tr>
-        <tr><td>Periode de formation</td><td><span id="receiptFormationPeriod">—</span><span class="receipt-write-space"></span></td></tr>
+        <tr><td>Periode de formation</td><td><span class="receipt-write-space-full"></span></td></tr>
         <tr><td>Montant payé</td><td id="receiptAmount" class="receipt-amount"></td></tr>
         <tr><td>Reste à payer</td><td id="receiptRemaining"></td></tr>
       </table>
@@ -301,8 +303,8 @@
           <span>📍 Hay mabrouka, boulevard 10 Mars, numéro 347</span>
           <span>📞 0711702502</span>
           <span>✉️ eduflow.academy@gmail.com</span>
-          <span><a href="https://www.instagram.com/edu.flow.academy?igsh=MWdxYnpmd2syMDA3NQ==" target="_blank" rel="noopener">📷 @edu.flow.academy</a></span>
-          <span><a href="https://www.facebook.com/share/19KqbqfSr8/?mibextid=wwXIfr" target="_blank" rel="noopener">👍 Edu Flow Academy</a></span>
+          <span><a href="https://www.instagram.com/edu.flow.academy?igsh=MWdxYnpmd2syMDA3NQ==" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:3px;"><defs><linearGradient id="receiptIgGrad" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FED576"/><stop offset="0.26" stop-color="#F47133"/><stop offset="0.61" stop-color="#BC3081"/><stop offset="1" stop-color="#4C63D2"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#receiptIgGrad)"/><rect x="6" y="6" width="12" height="12" rx="4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="16.2" cy="7.8" r="0.9" fill="#fff"/></svg>@edu.flow.academy</a></span>
+          <span><a href="https://www.facebook.com/share/19KqbqfSr8/?mibextid=wwXIfr" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:3px;"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path d="M15.5 8.5h-1.6c-.4 0-.8.4-.8 1v1.5h2.4l-.3 2.3h-2.1V19h-2.4v-5.7H9.1v-2.3h1.6V9.2c0-1.7 1-2.9 2.7-2.9h2.1v2.2z" fill="#fff"/></svg>Edu Flow Academy</a></span>
         </div>
         <span id="receiptIssuedOn"></span>
       </div>
@@ -322,6 +324,7 @@
 let currentProfile = null;
 let allPayments = [];
 let activeStudents = [];
+let currentReceiptPayment = null;
 let editingPaymentId = null;
 
 function fmtDate(iso){
@@ -333,7 +336,7 @@ const METHOD_LABELS = { especes:'Especes', carte:'Carte', virement:'Virement', a
 
 async function loadAll(){
   const [{ data: payments, error: pErr }, { data: students, error: sErr }] = await Promise.all([
-    eduflowClient.from('payments').select('id, amount, currency, method, note, subject, period, paid_at, status, students(id, full_name, student_code), recorder:recorded_by(full_name)').order('paid_at', { ascending: false }),
+    eduflowClient.from('payments').select('id, amount, currency, method, note, subject, period, paid_at, status, receipt_printed_at, receipt_print_count, students(id, full_name, student_code), recorder:recorded_by(full_name)').order('paid_at', { ascending: false }),
     eduflowClient.from('students').select('id, full_name, student_code').eq('status', 'active').order('full_name')
   ]);
   if (pErr){ alert('Erreur de chargement des paiements : ' + pErr.message); return; }
@@ -369,6 +372,9 @@ function renderTable(){
       <td class="amount-cell">${fmtAmount(p.amount, p.currency)}</td>
       <td>${METHOD_LABELS[p.method] || p.method || '—'}${p.note ? ' <span style="color:#9A9B9C;">— ' + p.note + '</span>' : ''}</td>
       <td><span class="status-pill ${p.status==='active'?'status-active':'status-voided'}">${p.status==='active'?'Valide':'Annule'}</span></td>
+      <td>${p.receipt_printed_at
+        ? '<span class="archive-pill" title="Reçu imprimé le ' + fmtDate(p.receipt_printed_at) + (p.receipt_print_count > 1 ? ' (' + p.receipt_print_count + ' fois)' : '') + '">🗄️ Archivé</span>'
+        : '<span class="archive-none">—</span>'}</td>
       <td></td>
     `;
     if (p.status === 'active'){
@@ -425,6 +431,7 @@ function showView(name){
 }
 
 async function openReceipt(p){
+  currentReceiptPayment = p;
   document.getElementById('receiptRef').textContent = 'Recu N° ' + p.id.slice(0, 8).toUpperCase();
   document.getElementById('receiptStudent').textContent = p.students ? p.students.full_name : '—';
   document.getElementById('receiptCode').textContent = p.students ? (p.students.student_code || '—') : '—';
@@ -433,11 +440,11 @@ async function openReceipt(p){
   document.getElementById('receiptIssuedOn').textContent = 'Émis le ' + fmtDate(new Date());
 
   document.getElementById('receiptSubject').textContent = p.subject ? (EDUFLOW_SUBJECT_LABELS[p.subject] || p.subject) : '—';
+  document.getElementById('receiptPeriod').textContent = p.period || '—';
 
   showView('receipt');
 
   document.getElementById('receiptRemaining').textContent = '—';
-  document.getElementById('receiptFormationPeriod').textContent = '—';
   if (p.students){
     const [{ data: enrolls }, { data: paid }] = await Promise.all([
       eduflowClient.from('enrollments').select('expected_amount, enrolled_at, classes(subject)').eq('student_id', p.students.id).eq('status', 'active'),
@@ -458,19 +465,6 @@ async function openReceipt(p){
         : '—';
     }
 
-    // Periode de formation: fully automatic, no manual entry — from the
-    // earliest active enrollment date for this student to the date of
-    // this payment. No new field to fill in, derived from data that
-    // already exists (enrollments.enrolled_at + payments.paid_at).
-    if (enrolls && enrolls.length){
-      const earliest = enrolls.reduce((min, e) =>
-        (!min || new Date(e.enrolled_at) < new Date(min)) ? e.enrolled_at : min, null);
-      if (earliest){
-        document.getElementById('receiptFormationPeriod').textContent =
-          fmtDate(earliest) + ' à ' + fmtDate(p.paid_at);
-      }
-    }
-
     const expected = (enrolls || []).reduce((sum, e) => sum + (e.expected_amount ? Number(e.expected_amount) : 0), 0);
     if (expected > 0){
       const totalPaid = (paid || []).reduce((sum, x) => sum + Number(x.amount), 0);
@@ -479,7 +473,25 @@ async function openReceipt(p){
     }
   }
 }
-document.getElementById('printReceiptBtn').addEventListener('click', () => window.print());
+document.getElementById('printReceiptBtn').addEventListener('click', async () => {
+  // Archive: record that this receipt was printed, directly on the
+  // payment row (no separate table needed) — shows up as a "Archivé"
+  // badge back in the payments list. Fire-and-refresh: don't block the
+  // print dialog waiting on the network.
+  if (currentReceiptPayment){
+    const p = currentReceiptPayment;
+    const printedAt = new Date().toISOString();
+    p.receipt_printed_at = printedAt;
+    p.receipt_print_count = (p.receipt_print_count || 0) + 1;
+    eduflowClient.from('payments').update({
+      receipt_printed_at: printedAt,
+      receipt_print_count: p.receipt_print_count
+    }).eq('id', p.id).then(({ error }) => {
+      if (error) console.error('Archivage du reçu échoué :', error.message);
+    });
+  }
+  window.print();
+});
 document.getElementById('receiptBackLink').addEventListener('click', () => showView('list'));
 
 function openNewForm(preselectStudentId){
