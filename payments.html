@@ -169,16 +169,21 @@
   .receipt-footer-contact span:not(:last-child)::after{
     content:'•';position:absolute;right:0;color:rgba(255,255,255,0.6);font-weight:400;
   }
+  .receipt-footer-social{
+    display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;
+    font-size:0.6rem;font-weight:600;
+  }
+  .receipt-footer-social a{color:#8A8B8D;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
 </style>
   <link rel="stylesheet" href="animations.css">
 </head>
 <body>
 
 <div class="wrap" id="app" style="display:none;">
-  <div class="topbar">
+  <div class="topbar no-print">
     <div class="brand-name">Edu Flow Academy — Paiements</div>
     <div class="who" id="whoLabel"></div>
-    <div class="topbar-actions no-print">
+    <div class="topbar-actions">
       <a href="index.html" class="btn-home">🏠 Accueil</a>
       <button class="btn-logout" id="logoutBtn">Deconnexion</button>
     </div>
@@ -299,6 +304,10 @@
           <span>📍 Hay mabrouka, boulevard 10 Mars, numéro 347</span>
           <span>📞 0711702502</span>
           <span>✉️ eduflow.academy@gmail.com</span>
+        </div>
+        <div class="receipt-footer-social">
+          <a href="https://www.instagram.com/edu.flow.academy?igsh=MWdxYnpmd2syMDA3NQ==" target="_blank" rel="noopener">📷 @edu.flow.academy</a>
+          <a href="https://www.facebook.com/share/19KqbqfSr8/?mibextid=wwXIfr" target="_blank" rel="noopener">👍 Edu Flow Academy</a>
         </div>
         <span id="receiptIssuedOn"></span>
       </div>
