@@ -197,6 +197,7 @@
       <div class="toolbar no-print">
         <input type="text" id="searchInput" placeholder="Rechercher par nom d'eleve...">
         <button class="btn-sm btn-primary-sm" id="newPaymentBtn">+ Nouveau paiement</button>
+        <button class="btn-sm btn-ghost-sm" id="viewArchiveBtn">🗄️ Archive <span class="count-badge" id="archiveCount">0</span></button>
         <button class="btn-sm btn-ghost-sm" id="printListBtn">🖨️ Imprimer</button>
       </div>
       <table class="data-table">
@@ -314,6 +315,25 @@
       </div>
     </div>
   </div>
+
+  <!-- ARCHIVE VIEW -->
+  <div id="archiveView" style="display:none;">
+    <a class="back-link no-print" id="archiveBackLink">← Retour a la liste</a>
+    <div class="card">
+      <h2>Reçus archivés <span class="count-badge" id="archiveViewCount">0</span></h2>
+      <p class="lead">Paiements dont le reçu a déjà été imprimé.</p>
+      <div class="toolbar no-print">
+        <input type="text" id="archiveSearchInput" placeholder="Rechercher par nom d'eleve...">
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Imprimé le</th><th>Eleve</th><th>Montant</th><th>Date de paiement</th><th>Nb impressions</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="archiveBody"></tbody>
+      </table>
+      <div class="empty-msg" id="archiveEmpty" style="display:none;">Aucun reçu archivé pour le moment.</div>
+    </div>
+  </div>
 </div>
 
 <div class="loading-msg" id="loadingMsg">Chargement...</div>
@@ -325,6 +345,7 @@ let currentProfile = null;
 let allPayments = [];
 let activeStudents = [];
 let currentReceiptPayment = null;
+let receiptOrigin = 'list';
 let editingPaymentId = null;
 
 function fmtDate(iso){
@@ -363,6 +384,7 @@ function renderTable(){
   });
 
   document.getElementById('paymentCount').textContent = allPayments.filter(p => p.status === 'active').length;
+  document.getElementById('archiveCount').textContent = allPayments.filter(p => p.receipt_printed_at).length;
   document.getElementById('paymentsEmpty').style.display = visible.length ? 'none' : 'block';
 
   const total = visible.filter(p => p.status === 'active').reduce((sum, p) => sum + Number(p.amount), 0);
@@ -428,15 +450,57 @@ function renderTable(){
 }
 
 document.getElementById('searchInput').addEventListener('input', renderTable);
+document.getElementById('archiveSearchInput').addEventListener('input', renderArchiveTable);
+document.getElementById('viewArchiveBtn').addEventListener('click', () => { renderArchiveTable(); showView('archive'); });
+document.getElementById('archiveBackLink').addEventListener('click', () => showView('list'));
 
 function showView(name){
   document.getElementById('listView').style.display = name === 'list' ? 'block' : 'none';
   document.getElementById('formView').style.display = name === 'form' ? 'block' : 'none';
   document.getElementById('receiptView').style.display = name === 'receipt' ? 'block' : 'none';
+  document.getElementById('archiveView').style.display = name === 'archive' ? 'block' : 'none';
 }
 
-async function openReceipt(p){
+function renderArchiveTable(){
+  const search = document.getElementById('archiveSearchInput').value.trim().toLowerCase();
+  const body = document.getElementById('archiveBody');
+  body.innerHTML = '';
+
+  const archived = allPayments
+    .filter(p => p.receipt_printed_at)
+    .filter(p => {
+      if (!search) return true;
+      const name = p.students ? p.students.full_name.toLowerCase() : '';
+      return name.includes(search);
+    })
+    .sort((a, b) => new Date(b.receipt_printed_at) - new Date(a.receipt_printed_at));
+
+  document.getElementById('archiveCount').textContent = allPayments.filter(p => p.receipt_printed_at).length;
+  document.getElementById('archiveViewCount').textContent = archived.length;
+  document.getElementById('archiveEmpty').style.display = archived.length ? 'none' : 'block';
+
+  archived.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${fmtDate(p.receipt_printed_at)}</td>
+      <td>${p.students ? p.students.full_name : '—'}</td>
+      <td class="amount-cell">${fmtAmount(p.amount, p.currency)}</td>
+      <td>${fmtDate(p.paid_at)}</td>
+      <td>${p.receipt_print_count || 1}</td>
+      <td></td>
+    `;
+    const receiptBtn = document.createElement('button');
+    receiptBtn.className = 'btn-sm btn-ghost-sm no-print';
+    receiptBtn.textContent = '🧾 Voir le reçu';
+    receiptBtn.addEventListener('click', () => openReceipt(p, 'archive'));
+    tr.lastElementChild.appendChild(receiptBtn);
+    body.appendChild(tr);
+  });
+}
+
+async function openReceipt(p, origin){
   currentReceiptPayment = p;
+  receiptOrigin = origin || 'list';
   document.getElementById('receiptRef').textContent = 'Recu N° ' + p.id.slice(0, 8).toUpperCase();
   document.getElementById('receiptStudent').textContent = p.students ? p.students.full_name : '—';
   document.getElementById('receiptCode').textContent = p.students ? (p.students.student_code || '—') : '—';
@@ -500,7 +564,7 @@ document.getElementById('printReceiptBtn').addEventListener('click', async () =>
   }
   window.print();
 });
-document.getElementById('receiptBackLink').addEventListener('click', () => showView('list'));
+document.getElementById('receiptBackLink').addEventListener('click', () => showView(receiptOrigin));
 
 function openNewForm(preselectStudentId){
   editingPaymentId = null;
