@@ -148,6 +148,7 @@
   table.receipt-table td:last-child{font-weight:600;text-align:right;}
   .receipt-amount{font-size:0.92rem;color:var(--green-dark);font-weight:700 !important;}
   .receipt-write-space{display:inline-block;width:46px;min-height:1em;border-bottom:1px dotted #B8BCBA;margin-left:6px;}
+  .receipt-write-space-full{display:inline-block;width:100%;min-height:1.1em;border-bottom:1px dotted #B8BCBA;}
   .receipt-thanks{text-align:center;color:#7A7B7D;font-size:0.68rem;margin:10px 0 0;line-height:1.4;position:relative;z-index:1;}
   .receipt-signature{margin-top:10px;display:flex;justify-content:flex-end;position:relative;z-index:1;}
   .receipt-signature .signature-block{text-align:center;width:130px;position:relative;}
@@ -169,11 +170,7 @@
   .receipt-footer-contact span:not(:last-child)::after{
     content:'•';position:absolute;right:0;color:rgba(255,255,255,0.6);font-weight:400;
   }
-  .receipt-footer-social{
-    display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;
-    font-size:0.6rem;font-weight:600;
-  }
-  .receipt-footer-social a{color:#8A8B8D;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+  .receipt-footer-contact a{color:inherit;text-decoration:none;}
 </style>
   <link rel="stylesheet" href="animations.css">
 </head>
@@ -284,7 +281,7 @@
         <tr><td>Élève</td><td id="receiptStudent"></td></tr>
         <tr><td>Code élève</td><td id="receiptCode"></td></tr>
         <tr><td>Date de paiement</td><td id="receiptDate"></td></tr>
-        <tr id="receiptPeriodRow" style="display:none;"><td>Période à payer</td><td id="receiptPeriod"></td></tr>
+        <tr><td>Période à payer</td><td><span class="receipt-write-space-full"></span></td></tr>
         <tr><td>Matière / formation</td><td id="receiptSubject"></td></tr>
         <tr><td>Periode de formation</td><td><span id="receiptFormationPeriod">—</span><span class="receipt-write-space"></span></td></tr>
         <tr><td>Montant payé</td><td id="receiptAmount" class="receipt-amount"></td></tr>
@@ -304,10 +301,8 @@
           <span>📍 Hay mabrouka, boulevard 10 Mars, numéro 347</span>
           <span>📞 0711702502</span>
           <span>✉️ eduflow.academy@gmail.com</span>
-        </div>
-        <div class="receipt-footer-social">
-          <a href="https://www.instagram.com/edu.flow.academy?igsh=MWdxYnpmd2syMDA3NQ==" target="_blank" rel="noopener">📷 @edu.flow.academy</a>
-          <a href="https://www.facebook.com/share/19KqbqfSr8/?mibextid=wwXIfr" target="_blank" rel="noopener">👍 Edu Flow Academy</a>
+          <span><a href="https://www.instagram.com/edu.flow.academy?igsh=MWdxYnpmd2syMDA3NQ==" target="_blank" rel="noopener">📷 @edu.flow.academy</a></span>
+          <span><a href="https://www.facebook.com/share/19KqbqfSr8/?mibextid=wwXIfr" target="_blank" rel="noopener">👍 Edu Flow Academy</a></span>
         </div>
         <span id="receiptIssuedOn"></span>
       </div>
@@ -437,8 +432,6 @@ async function openReceipt(p){
   document.getElementById('receiptAmount').textContent = fmtAmount(p.amount, p.currency);
   document.getElementById('receiptIssuedOn').textContent = 'Émis le ' + fmtDate(new Date());
 
-  document.getElementById('receiptPeriodRow').style.display = p.period ? '' : 'none';
-  document.getElementById('receiptPeriod').textContent = p.period || '';
   document.getElementById('receiptSubject').textContent = p.subject ? (EDUFLOW_SUBJECT_LABELS[p.subject] || p.subject) : '—';
 
   showView('receipt');
