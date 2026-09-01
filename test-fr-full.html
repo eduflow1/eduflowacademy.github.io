@@ -138,7 +138,7 @@
   <div class="screen active" id="screen-login">
     <div class="card">
       <h2>Bienvenue au test de positionnement</h2>
-      <p class="lead">Ce test évalue votre niveau de français, de A1 à B1, à travers quatre compétences : compréhension écrite, compréhension orale, expression écrite et expression orale.</p>
+      <p class="lead">Ce test évalue votre niveau de français, de A1 à B2, à travers quatre compétences : compréhension écrite, compréhension orale, expression écrite et expression orale.</p>
 
       <label for="studentName">Nom complet de l'étudiant(e)</label>
       <input type="text" id="studentName" placeholder="Ex. : Sara El Amrani">
@@ -162,7 +162,7 @@
       <h3 style="font-size:1rem;margin:22px 0 10px;">Règles du test</h3>
       <ul class="rules">
         <li><span class="dot"></span>Durée totale : <strong>45 minutes</strong>. Le test se termine automatiquement à la fin du temps imparti.</li>
-        <li><span class="dot"></span>100 questions réparties en 4 compétences, du niveau A1 au niveau B1.</li>
+        <li><span class="dot"></span>100 questions réparties en 4 compétences, du niveau A1 au niveau B2.</li>
         <li><span class="dot"></span>Certaines questions comportent un audio (écoute obligatoire avant de répondre).</li>
         <li><span class="dot"></span>Une partie orale vous demandera d'enregistrer votre voix via le microphone.</li>
         <li><span class="dot"></span><strong>Aucun retour en arrière</strong> n'est possible : une fois validée, une réponse ne peut plus être modifiée.</li>
@@ -647,6 +647,7 @@ function computeSkillScore(skillCode){
 }
 
 function determineLevel(globalPct){
+  if(globalPct >= 90) return 'B2';
   if(globalPct >= 80) return 'B1';
   if(globalPct >= 55) return 'A2';
   return 'A1';
@@ -716,12 +717,13 @@ function renderResults(){
         <div class="score-card"><div class="num" style="font-size:1.05rem;">${student.objective}</div><div class="lbl">Objectif</div></div>
         <div class="score-card"><div class="num">${mUsed}m ${sUsed}s</div><div class="lbl">Temps utilisé</div></div>
         <div class="score-card"><div class="num">${gradable.toFixed(1)}/${gradableTotal}</div><div class="lbl">Score global</div></div>
+        <div class="score-card"><div class="num">${globalPct}%</div><div class="lbl">Pourcentage global</div></div>
       </div>
 
       <div style="text-align:center;">
         <div style="font-size:0.85rem;color:#7A7B7D;">Niveau estimé</div>
         <div class="level-badge">${level}</div>
-        <div style="font-size:0.85rem;color:#7A7B7D;">Échelle CEFR : A1 (débutant) → A2 (élémentaire) → B1 (intermédiaire)</div>
+        <div style="font-size:0.85rem;color:#7A7B7D;">Échelle CEFR : A1 (débutant) → A2 (élémentaire) → B1 (intermédiaire) → B2 (intermédiaire avancé)</div>
       </div>
 
       <h3 style="font-size:1rem;margin:26px 0 14px;">Résultats détaillés par compétence</h3>

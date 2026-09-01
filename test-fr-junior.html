@@ -688,7 +688,8 @@ function computeSkillScore(skillCode){
 }
 
 function determineLevel(globalPct){
-  // Junior test is capped at A2 max — B1+ requires the full 100-question test.
+  if(globalPct >= 90) return 'B2';
+  if(globalPct >= 80) return 'B1';
   if(globalPct >= 55) return 'A2';
   return 'A1';
 }
@@ -757,12 +758,13 @@ function renderResults(){
         <div class="score-card"><div class="num" style="font-size:1.05rem;">${student.objective}</div><div class="lbl">Pourquoi j'apprends</div></div>
         <div class="score-card"><div class="num">${mUsed}m ${sUsed}s</div><div class="lbl">Temps utilisé</div></div>
         <div class="score-card"><div class="num">${gradable.toFixed(1)}/${gradableTotal}</div><div class="lbl">Score total</div></div>
+        <div class="score-card"><div class="num">${globalPct}%</div><div class="lbl">Pourcentage global</div></div>
       </div>
 
       <div style="text-align:center;">
         <div style="font-size:0.85rem;color:#7A7B7D;">Ton niveau en français</div>
         <div class="level-badge">${level}</div>
-        <div style="font-size:0.85rem;color:#7A7B7D;">Échelle du Cadre européen : A1 (débutant) → A2 (élémentaire) → B1 (intermédiaire)</div>
+        <div style="font-size:0.85rem;color:#7A7B7D;">Échelle du Cadre européen : A1 (débutant) → A2 (élémentaire) → B1 (intermédiaire) → B2 (intermédiaire avancé)</div>
       </div>
 
       <h3 style="font-size:1rem;margin:26px 0 14px;">Détail par compétence</h3>

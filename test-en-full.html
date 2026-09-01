@@ -138,7 +138,7 @@
   <div class="screen active" id="screen-login">
     <div class="card">
       <h2>Welcome to the placement test</h2>
-      <p class="lead">This test evaluates your English level, from A1 to B1, across four skills: reading comprehension, listening comprehension, writing/vocabulary and speaking.</p>
+      <p class="lead">This test evaluates your English level, from A1 to B2, across four skills: reading comprehension, listening comprehension, writing/vocabulary and speaking.</p>
 
       <label for="studentName">Student's full name</label>
       <input type="text" id="studentName" placeholder="E.g.: Sara El Amrani">
@@ -162,7 +162,7 @@
       <h3 style="font-size:1rem;margin:22px 0 10px;">Test rules</h3>
       <ul class="rules">
         <li><span class="dot"></span>Total duration: <strong>45 minutes</strong>. The test ends automatically when time is up.</li>
-        <li><span class="dot"></span>100 questions across 4 skills, from level A1 to level B1.</li>
+        <li><span class="dot"></span>100 questions across 4 skills, from level A1 to level B2.</li>
         <li><span class="dot"></span>Some questions include audio (you must listen before answering).</li>
         <li><span class="dot"></span>A speaking section will ask you to record your voice via the microphone.</li>
         <li><span class="dot"></span><strong>No going back</strong>: once submitted, an answer cannot be changed.</li>
@@ -647,6 +647,7 @@ function computeSkillScore(skillCode){
 }
 
 function determineLevel(globalPct){
+  if(globalPct >= 90) return 'B2';
   if(globalPct >= 80) return 'B1';
   if(globalPct >= 55) return 'A2';
   return 'A1';
@@ -716,12 +717,13 @@ function renderResults(){
         <div class="score-card"><div class="num" style="font-size:1.05rem;">${student.objective}</div><div class="lbl">Objective</div></div>
         <div class="score-card"><div class="num">${mUsed}m ${sUsed}s</div><div class="lbl">Time used</div></div>
         <div class="score-card"><div class="num">${gradable.toFixed(1)}/${gradableTotal}</div><div class="lbl">Overall score</div></div>
+        <div class="score-card"><div class="num">${globalPct}%</div><div class="lbl">Overall percentage</div></div>
       </div>
 
       <div style="text-align:center;">
         <div style="font-size:0.85rem;color:#7A7B7D;">Estimated level</div>
         <div class="level-badge">${level}</div>
-        <div style="font-size:0.85rem;color:#7A7B7D;">CEFR scale: A1 (beginner) → A2 (elementary) → B1 (intermediate)</div>
+        <div style="font-size:0.85rem;color:#7A7B7D;">CEFR scale: A1 (beginner) → A2 (elementary) → B1 (intermediate) → B2 (upper-intermediate)</div>
       </div>
 
       <h3 style="font-size:1rem;margin:26px 0 14px;">Detailed results by skill</h3>

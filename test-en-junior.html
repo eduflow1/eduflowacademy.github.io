@@ -900,10 +900,6 @@ function computeBreakdown(){
 
 function levelFor(score){
   const found = LEVELS.find(l => score >= l.min && score <= l.max) || LEVELS[LEVELS.length-1];
-  // Junior test is capped at A2 max — B1/B2 require the full 100-question test.
-  const order = ['Pre-A1','A1','A2','B1','B2'];
-  const a2 = LEVELS.find(l => l.name === 'A2');
-  if(order.indexOf(found.name) > order.indexOf('A2') && a2) return a2;
   return found;
 }
 
@@ -938,10 +934,11 @@ function renderResult(){
   const bd = computeBreakdown();
 
   const pct = (s) => s.total ? Math.round(s.correct / s.total * 100) : 0;
+  const globalPct = Math.round(score / QUESTIONS.length * 100);
   pushToEduFlowArchive({
     name: studentName, age: studentAge, objective: studentObjective,
     subject: 'Anglais', testType: 'Junior (-12 ans)',
-    level: level.name, scorePct: Math.round(score / QUESTIONS.length * 100),
+    level: level.name, scorePct: globalPct,
     skills: { Grammar: pct(bd.grammar), Reading: pct(bd.reading), Listening: pct(bd.listening) },
     date: new Date().toISOString()
   });
@@ -961,7 +958,7 @@ function renderResult(){
       </div>
       <p class="level-name">${studentName ? studentName + ' is' : "You're"} at level ${level.name}</p>
       <p class="level-desc">${level.desc}</p>
-      <p class="score-line">TOTAL SCORE ${score} / ${QUESTIONS.length}</p>
+      <p class="score-line">TOTAL SCORE ${score} / ${QUESTIONS.length} (${globalPct}%)</p>
 
       <div class="report">
         <div class="report-meta">
