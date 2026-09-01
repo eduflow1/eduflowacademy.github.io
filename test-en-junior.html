@@ -373,12 +373,24 @@
     line-height:1.6; color: var(--text);
   }
 
+  .record-box{ background: var(--paper-soft); border-radius:14px; padding:20px; text-align:center; margin-bottom:16px; }
+  .rec-btn{
+    width:64px; height:64px; border-radius:50%; background: var(--danger); color:#fff;
+    display:inline-flex; align-items:center; justify-content:center; font-size:1.4rem; cursor:pointer; border:none;
+    box-shadow:0 6px 18px rgba(199,75,66,0.35);
+  }
+  .rec-btn.recording{ animation: pulse 1.2s infinite; }
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(199,75,66,0.5);}70%{box-shadow:0 0 0 16px rgba(199,75,66,0);}100%{box-shadow:0 0 0 0 rgba(199,75,66,0);}}
+  .rec-status{ margin-top:10px; font-size:0.85rem; color: var(--text-soft); }
+  .rec-playback{ margin-top:14px; }
+  .skip-note{ font-size:0.78rem; color: var(--text-soft); margin-top:10px; }
+
   /* REPORT / CORRECTION */
   .report{
     text-align:left; margin-top: 8px;
   }
   .report-grid{
-    display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin: 6px 0 22px;
+    display:grid; grid-template-columns: repeat(auto-fit,minmax(90px,1fr)); gap:10px; margin: 6px 0 22px;
   }
   .report-card{
     background:#fff; border:1.5px solid var(--line); border-radius:10px;
@@ -524,7 +536,13 @@ const QUESTIONS = [
     q:'What temperature will it reach?', opts:['8 degrees','12 degrees','18 degrees','25 degrees'], a:2},
   {type:'listening', recId:2,
     q:'Why is the 3:30 train delayed?', opts:['A strike','The weather','A technical fault','Too many passengers'], a:1},
+  {type:'speaking', id:'SP1', prompt:'Say your name and how old you are.', keywords:['name','years','old','am']},
+  {type:'speaking', id:'SP2', prompt:'Describe your family in a few sentences.', keywords:['father','mother','brother','sister','family']},
+  {type:'speaking', id:'SP3', prompt:'Talk about your favourite food and why you like it.', keywords:['food','favourite','because','like']},
+  {type:'speaking', id:'SP4', prompt:'Describe your bedroom in a few sentences.', keywords:['bedroom','bed','window','desk']},
 ];
+
+const MC_TOTAL = QUESTIONS.filter(q => q.type !== 'speaking').length;
 
 const LISTENING_RECS = [
   { title:'At the Café', level:'A1–A2',
@@ -546,6 +564,12 @@ const LEVELS = [
 
 let current = 0;
 let answers = new Array(QUESTIONS.length).fill(null);
+let recordings = {}; // speaking item id -> {url, duration, transcript, score, max}
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordStart = 0;
+let liveRecognition = null;
+let liveTranscript = '';
 let started = false;
 let studentName = '';
 let studentAge = '';
@@ -638,10 +662,11 @@ function renderStart(){
   body.innerHTML = `
     <div class="screen-start">
       <p class="eyebrow">Welcome to Edu Flow Academy</p>
-      <p class="lede">A short journey through grammar, vocabulary, reading, and listening — to find out exactly where your English stands today.</p>
+      <p class="lede">A short journey through grammar, vocabulary, reading, listening, and speaking — to find out exactly where your English stands today.</p>
       <ul>
-        <li><span class="dot"></span>${QUESTIONS.length} questions, 20 minutes max. The test ends automatically when time is up.</li>
+        <li><span class="dot"></span>${QUESTIONS.length} questions/tasks, 20 minutes max. The test ends automatically when time is up.</li>
         <li><span class="dot"></span>Grammar &amp; vocabulary, two reading passages, and three listening recordings (British English audio).</li>
+        <li><span class="dot"></span>A short speaking section will ask you to record your voice via the microphone (optional — you can skip if it's unavailable).</li>
         <li><span class="dot"></span>Your level (Pre-A1 to B2) is calculated automatically at the end, with a full report.</li>
         <li><span class="dot"></span>Answer as best you can — there's no penalty for guessing.</li>
       </ul>
@@ -677,6 +702,7 @@ function renderStart(){
     started = true;
     current = 0;
     answers = new Array(QUESTIONS.length).fill(null);
+    recordings = {};
     listeningPlaysLeft = LISTENING_RECS.map(() => 2);
     startedAt = new Date();
     startTimer();
@@ -816,7 +842,8 @@ function renderQuestion(){
   }
 
   const letters = ['A','B','C','D'];
-  const optsHtml = item.opts.map((opt, i) => `
+  const isSpeaking = item.type === 'speaking';
+  const optsHtml = isSpeaking ? '' : item.opts.map((opt, i) => `
     <button class="option ${answers[current]===i ? 'selected':''}" data-i="${i}">
       <span class="letter">${letters[i]}</span><span>${opt}</span>
     </button>
@@ -824,17 +851,27 @@ function renderQuestion(){
 
   const eyebrowText = item.type === 'reading' ? 'Reading comprehension'
     : item.type === 'listening' ? 'Listening comprehension'
+    : isSpeaking ? 'Speaking'
     : 'Grammar & vocabulary';
+
+  const speakingHtml = isSpeaking ? `
+    <div class="record-box">
+      <button class="rec-btn" id="recBtn" type="button">🎙️</button>
+      <div class="rec-status" id="recStatus">Press to start recording.</div>
+      <div class="rec-playback" id="recPlayback"></div>
+    </div>
+    <div class="skip-note">If the microphone is not available, you can move to the next question without recording.</div>
+  ` : '';
 
   body.innerHTML = `
     <div class="screen-question">
       <p class="eyebrow">${eyebrowText}</p>
       ${passageHtml}
       ${audioHtml}
-      <p class="question">${item.q}</p>
-      <div class="options">${optsHtml}</div>
+      <p class="question">${isSpeaking ? item.prompt : item.q}</p>
+      ${isSpeaking ? speakingHtml : `<div class="options">${optsHtml}</div>`}
       <div class="nav-row">
-        <button class="btn" id="nextBtn" ${answers[current]===null ? 'disabled':''}>${current === QUESTIONS.length-1 ? 'See my result' : 'Next'}</button>
+        <button class="btn" id="nextBtn" ${(!isSpeaking && answers[current]===null) ? 'disabled':''}>${current === QUESTIONS.length-1 ? 'See my result' : 'Next'}</button>
       </div>
     </div>
   `;
@@ -846,7 +883,7 @@ function renderQuestion(){
     });
   });
   document.getElementById('nextBtn').addEventListener('click', () => {
-    if (answers[current] === null) return;
+    if (!isSpeaking && answers[current] === null) return;
     if (current < QUESTIONS.length - 1){
       current++;
       renderQuestion();
@@ -854,6 +891,9 @@ function renderQuestion(){
       renderResult();
     }
   });
+  if (isSpeaking){
+    document.getElementById('recBtn').addEventListener('click', () => toggleRecording(item.id));
+  }
   if (item.type === 'listening'){
     const playBtn = document.getElementById('playBtn');
     if (playBtn){
@@ -892,10 +932,105 @@ function computeBreakdown(){
     listening: {correct:0, total:0},
   };
   QUESTIONS.forEach((item, i) => {
+    if (item.type === 'speaking') return;
     b[item.type].total++;
     if (answers[i] === item.a) b[item.type].correct++;
   });
   return b;
+}
+
+function scoreOralResponse(transcript, duration, item){
+  const words = transcript.trim().length ? transcript.trim().split(/\s+/) : [];
+  const wordCount = words.length;
+
+  let lengthPts = 0;
+  if(wordCount >= 20) lengthPts = 2;
+  else if(wordCount >= 8) lengthPts = 1.5;
+  else if(wordCount >= 3) lengthPts = 0.5;
+
+  const lowerT = transcript.toLowerCase();
+  const kws = item.keywords || [];
+  const hits = kws.filter(k=>lowerT.includes(k.toLowerCase())).length;
+  const keywordPts = kws.length ? Math.min(2, (hits/kws.length)*2) : (wordCount>3 ? 1 : 0);
+
+  const connectors = ['because','although','however','so ','then','next'];
+  const connectorPts = connectors.some(c=>lowerT.includes(c)) ? 1 : 0;
+
+  const total = Math.round((lengthPts + keywordPts + connectorPts) * 10) / 10; // out of 5
+  return { score: Math.min(5,total), max: 5, wordCount };
+}
+
+async function toggleRecording(itemId){
+  const item = QUESTIONS[current];
+  const recBtn = document.getElementById('recBtn');
+  const status = document.getElementById('recStatus');
+  if(!mediaRecorder || mediaRecorder.state === 'inactive'){
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) recordedChunks.push(e.data); };
+      mediaRecorder.onstop = ()=>{
+        const blob = new Blob(recordedChunks, {type:'audio/webm'});
+        const url = URL.createObjectURL(blob);
+        const duration = Math.round((Date.now()-recordStart)/1000);
+
+        if(liveRecognition){ try{ liveRecognition.stop(); }catch(e){} }
+
+        const finalize = ()=>{
+          const result = scoreOralResponse(liveTranscript, duration, item);
+          recordings[itemId] = {url, duration, transcript: liveTranscript, score: result.score, max: result.max};
+          answers[current] = 'recorded';
+          document.getElementById('recPlayback').innerHTML = `<audio controls src="${url}"></audio>`;
+          const notePart = liveTranscript
+            ? `Automatic score: ${result.score.toFixed(1)}/${result.max}`
+            : `Automatic score: ${result.score.toFixed(1)}/${result.max} (speech recognition unavailable in this browser — score based on duration)`;
+          status.textContent = 'Recording finished ('+duration+' s). '+notePart;
+        };
+        setTimeout(finalize, 400);
+        stream.getTracks().forEach(t=>t.stop());
+      };
+
+      liveTranscript = '';
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(SR){
+        liveRecognition = new SR();
+        liveRecognition.lang = 'en-US';
+        liveRecognition.continuous = true;
+        liveRecognition.interimResults = true;
+        liveRecognition.onresult = (e)=>{
+          let text = '';
+          for(let i=0;i<e.results.length;i++){ text += e.results[i][0].transcript + ' '; }
+          liveTranscript = text.trim();
+        };
+        liveRecognition.onerror = ()=>{};
+        try{ liveRecognition.start(); }catch(e){}
+      } else {
+        liveRecognition = null;
+      }
+
+      mediaRecorder.start();
+      recordStart = Date.now();
+      recBtn.classList.add('recording');
+      status.textContent = 'Recording in progress… Click again to stop.';
+    }catch(err){
+      status.textContent = "Microphone unavailable. You can continue without recording.";
+    }
+  } else {
+    mediaRecorder.stop();
+    recBtn.classList.remove('recording');
+  }
+}
+
+function computeOralScore(){
+  const items = QUESTIONS.filter(q=>q.type==='speaking');
+  let sum = 0, max = 0;
+  items.forEach(it=>{
+    const rec = recordings[it.id];
+    max += 5;
+    if(rec) sum += rec.score;
+  });
+  return { correct: sum, total: max, pct: max? Math.round(sum/max*100) : 0, count: items.length, answered: Object.keys(recordings).length };
 }
 
 function levelFor(score){
@@ -906,7 +1041,8 @@ function levelFor(score){
 function buildCorrectionHTML(){
   const letters = ['A','B','C','D'];
   const typeLabel = {grammar:'Grammar & Vocabulary', reading:'Reading', listening:'Listening'};
-  return QUESTIONS.map((item, i) => {
+  return QUESTIONS.filter(item => item.type !== 'speaking').map((item) => {
+    const i = QUESTIONS.indexOf(item);
     const ok = answers[i] === item.a;
     const given = answers[i] === null ? 'No answer' : `${letters[answers[i]]}) ${item.opts[answers[i]]}`;
     const correct = `${letters[item.a]}) ${item.opts[item.a]}`;
@@ -932,14 +1068,15 @@ function renderResult(){
   const score = computeScore();
   const level = levelFor(score);
   const bd = computeBreakdown();
+  const oral = computeOralScore();
 
   const pct = (s) => s.total ? Math.round(s.correct / s.total * 100) : 0;
-  const globalPct = Math.round(score / QUESTIONS.length * 100);
+  const globalPct = Math.round(score / MC_TOTAL * 100);
   pushToEduFlowArchive({
     name: studentName, age: studentAge, objective: studentObjective,
     subject: 'Anglais', testType: 'Junior (-12 ans)',
     level: level.name, scorePct: globalPct,
-    skills: { Grammar: pct(bd.grammar), Reading: pct(bd.reading), Listening: pct(bd.listening) },
+    skills: { Grammar: pct(bd.grammar), Reading: pct(bd.reading), Listening: pct(bd.listening), Speaking: oral.pct },
     date: new Date().toISOString()
   });
   const finishedAt = new Date();
@@ -958,7 +1095,7 @@ function renderResult(){
       </div>
       <p class="level-name">${studentName ? studentName + ' is' : "You're"} at level ${level.name}</p>
       <p class="level-desc">${level.desc}</p>
-      <p class="score-line">TOTAL SCORE ${score} / ${QUESTIONS.length} (${globalPct}%)</p>
+      <p class="score-line">TOTAL SCORE ${score} / ${MC_TOTAL} (${globalPct}%)</p>
 
       <div class="report">
         <div class="report-meta">
@@ -972,7 +1109,9 @@ function renderResult(){
           <div class="report-card"><div class="num">${bd.grammar.correct}/${bd.grammar.total}</div><div class="lbl">Grammar &amp; Vocab</div></div>
           <div class="report-card"><div class="num">${bd.reading.correct}/${bd.reading.total}</div><div class="lbl">Reading</div></div>
           <div class="report-card"><div class="num">${bd.listening.correct}/${bd.listening.total}</div><div class="lbl">Listening</div></div>
+          <div class="report-card"><div class="num">${oral.correct.toFixed(1)}/${oral.total}</div><div class="lbl">Speaking</div></div>
         </div>
+        <div style="font-size:0.78rem;color:var(--text-soft);margin-top:-4px;">The speaking score (${oral.answered}/${oral.count} recorded responses) is an automatic estimate based on speech recognition; validation by a teacher is still recommended for pronunciation and fine grammar.</div>
       </div>
 
       <div class="result-actions">

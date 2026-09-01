@@ -179,10 +179,24 @@
 
 <div id="singleReport" class="single-report"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
 <script>
 const STAFF_CODE = 'STAFF-F6WSAR';
-const SUPABASE_URL = 'https://capbydzmhgllequsdhtp.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhcGJ5ZHptaGdsbGVxdXNkaHRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODY5NDEsImV4cCI6MjA5OTQ2Mjk0MX0.g53p79GmpEOCPf_wEYFsPW5-cFOQuJLAcGmtLNaxKw0';
+// SUPABASE_URL / SUPABASE_ANON_KEY come from eduflow-auth.js (loaded above).
+
+// Logged-in admin/staff/receptionist accounts skip the shared passphrase gate —
+// it stays in place only for the legacy no-account "share the code" flow.
+(async () => {
+  try{
+    const { session, profile } = await eduflowGetProfile();
+    if (session && profile && profile.status === 'active' &&
+        ['admin','staff','receptionist'].includes(profile.role)){
+      showArchive();
+      loadArchiveFromSupabase();
+    }
+  }catch(e){}
+})();
 
 let remoteResults = null;
 let remoteLoadFailed = false;
