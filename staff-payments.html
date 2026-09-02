@@ -85,6 +85,7 @@
   .status-pill{display:inline-block;font-size:0.72rem;font-weight:700;border-radius:999px;padding:3px 10px;}
   .status-active{background:#E8F5E4;color:var(--green-dark);}
   .status-voided{background:#FCE9E6;color:var(--danger);text-decoration:line-through;}
+  .status-archived{background:#F0F1F2;color:#7A7B7D;}
   .amount-cell{font-weight:700;}
 
   label{display:block;font-weight:600;font-size:0.82rem;margin-bottom:5px;color:var(--ink);}
@@ -147,6 +148,7 @@
     <div class="brand-name">Edu Flow Academy — Salaires</div>
     <div class="who" id="whoLabel"></div>
     <div class="topbar-actions">
+      <a href="#" class="btn-home" id="dashboardBtn">📊 Tableau de bord</a>
       <a href="index.html" class="btn-home">🏠 Accueil</a>
       <button class="btn-logout" id="logoutBtn">Deconnexion</button>
     </div>
@@ -160,6 +162,11 @@
       <div class="total-line" id="totalLine"></div>
       <div class="toolbar">
         <input type="text" id="searchInput" placeholder="Rechercher par nom...">
+        <select id="statusFilter">
+          <option value="visible">Actifs + annules</option>
+          <option value="all">Tous (y compris archives)</option>
+          <option value="archived">Archives seulement</option>
+        </select>
         <button class="btn-sm btn-primary-sm" id="newPaymentBtn">+ Nouveau paiement</button>
       </div>
       <table class="data-table">
@@ -180,6 +187,7 @@
       <div class="field">
         <label for="fStaffInput">Membre du personnel</label>
         <select id="fStaffInput"></select>
+        <div class="lead" id="fRateHint" style="margin:6px 0 0;"></div>
       </div>
       <div class="field-row">
         <div class="field">
@@ -232,6 +240,10 @@
           <label for="rToInput">Au</label>
           <input type="date" id="rToInput">
         </div>
+        <div class="field">
+          <label for="rManualInput">Seances manuelles (en plus des automatiques)</label>
+          <input type="number" id="rManualInput" min="0" step="1" value="0">
+        </div>
       </div>
       <div class="form-actions">
         <button class="btn-sm btn-primary-sm" id="rRecalcBtn">Recalculer les seances</button>
@@ -261,7 +273,7 @@ const METHOD_LABELS = { especes:'Especes', carte:'Carte', virement:'Virement', a
 async function loadAll(){
   const [{ data: payments, error: pErr }, { data: staff, error: sErr }] = await Promise.all([
     eduflowClient.from('staff_payments').select('id, staff_id, amount, currency, period, method, note, paid_at, status, profiles!staff_payments_staff_id_fkey(id, full_name)').order('paid_at', { ascending: false }),
-    eduflowClient.from('profiles').select('id, full_name').eq('role', 'staff').eq('status', 'active').order('full_name')
+    eduflowClient.from('profiles').select('id, full_name, hourly_rate').eq('role', 'staff').eq('status', 'active').order('full_name')
   ]);
   if (pErr){ alert('Erreur de chargement : ' + pErr.message); return; }
   if (sErr){ alert('Erreur de chargement du personnel : ' + sErr.message); return; }
@@ -270,57 +282,99 @@ async function loadAll(){
   renderTable();
 }
 
+const STATUS_PILL = {
+  active: { cls: 'status-active', label: 'Valide' },
+  voided: { cls: 'status-voided', label: 'Annule' },
+  archived: { cls: 'status-archived', label: 'Archive' }
+};
+
 function renderTable(){
   const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
   const body = document.getElementById('paymentsBody');
   body.innerHTML = '';
 
   const visible = allPayments.filter(p => {
-    if (!search) return true;
-    const name = p.profiles ? p.profiles.full_name.toLowerCase() : '';
-    return name.includes(search);
+    if (search){
+      const name = p.profiles ? p.profiles.full_name.toLowerCase() : '';
+      if (!name.includes(search)) return false;
+    }
+    if (statusFilter === 'archived') return p.status === 'archived';
+    if (statusFilter === 'visible') return p.status !== 'archived';
+    return true; // 'all'
   });
 
   document.getElementById('paymentCount').textContent = allPayments.filter(p => p.status === 'active').length;
   document.getElementById('paymentsEmpty').style.display = visible.length ? 'none' : 'block';
 
   const total = visible.filter(p => p.status === 'active').reduce((sum, p) => sum + Number(p.amount), 0);
-  document.getElementById('totalLine').textContent = visible.length ? 'Total (visible, hors annules) : ' + total.toFixed(2) + ' MAD' : '';
+  document.getElementById('totalLine').textContent = visible.length ? 'Total (visible, hors annules/archives) : ' + total.toFixed(2) + ' MAD' : '';
 
   visible.forEach(p => {
+    const pill = STATUS_PILL[p.status] || STATUS_PILL.active;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${fmtDate(p.paid_at)}</td>
       <td>${p.profiles ? p.profiles.full_name : '—'}</td>
       <td>${p.period || '—'}</td>
       <td class="amount-cell">${Number(p.amount).toFixed(2)} ${p.currency}</td>
-      <td><span class="status-pill ${p.status==='active'?'status-active':'status-voided'}">${p.status==='active'?'Valide':'Annule'}</span></td>
+      <td><span class="status-pill ${pill.cls}">${pill.label}</span></td>
       <td></td>
     `;
-    if (p.status === 'active'){
-      const receiptBtn = document.createElement('button');
-      receiptBtn.className = 'btn-sm btn-ghost-sm';
-      receiptBtn.textContent = '🖨️ Recu';
-      receiptBtn.style.marginRight = '6px';
-      receiptBtn.addEventListener('click', () => openReceipt(p));
-      tr.lastElementChild.appendChild(receiptBtn);
+    const actions = tr.lastElementChild;
 
+    const receiptBtn = document.createElement('button');
+    receiptBtn.className = 'btn-sm btn-ghost-sm';
+    receiptBtn.textContent = '🖨️ Recu';
+    receiptBtn.style.marginRight = '6px';
+    receiptBtn.addEventListener('click', () => openReceipt(p));
+    actions.appendChild(receiptBtn);
+
+    if (p.status === 'active'){
       const voidBtn = document.createElement('button');
       voidBtn.className = 'btn-sm btn-reject';
       voidBtn.textContent = 'Annuler';
+      voidBtn.style.marginRight = '6px';
       voidBtn.addEventListener('click', async () => {
         if (!confirm('Annuler ce paiement ?')) return;
         const { error } = await eduflowClient.from('staff_payments').update({ status: 'voided' }).eq('id', p.id);
         if (error){ alert('Erreur : ' + error.message); return; }
         await loadAll();
       });
-      tr.lastElementChild.appendChild(voidBtn);
+      actions.appendChild(voidBtn);
     }
+
+    if (p.status !== 'archived'){
+      const archiveBtn = document.createElement('button');
+      archiveBtn.className = 'btn-sm btn-ghost-sm';
+      archiveBtn.textContent = '🗂️ Archiver';
+      archiveBtn.style.marginRight = '6px';
+      archiveBtn.addEventListener('click', async () => {
+        if (!confirm('Archiver ce paiement ? Il sera masque de la liste par defaut mais reste consultable via le filtre "Archives".')) return;
+        const { error } = await eduflowClient.from('staff_payments').update({ status: 'archived' }).eq('id', p.id);
+        if (error){ alert('Erreur : ' + error.message); return; }
+        await loadAll();
+      });
+      actions.appendChild(archiveBtn);
+    }
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-sm btn-reject';
+    deleteBtn.textContent = '🗑️ Supprimer';
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm('Supprimer definitivement ce paiement ? Cette action est irreversible.')) return;
+      const { error } = await eduflowClient.from('staff_payments').delete().eq('id', p.id);
+      if (error){ alert('Erreur : ' + error.message); return; }
+      await loadAll();
+    });
+    actions.appendChild(deleteBtn);
+
     body.appendChild(tr);
   });
 }
 
 document.getElementById('searchInput').addEventListener('input', renderTable);
+document.getElementById('statusFilter').addEventListener('change', renderTable);
 
 function showView(name){
   document.getElementById('listView').style.display = name === 'list' ? 'block' : 'none';
@@ -343,6 +397,7 @@ function openReceipt(p){
   const range = monthRange(p.paid_at);
   document.getElementById('rFromInput').value = range.from;
   document.getElementById('rToInput').value = range.to;
+  document.getElementById('rManualInput').value = 0;
   showView('receipt');
   window.scrollTo(0, 0);
   computeAndRenderReceipt();
@@ -353,6 +408,7 @@ async function computeAndRenderReceipt(){
   if (!p) return;
   const from = document.getElementById('rFromInput').value;
   const to = document.getElementById('rToInput').value;
+  const manualCount = Math.max(0, parseInt(document.getElementById('rManualInput').value, 10) || 0);
   const doc = document.getElementById('receiptDoc');
   doc.innerHTML = '<p class="loading-msg">Chargement des seances...</p>';
 
@@ -369,6 +425,10 @@ async function computeAndRenderReceipt(){
 
   const rows = sessions || [];
   const staffName = p.profiles ? p.profiles.full_name : '—';
+  const staffProfile = staffOptions.find(s => s.id === p.staff_id);
+  const hourlyRate = staffProfile && staffProfile.hourly_rate != null ? Number(staffProfile.hourly_rate) : null;
+  const totalSessions = rows.length + manualCount;
+  const calculatedAmount = hourlyRate != null ? hourlyRate * totalSessions : null;
   const tableRows = rows.length
     ? rows.map(s => `
         <tr>
@@ -395,7 +455,7 @@ async function computeAndRenderReceipt(){
       <div class="row"><span>Methode</span><span>${METHOD_LABELS[p.method] || p.method || '—'}</span></div>
       <div class="row"><span>Date de paiement</span><span>${fmtDate(p.paid_at)}</span></div>
     </div>
-    <div class="receipt-count">${rows.length} seance${rows.length === 1 ? '' : 's'} sur cette periode</div>
+    <div class="receipt-count">${rows.length + manualCount} seance${(rows.length + manualCount) === 1 ? '' : 's'} sur cette periode${manualCount ? ` (${rows.length} automatique${rows.length===1?'':'s'} + ${manualCount} ajoutee${manualCount===1?'':'s'} manuellement)` : ''}</div>
     ${rows.length ? `
       <div class="receipt-table-wrap">
         <table class="receipt-table">
@@ -404,10 +464,19 @@ async function computeAndRenderReceipt(){
         </table>
       </div>
     ` : '<div class="receipt-empty">Aucune seance terminee trouvee sur cette periode.</div>'}
+    ${calculatedAmount != null ? `
+      <div class="receipt-amount-line" style="background:#EEF7FC;">
+        <span class="label">Montant calcule (${hourlyRate.toFixed(2)} MAD/h &times; ${totalSessions} seance${totalSessions===1?'':'s'})</span>
+        <span class="value">${calculatedAmount.toFixed(2)} MAD</span>
+      </div>
+    ` : ''}
     <div class="receipt-amount-line">
       <span class="label">Montant verse</span>
       <span class="value">${Number(p.amount).toFixed(2)} ${p.currency}</span>
     </div>
+    ${calculatedAmount != null && Math.abs(calculatedAmount - Number(p.amount)) > 0.01 ? `
+      <p style="font-size:0.8rem;color:var(--danger);">⚠️ Le montant verse differe du montant calcule (ecart de ${Math.abs(calculatedAmount - Number(p.amount)).toFixed(2)} MAD).</p>
+    ` : ''}
     ${p.note ? `<p style="font-size:0.85rem;color:#7A7B7D;">Note : ${p.note}</p>` : ''}
     <div class="receipt-signatures">
       <div class="receipt-sign"><div class="sig-line">Signature de l'enseignant(e)</div>${staffName}</div>
@@ -417,8 +486,16 @@ async function computeAndRenderReceipt(){
 }
 
 document.getElementById('rRecalcBtn').addEventListener('click', computeAndRenderReceipt);
+document.getElementById('rManualInput').addEventListener('input', computeAndRenderReceipt);
 document.getElementById('rPrintBtn').addEventListener('click', () => window.print());
 document.getElementById('receiptBackLink').addEventListener('click', () => showView('list'));
+
+function updateRateHint(){
+  const staff = staffOptions.find(s => s.id === document.getElementById('fStaffInput').value);
+  document.getElementById('fRateHint').textContent = (staff && staff.hourly_rate != null)
+    ? 'Taux horaire declare : ' + Number(staff.hourly_rate).toFixed(2) + ' MAD/h'
+    : '';
+}
 
 document.getElementById('newPaymentBtn').addEventListener('click', () => {
   document.getElementById('fStaffInput').innerHTML = staffOptions.map(s =>
@@ -429,8 +506,10 @@ document.getElementById('newPaymentBtn').addEventListener('click', () => {
   document.getElementById('fPeriodInput').value = '';
   document.getElementById('fMethodInput').value = 'virement';
   document.getElementById('fNoteInput').value = '';
+  updateRateHint();
   showView('form');
 });
+document.getElementById('fStaffInput').addEventListener('change', updateRateHint);
 document.getElementById('formBackLink').addEventListener('click', () => showView('list'));
 document.getElementById('cancelFormBtn').addEventListener('click', () => showView('list'));
 
@@ -467,6 +546,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   eduflowShowDeniedBanner();
   currentProfile = result.profile;
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('dashboardBtn').href = eduflowRoleHome(result.profile.role);
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   await loadAll();

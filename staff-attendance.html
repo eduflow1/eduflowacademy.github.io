@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edu Flow Academy — Presence</title>
+<title>Edu Flow Academy — Presence du personnel</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
   :root{
@@ -69,18 +69,16 @@
   .back-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:14px;cursor:pointer;}
   .back-link:hover{color:var(--blue-dark);}
 
-  .att-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
-  .att-row:last-child{border-bottom:none;}
-  .att-info{flex:1;min-width:160px;}
-  .status-btns{display:flex;gap:6px;}
+  .teacher-row{display:flex;align-items:center;gap:10px;padding:14px 0;flex-wrap:wrap;}
+  .teacher-info{flex:1;min-width:160px;font-weight:600;}
+  .status-btns{display:flex;gap:8px;}
   .status-btn{
-    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.76rem;
-    border:1.5px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;background:#fff;color:#9A9B9C;
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;
+    border:1.5px solid var(--line);border-radius:8px;padding:8px 16px;cursor:pointer;background:#fff;color:#9A9B9C;
   }
   .status-btn.present.selected{background:var(--green);border-color:var(--green);color:#fff;}
   .status-btn.absent.selected{background:var(--danger);border-color:var(--danger);color:#fff;}
-  .status-btn.late.selected{background:var(--orange);border-color:var(--orange);color:#fff;}
-  .status-btn.excused.selected{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .status-note{font-size:0.8rem;color:#9A9B9C;margin-top:10px;}
 
   .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
 </style>
@@ -90,7 +88,7 @@
 
 <div class="wrap" id="app" style="display:none;">
   <div class="topbar">
-    <div class="brand-name">Edu Flow Academy — Presence</div>
+    <div class="brand-name">Edu Flow Academy — Presence du personnel</div>
     <div class="who" id="whoLabel"></div>
     <div class="topbar-actions">
       <a href="#" class="btn-home" id="dashboardBtn">📊 Tableau de bord</a>
@@ -102,13 +100,14 @@
   <!-- PICKER VIEW -->
   <div id="pickerView">
     <div class="card">
-      <h2>Feuille de presence</h2>
+      <h2>Presence de l'enseignant(e)</h2>
       <p class="lead" id="pickerLead">Choisissez une classe et une date.</p>
       <div class="toolbar">
         <select id="classPicker"></select>
         <input type="date" id="datePicker">
         <button class="btn-sm btn-primary-sm" id="openSessionBtn">Ouvrir</button>
       </div>
+      <div class="empty-msg" id="noClassesMsg" style="display:none;">Aucune classe disponible.</div>
     </div>
   </div>
 
@@ -118,11 +117,14 @@
     <div class="card">
       <h2 id="sessionTitle">—</h2>
       <p class="lead" id="sessionMeta">—</p>
-      <div id="attList"></div>
-      <div class="empty-msg" id="attEmpty" style="display:none;">Aucun eleve inscrit dans cette classe.</div>
-      <div class="toolbar" style="margin-top:16px;" id="saveWrap">
-        <button class="btn-sm btn-primary-sm" id="saveAttBtn">Enregistrer</button>
+      <div class="teacher-row">
+        <div class="teacher-info" id="teacherName">—</div>
+        <div class="status-btns">
+          <button type="button" class="status-btn present" id="presentBtn">✅ Present</button>
+          <button type="button" class="status-btn absent" id="absentBtn">❌ Absent</button>
+        </div>
       </div>
+      <div class="status-note" id="statusNote"></div>
     </div>
   </div>
 </div>
@@ -136,18 +138,26 @@ let currentProfile = null;
 let myClasses = [];
 let currentSession = null;
 let currentClass = null;
-let rosterEntries = []; // {student, status}
-const STATUS_LABELS = { present:'Present', absent:'Absent', late:'Retard', excused:'Excuse' };
 
-function canMark(){ return currentProfile.role === 'admin' || currentProfile.role === 'staff'; }
+function canMark(){
+  return currentProfile.role === 'admin'
+    || currentProfile.role === 'receptionist'
+    || (currentProfile.role === 'staff' && currentClass && currentClass.teacher_id === currentProfile.id);
+}
 
 async function loadClasses(){
-  const { data, error } = await eduflowClient.from('classes').select('id, name, subject').eq('status', 'active').order('name');
+  let query = eduflowClient.from('classes').select('id, name, subject, teacher_id').eq('status', 'active').order('name');
+  if (currentProfile.role === 'staff'){
+    query = query.eq('teacher_id', currentProfile.id);
+  }
+  const { data, error } = await query;
   if (error){ alert('Erreur : ' + error.message); return; }
   myClasses = data || [];
   document.getElementById('classPicker').innerHTML = myClasses.map(c =>
     `<option value="${c.id}">${c.name}</option>`
   ).join('') || '<option value="">Aucune classe</option>';
+  document.getElementById('noClassesMsg').style.display = myClasses.length ? 'none' : 'block';
+  document.getElementById('openSessionBtn').disabled = !myClasses.length;
 }
 
 document.getElementById('openSessionBtn').addEventListener('click', async () => {
@@ -159,14 +169,12 @@ document.getElementById('openSessionBtn').addEventListener('click', async () => 
 
 async function openSession(classId, date){
   currentClass = myClasses.find(c => c.id === classId);
+  if (!currentClass) return;
 
-  // Find or create the session for this class+date.
+  // Find or create the session for this class+date (shared with the student
+  // attendance sheet — a session opened either way is the same session).
   let { data: existing } = await eduflowClient.from('class_sessions').select('*').eq('class_id', classId).eq('session_date', date).maybeSingle();
   if (!existing){
-    if (!canMark()){
-      alert('Cette seance n\'a pas encore ete ouverte par un enseignant ou l\'administration.');
-      return;
-    }
     const { data: created, error: createErr } = await eduflowClient
       .from('class_sessions').insert({ class_id: classId, session_date: date }).select('*').single();
     if (createErr){ alert('Erreur : ' + createErr.message); return; }
@@ -174,76 +182,48 @@ async function openSession(classId, date){
   }
   currentSession = existing;
 
-  const { data: enrollments, error: enrErr } = await eduflowClient
-    .from('enrollments').select('student_id, students(id, full_name, student_code)').eq('class_id', classId).eq('status', 'active');
-  if (enrErr){ alert('Erreur : ' + enrErr.message); return; }
-
-  const { data: records } = await eduflowClient
-    .from('attendance_records').select('*').eq('session_id', currentSession.id);
-  const recordByStudent = {};
-  (records || []).forEach(r => { recordByStudent[r.student_id] = r; });
-
-  rosterEntries = (enrollments || []).filter(e => e.students).map(e => ({
-    student: e.students,
-    status: recordByStudent[e.student_id] ? recordByStudent[e.student_id].status : 'present'
-  }));
-
   document.getElementById('sessionTitle').textContent = currentClass.name;
   document.getElementById('sessionMeta').textContent = new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  renderRoster();
+  document.getElementById('teacherName').textContent = currentClass.teacher_id === currentProfile.id
+    ? (currentProfile.full_name || currentProfile.email)
+    : 'Enseignant(e) de cette classe';
+  renderStatus();
   document.getElementById('pickerView').style.display = 'none';
   document.getElementById('sessionView').style.display = 'block';
 }
 
-function renderRoster(){
-  const list = document.getElementById('attList');
-  const empty = document.getElementById('attEmpty');
-  list.innerHTML = '';
-  empty.style.display = rosterEntries.length ? 'none' : 'block';
-  document.getElementById('saveWrap').style.display = canMark() ? 'flex' : 'none';
+function renderStatus(){
+  const canDo = canMark();
+  const presentBtn = document.getElementById('presentBtn');
+  const absentBtn = document.getElementById('absentBtn');
+  presentBtn.classList.toggle('selected', currentSession.teacher_status === 'present');
+  absentBtn.classList.toggle('selected', currentSession.teacher_status === 'absent');
+  presentBtn.disabled = !canDo;
+  absentBtn.disabled = !canDo;
 
-  rosterEntries.forEach((entry, idx) => {
-    const row = document.createElement('div');
-    row.className = 'att-row';
-    const statusBtns = Object.keys(STATUS_LABELS).map(st =>
-      `<button type="button" class="status-btn ${st} ${entry.status===st?'selected':''}" data-idx="${idx}" data-status="${st}" ${canMark() ? '' : 'disabled'}>${STATUS_LABELS[st]}</button>`
-    ).join('');
-    row.innerHTML = `
-      <div class="att-info">${entry.student.full_name} <span style="color:#9A9B9C;font-size:0.8rem;">${entry.student.student_code||''}</span></div>
-      <div class="status-btns">${statusBtns}</div>
-    `;
-    list.appendChild(row);
-  });
-
-  if (canMark()){
-    list.querySelectorAll('.status-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.idx, 10);
-        rosterEntries[idx].status = btn.dataset.status;
-        renderRoster();
-      });
-    });
+  const note = document.getElementById('statusNote');
+  if (!canDo){
+    note.textContent = "Vous n'avez pas le droit de modifier la presence pour cette seance.";
+  } else if (currentSession.teacher_status_marked_at){
+    note.textContent = 'Derniere mise a jour : ' + new Date(currentSession.teacher_status_marked_at).toLocaleString('fr-FR');
+  } else {
+    note.textContent = 'Pas encore renseigne.';
   }
 }
 
-document.getElementById('saveAttBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('saveAttBtn');
-  btn.disabled = true;
-  btn.textContent = 'Enregistrement...';
-
-  const rows = rosterEntries.map(e => ({
-    session_id: currentSession.id,
-    student_id: e.student.id,
-    status: e.status,
-    marked_by: currentProfile.id
-  }));
-
-  const { error } = await eduflowClient.from('attendance_records').upsert(rows, { onConflict: 'session_id,student_id' });
-  btn.disabled = false;
-  btn.textContent = 'Enregistrer';
+async function markAttendance(status){
+  const { error } = await eduflowClient.rpc('mark_teacher_attendance', {
+    p_session_id: currentSession.id,
+    p_status: status
+  });
   if (error){ alert('Erreur : ' + error.message); return; }
-  alert('Presence enregistree.');
-});
+  currentSession.teacher_status = status;
+  currentSession.teacher_status_marked_at = new Date().toISOString();
+  renderStatus();
+}
+
+document.getElementById('presentBtn').addEventListener('click', () => markAttendance('present'));
+document.getElementById('absentBtn').addEventListener('click', () => markAttendance('absent'));
 
 document.getElementById('backLink').addEventListener('click', () => {
   document.getElementById('sessionView').style.display = 'none';
@@ -261,7 +241,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   document.getElementById('dashboardBtn').href = eduflowRoleHome(result.profile.role);
   document.getElementById('pickerLead').textContent = currentProfile.role === 'staff'
     ? 'Choisissez une de vos classes et une date.'
-    : 'Choisissez une classe et une date.';
+    : 'Choisissez une classe et une date, pour n\'importe quel enseignant.';
   document.getElementById('datePicker').value = new Date().toISOString().slice(0, 10);
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';

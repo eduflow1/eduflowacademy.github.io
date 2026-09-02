@@ -324,6 +324,7 @@
           <a href="classes.html" class="sidebar-link" data-label="Classes"><span class="ic ic-blue">📚</span><span class="txt">Classes</span></a>
           <a href="timetable.html" class="sidebar-link" data-label="Emploi du temps"><span class="ic ic-blue">🗓️</span><span class="txt">Emploi du temps</span></a>
           <a href="attendance.html" class="sidebar-link" data-label="Presence"><span class="ic ic-blue">✅</span><span class="txt">Presence</span></a>
+          <a href="staff-attendance.html" class="sidebar-link" data-label="Presence personnel"><span class="ic ic-blue">🧑‍🏫</span><span class="txt">Presence personnel</span></a>
           <a href="workshops.html" class="sidebar-link" data-label="Ateliers"><span class="ic ic-blue">🎪</span><span class="txt">Ateliers</span></a>
         </div>
 
@@ -395,6 +396,7 @@
           <a href="classes.html" class="btn-sm btn-reset btn-link">Gerer les classes</a>
           <a href="timetable.html" class="btn-sm btn-reset btn-link">Emploi du temps</a>
           <a href="attendance.html" class="btn-sm btn-reset btn-link">Presence</a>
+          <a href="staff-attendance.html" class="btn-sm btn-reset btn-link">Presence personnel</a>
           <a href="payments.html" class="btn-sm btn-reset btn-link">Paiements eleves</a>
           <a href="workshops.html" class="btn-sm btn-reset btn-link">Ateliers &amp; formations</a>
         </div>
@@ -483,7 +485,7 @@
           <div class="table-scroll">
             <table class="accounts-table">
               <thead>
-                <tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Statut</th><th>Actions</th></tr>
+                <tr><th>Nom</th><th>Email</th><th>Telephone</th><th>Role</th><th>Taux horaire</th><th>Statut</th><th>Actions</th></tr>
               </thead>
               <tbody id="accountsBody"></tbody>
             </table>
@@ -655,6 +657,9 @@ function renderAccounts(){
           <option value="admin" ${p.role==='admin'?'selected':''}>Administration</option>
         </select>
       </td>
+      <td>${p.role === 'staff'
+        ? `<input type="number" class="rate-input" data-id="${p.id}" value="${p.hourly_rate != null ? p.hourly_rate : ''}" min="0" step="0.01" placeholder="MAD/h" style="width:90px;">`
+        : '—'}</td>
       <td><span class="status-pill ${p.status==='active'?'status-active':'status-disabled'}">${p.status==='active'?'Actif':'Desactive'}</span></td>
       <td class="row-actions">
         <button class="btn-sm ${p.status==='active'?'btn-reject':'btn-approve'} toggle-status-btn" data-id="${p.id}" data-status="${p.status}" ${isSelf ? 'disabled' : ''}>
@@ -673,6 +678,21 @@ function renderAccounts(){
       const { error } = await eduflowClient
         .from('profiles')
         .update({ phone: input.value.trim() || null })
+        .eq('id', id);
+      if (error){
+        alert('Erreur : ' + error.message);
+      }
+      await refreshProfiles();
+    });
+  });
+
+  body.querySelectorAll('.rate-input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const id = input.dataset.id;
+      const val = input.value.trim() === '' ? null : parseFloat(input.value);
+      const { error } = await eduflowClient
+        .from('profiles')
+        .update({ hourly_rate: val })
         .eq('id', id);
       if (error){
         alert('Erreur : ' + error.message);

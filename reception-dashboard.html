@@ -80,6 +80,7 @@
     <div class="brand-name">Edu Flow Academy — Espace Reception</div>
     <div class="who" id="whoLabel"></div>
     <div class="topbar-actions">
+      <a href="#" class="btn-home" id="dashboardBtn">📊 Tableau de bord</a>
       <a href="index.html" class="btn-home">🏠 Accueil</a>
       <button class="btn-logout" id="logoutBtn">Deconnexion</button>
     </div>
@@ -98,6 +99,7 @@
       <a href="payments.html" class="tile-link">💳 Paiements eleves</a>
       <a href="timetable.html" class="tile-link">🗓️ Emploi du temps</a>
       <a href="attendance.html" class="tile-link">✅ Presence</a>
+      <a href="staff-attendance.html" class="tile-link">🧑‍🏫 Presence du personnel</a>
       <a href="workshops.html" class="tile-link">🎓 Ateliers &amp; formations</a>
       <a href="archive.html" class="tile-link">📝 Resultats des tests</a>
       <a href="inbox.html" class="tile-link">📨 Notifications<span id="inboxBadge" class="inbox-badge"></span></a>
@@ -140,6 +142,7 @@ function renderSubjectTiles(){
   if (!result) return;
   eduflowShowDeniedBanner();
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('dashboardBtn').href = eduflowRoleHome(result.profile.role);
   document.getElementById('welcomeMsg').textContent = 'Bienvenue, ' + (result.profile.full_name || 'vous') + ' !';
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
