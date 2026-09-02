@@ -260,7 +260,7 @@ const METHOD_LABELS = { especes:'Especes', carte:'Carte', virement:'Virement', a
 
 async function loadAll(){
   const [{ data: payments, error: pErr }, { data: staff, error: sErr }] = await Promise.all([
-    eduflowClient.from('staff_payments').select('id, amount, currency, period, method, note, paid_at, status, profiles(id, full_name)').order('paid_at', { ascending: false }),
+    eduflowClient.from('staff_payments').select('id, staff_id, amount, currency, period, method, note, paid_at, status, profiles!staff_payments_staff_id_fkey(id, full_name)').order('paid_at', { ascending: false }),
     eduflowClient.from('profiles').select('id, full_name').eq('role', 'staff').eq('status', 'active').order('full_name')
   ]);
   if (pErr){ alert('Erreur de chargement : ' + pErr.message); return; }
