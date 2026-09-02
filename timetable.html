@@ -92,6 +92,7 @@
     </div>
     <div class="who" id="whoLabel"></div>
     <div class="topbar-actions no-print">
+      <a href="#" class="btn-home" id="dashboardBtn">📊 Tableau de bord</a>
       <a href="index.html" class="btn-home">🏠 Accueil</a>
       <button class="btn-logout" id="logoutBtn">Deconnexion</button>
     </div>
@@ -220,6 +221,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   eduflowShowDeniedBanner();
   currentProfile = result.profile;
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('dashboardBtn').href = eduflowRoleHome(result.profile.role);
   document.getElementById('lead').textContent = currentProfile.role === 'staff'
     ? 'Vos classes, par jour.'
     : 'Toutes les classes actives, par jour.';
