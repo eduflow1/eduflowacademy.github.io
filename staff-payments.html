@@ -293,7 +293,11 @@ async function loadAll(){
   if (pErr){ alert('Erreur de chargement : ' + pErr.message); return; }
   if (sErr){ alert('Erreur de chargement du personnel : ' + sErr.message); return; }
   if (supErr){ alert('Erreur de chargement du personnel d\'entretien : ' + supErr.message); return; }
-  allPayments = payments || [];
+  // Defense in depth: the database RLS policy already restricts a staff
+  // account to only its own rows (staff_id = auth.uid()), but filter again
+  // here so the UI is guaranteed correct even if that policy is ever
+  // missing/misconfigured on the live database.
+  allPayments = isReadOnly ? (payments || []).filter(p => p.staff_id === currentProfile.id) : (payments || []);
   const ROLE_LABELS = { staff: 'Enseignant(e)', receptionist: 'Reception' };
   staffOptions = [
     ...(profs || []).map(p => ({ id: p.id, full_name: p.full_name, hourly_rate: p.hourly_rate, payeeType: 'profile', roleLabel: ROLE_LABELS[p.role] || p.role })),
