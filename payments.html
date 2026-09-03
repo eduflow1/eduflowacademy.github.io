@@ -110,6 +110,32 @@
     .receipt-footer-contact span{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
 
+  /* Card print mode (55x85mm ID-card format): activated only for the
+     duration of one print job by toggling this class on .receipt-card
+     and injecting a matching @page rule (see printCardBtn handler below)
+     — never affects the normal on-screen view or the normal-size print. */
+  @media print{
+    .receipt-card.card-print{max-width:none;width:49mm;margin:0;}
+    .receipt-card.card-print .receipt-watermark,
+    .receipt-card.card-print .receipt-thanks,
+    .receipt-card.card-print .receipt-footer-strip,
+    .receipt-card.card-print .receipt-stamp-space,
+    .receipt-card.card-print tr.receipt-card-hide{display:none !important;}
+    .receipt-card.card-print .receipt-letterhead{padding:4px 6px;}
+    .receipt-card.card-print .logo-wrap{width:20px;height:20px;border-radius:5px;}
+    .receipt-card.card-print .receipt-brand-name{font-size:0.5rem;}
+    .receipt-card.card-print .receipt-doc-title{font-size:0.42rem;}
+    .receipt-card.card-print .receipt-doc-num{font-size:0.36rem;}
+    .receipt-card.card-print .receipt-paid-pill{font-size:0.32rem;padding:1px 5px;}
+    .receipt-card.card-print .receipt-body{padding:3px 6px 2px;}
+    .receipt-card.card-print table.receipt-table{font-size:0.36rem;}
+    .receipt-card.card-print table.receipt-table td{padding:1.5px 2px;}
+    .receipt-card.card-print .receipt-amount{font-size:0.4rem;}
+    .receipt-card.card-print .receipt-signature{margin-top:3px;}
+    .receipt-card.card-print .signature-block{width:70px;}
+    .receipt-card.card-print .signature-label{font-size:0.3rem;margin-bottom:2px;}
+  }
+
   .logo-wrap{width:50px;height:50px;border-radius:12px;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(0,0,0,0.10);border:2px solid rgba(255,255,255,0.7);}
   .logo-wrap img{width:100%;height:100%;object-fit:cover;}
   .receipt-card{max-width:440px;margin:0 auto;padding:0;overflow:hidden;position:relative;}
@@ -183,7 +209,6 @@
     <div class="brand-name">Edu Flow Academy — Paiements</div>
     <div class="who" id="whoLabel"></div>
     <div class="topbar-actions">
-      <a href="#" class="btn-home" id="dashboardBtn">📊 Tableau de bord</a>
       <a href="index.html" class="btn-home">🏠 Accueil</a>
       <button class="btn-logout" id="logoutBtn">Deconnexion</button>
     </div>
@@ -285,9 +310,9 @@
         <tr><td>Élève</td><td id="receiptStudent"></td></tr>
         <tr><td>Code élève</td><td id="receiptCode"></td></tr>
         <tr><td>Date de paiement</td><td id="receiptDate"></td></tr>
-        <tr><td>Période à payer</td><td id="receiptPeriod">—</td></tr>
+        <tr class="receipt-card-hide"><td>Période à payer</td><td id="receiptPeriod">—</td></tr>
         <tr><td>Matière / formation</td><td id="receiptSubject"></td></tr>
-        <tr><td>Periode de formation</td><td><span class="receipt-write-space-full"></span></td></tr>
+        <tr class="receipt-card-hide"><td>Periode de formation</td><td><span class="receipt-write-space-full"></span></td></tr>
         <tr><td>Montant payé</td><td id="receiptAmount" class="receipt-amount"></td></tr>
         <tr><td>Reste à payer</td><td id="receiptRemaining"></td></tr>
       </table>
@@ -313,6 +338,7 @@
       </div>
       <div class="form-actions no-print" style="margin:0 28px 24px;">
         <button class="btn-sm btn-primary-sm" id="printReceiptBtn">🖨️ Imprimer le reçu</button>
+        <button class="btn-sm btn-ghost-sm" id="printCardBtn">🪪 Imprimer en carte (55×85mm)</button>
       </div>
     </div>
   </div>
@@ -546,24 +572,52 @@ async function openReceipt(p, origin){
     }
   }
 }
-document.getElementById('printReceiptBtn').addEventListener('click', async () => {
+function archiveCurrentReceiptPrint(){
   // Archive: record that this receipt was printed, directly on the
   // payment row (no separate table needed) — shows up as a "Archivé"
   // badge back in the payments list. Fire-and-refresh: don't block the
-  // print dialog waiting on the network.
-  if (currentReceiptPayment){
-    const p = currentReceiptPayment;
-    const printedAt = new Date().toISOString();
-    p.receipt_printed_at = printedAt;
-    p.receipt_print_count = (p.receipt_print_count || 0) + 1;
-    eduflowClient.from('payments').update({
-      receipt_printed_at: printedAt,
-      receipt_print_count: p.receipt_print_count
-    }).eq('id', p.id).then(({ error }) => {
-      if (error) console.error('Archivage du reçu échoué :', error.message);
-    });
-  }
+  // print dialog waiting on the network. Shared by both print buttons
+  // (normal receipt and the 55x85mm card) — either counts as archived.
+  if (!currentReceiptPayment) return;
+  const p = currentReceiptPayment;
+  const printedAt = new Date().toISOString();
+  p.receipt_printed_at = printedAt;
+  p.receipt_print_count = (p.receipt_print_count || 0) + 1;
+  eduflowClient.from('payments').update({
+    receipt_printed_at: printedAt,
+    receipt_print_count: p.receipt_print_count
+  }).eq('id', p.id).then(({ error }) => {
+    if (error) console.error('Archivage du reçu échoué :', error.message);
+  });
+}
+
+document.getElementById('printReceiptBtn').addEventListener('click', () => {
+  archiveCurrentReceiptPrint();
   window.print();
+});
+
+// Card print (55x85mm ID-card format): @page is a page-level rule that
+// can't be scoped to a class in CSS, so instead of a permanent @page
+// rule (which would shrink every print in this file, including the
+// payments list) we inject one just for this print job, then remove it
+// right after — the normal receipt and the printed list are unaffected.
+document.getElementById('printCardBtn').addEventListener('click', () => {
+  archiveCurrentReceiptPrint();
+  const card = document.querySelector('.receipt-card');
+  const pageStyle = document.createElement('style');
+  pageStyle.id = 'cardPageStyle';
+  pageStyle.textContent = '@page{size:55mm 85mm;margin:3mm;}';
+  document.head.appendChild(pageStyle);
+  card.classList.add('card-print');
+  const cleanup = () => {
+    card.classList.remove('card-print');
+    pageStyle.remove();
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
+  // Fallback in case afterprint doesn't fire (some browsers/print-to-PDF flows).
+  setTimeout(cleanup, 5000);
 });
 document.getElementById('receiptBackLink').addEventListener('click', () => showView(receiptOrigin));
 
@@ -671,7 +725,6 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   eduflowShowDeniedBanner();
   currentProfile = result.profile;
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
-  document.getElementById('dashboardBtn').href = eduflowRoleHome(result.profile.role);
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   await loadAll();

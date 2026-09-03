@@ -103,10 +103,16 @@
 
   /* ---- Receipt document ---- */
   .receipt-doc{max-width:720px;margin:0 auto;}
-  .receipt-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
-  .receipt-logo{width:52px;height:52px;border-radius:13px;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.12);}
-  .receipt-academy{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.1rem;color:var(--ink);}
+  .receipt-header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:6px;padding-bottom:18px;border-bottom:2px solid var(--blue);}
+  .receipt-header-brand{display:flex;align-items:center;gap:14px;}
+  .receipt-logo{width:64px;height:64px;border-radius:16px;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.12);flex:none;}
+  .receipt-academy{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.2rem;color:var(--ink);}
   .receipt-academy-sub{font-size:0.78rem;color:#9A9B9C;}
+  .receipt-number{font-family:'IBM Plex Mono',monospace,'Inter',sans-serif;font-size:0.78rem;color:#9A9B9C;text-align:right;white-space:nowrap;}
+  .receipt-footer{
+    margin-top:40px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:0.74rem;color:#9A9B9C;text-align:center;line-height:1.6;
+  }
   .receipt-title{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.3rem;margin:6px 0 18px;text-align:center;color:var(--blue-dark);}
   .receipt-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:20px;font-size:0.88rem;}
   .receipt-meta .row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding:6px 0;}
@@ -144,7 +150,7 @@
 <body>
 
 <div class="wrap" id="app" style="display:none;">
-  <div class="topbar">
+  <div class="topbar no-print">
     <div class="brand-name">Edu Flow Academy — Salaires</div>
     <div class="who" id="whoLabel"></div>
     <div class="topbar-actions">
@@ -158,7 +164,7 @@
   <div id="listView">
     <div class="card">
       <h2>Salaires du personnel <span class="count-badge" id="paymentCount">0</span></h2>
-      <p class="lead">Reserve a l'administration. Historique des paiements verses au personnel enseignant.</p>
+      <p class="lead">Reserve a l'administration. Historique des paiements verses au personnel (enseignants, reception, entretien).</p>
       <div class="total-line" id="totalLine"></div>
       <div class="toolbar">
         <input type="text" id="searchInput" placeholder="Rechercher par nom...">
@@ -270,15 +276,29 @@ function fmtDate(iso){
 }
 const METHOD_LABELS = { especes:'Especes', carte:'Carte', virement:'Virement', autre:'Autre' };
 
+function payeeName(p){
+  if (p.profiles) return p.profiles.full_name;
+  if (p.support_staff) return p.support_staff.full_name;
+  return '—';
+}
+function payeeOptionId(p){ return p.staff_id || p.support_staff_id; }
+function findPayeeOption(id){ return staffOptions.find(s => s.id === id); }
+
 async function loadAll(){
-  const [{ data: payments, error: pErr }, { data: staff, error: sErr }] = await Promise.all([
-    eduflowClient.from('staff_payments').select('id, staff_id, amount, currency, period, method, note, paid_at, status, profiles!staff_payments_staff_id_fkey(id, full_name)').order('paid_at', { ascending: false }),
-    eduflowClient.from('profiles').select('id, full_name, hourly_rate').eq('role', 'staff').eq('status', 'active').order('full_name')
+  const [{ data: payments, error: pErr }, { data: profs, error: sErr }, { data: support, error: supErr }] = await Promise.all([
+    eduflowClient.from('staff_payments').select('id, staff_id, support_staff_id, amount, currency, period, method, note, paid_at, status, profiles!staff_payments_staff_id_fkey(id, full_name), support_staff(id, full_name)').order('paid_at', { ascending: false }),
+    eduflowClient.from('profiles').select('id, full_name, hourly_rate, role').in('role', ['staff', 'receptionist']).eq('status', 'active').order('full_name'),
+    eduflowClient.from('support_staff').select('id, full_name, hourly_rate, role_label').eq('status', 'active').order('full_name')
   ]);
   if (pErr){ alert('Erreur de chargement : ' + pErr.message); return; }
   if (sErr){ alert('Erreur de chargement du personnel : ' + sErr.message); return; }
+  if (supErr){ alert('Erreur de chargement du personnel d\'entretien : ' + supErr.message); return; }
   allPayments = payments || [];
-  staffOptions = staff || [];
+  const ROLE_LABELS = { staff: 'Enseignant(e)', receptionist: 'Reception' };
+  staffOptions = [
+    ...(profs || []).map(p => ({ id: p.id, full_name: p.full_name, hourly_rate: p.hourly_rate, payeeType: 'profile', roleLabel: ROLE_LABELS[p.role] || p.role })),
+    ...(support || []).map(s => ({ id: s.id, full_name: s.full_name, hourly_rate: s.hourly_rate, payeeType: 'support', roleLabel: s.role_label }))
+  ];
   renderTable();
 }
 
@@ -296,8 +316,7 @@ function renderTable(){
 
   const visible = allPayments.filter(p => {
     if (search){
-      const name = p.profiles ? p.profiles.full_name.toLowerCase() : '';
-      if (!name.includes(search)) return false;
+      if (!payeeName(p).toLowerCase().includes(search)) return false;
     }
     if (statusFilter === 'archived') return p.status === 'archived';
     if (statusFilter === 'visible') return p.status !== 'archived';
@@ -315,7 +334,7 @@ function renderTable(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${fmtDate(p.paid_at)}</td>
-      <td>${p.profiles ? p.profiles.full_name : '—'}</td>
+      <td>${payeeName(p)}</td>
       <td>${p.period || '—'}</td>
       <td class="amount-cell">${Number(p.amount).toFixed(2)} ${p.currency}</td>
       <td><span class="status-pill ${pill.cls}">${pill.label}</span></td>
@@ -330,7 +349,7 @@ function renderTable(){
     receiptBtn.addEventListener('click', () => openReceipt(p));
     actions.appendChild(receiptBtn);
 
-    if (p.status === 'active'){
+    if (!isReadOnly && p.status === 'active'){
       const voidBtn = document.createElement('button');
       voidBtn.className = 'btn-sm btn-reject';
       voidBtn.textContent = 'Annuler';
@@ -344,7 +363,7 @@ function renderTable(){
       actions.appendChild(voidBtn);
     }
 
-    if (p.status !== 'archived'){
+    if (!isReadOnly && p.status !== 'archived'){
       const archiveBtn = document.createElement('button');
       archiveBtn.className = 'btn-sm btn-ghost-sm';
       archiveBtn.textContent = '🗂️ Archiver';
@@ -358,16 +377,18 @@ function renderTable(){
       actions.appendChild(archiveBtn);
     }
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn-sm btn-reject';
-    deleteBtn.textContent = '🗑️ Supprimer';
-    deleteBtn.addEventListener('click', async () => {
-      if (!confirm('Supprimer definitivement ce paiement ? Cette action est irreversible.')) return;
-      const { error } = await eduflowClient.from('staff_payments').delete().eq('id', p.id);
-      if (error){ alert('Erreur : ' + error.message); return; }
-      await loadAll();
-    });
-    actions.appendChild(deleteBtn);
+    if (!isReadOnly){
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-sm btn-reject';
+      deleteBtn.textContent = '🗑️ Supprimer';
+      deleteBtn.addEventListener('click', async () => {
+        if (!confirm('Supprimer definitivement ce paiement ? Cette action est irreversible.')) return;
+        const { error } = await eduflowClient.from('staff_payments').delete().eq('id', p.id);
+        if (error){ alert('Erreur : ' + error.message); return; }
+        await loadAll();
+      });
+      actions.appendChild(deleteBtn);
+    }
 
     body.appendChild(tr);
   });
@@ -412,21 +433,26 @@ async function computeAndRenderReceipt(){
   const doc = document.getElementById('receiptDoc');
   doc.innerHTML = '<p class="loading-msg">Chargement des seances...</p>';
 
-  const { data: sessions, error } = await eduflowClient
-    .from('class_sessions')
-    .select('session_date, classes!inner(name, subject, teacher_id)')
-    .eq('classes.teacher_id', p.staff_id)
-    .eq('status', 'completed')
-    .gte('session_date', from)
-    .lte('session_date', to)
-    .order('session_date');
+  // Only teachers (paid via staff_id, a profiles row) have class_sessions to
+  // auto-detect. Receptionists and support staff (e.g. cleaning) have no
+  // classes — their session count is purely the manual input.
+  let rows = [];
+  if (p.staff_id){
+    const { data: sessions, error } = await eduflowClient
+      .from('class_sessions')
+      .select('session_date, classes!inner(name, subject, teacher_id)')
+      .eq('classes.teacher_id', p.staff_id)
+      .eq('status', 'completed')
+      .gte('session_date', from)
+      .lte('session_date', to)
+      .order('session_date');
+    if (error){ doc.innerHTML = '<p class="empty-msg">Erreur de chargement des seances : ' + error.message + '</p>'; return; }
+    rows = sessions || [];
+  }
 
-  if (error){ doc.innerHTML = '<p class="empty-msg">Erreur de chargement des seances : ' + error.message + '</p>'; return; }
-
-  const rows = sessions || [];
-  const staffName = p.profiles ? p.profiles.full_name : '—';
-  const staffProfile = staffOptions.find(s => s.id === p.staff_id);
-  const hourlyRate = staffProfile && staffProfile.hourly_rate != null ? Number(staffProfile.hourly_rate) : null;
+  const staffName = payeeName(p);
+  const payeeOption = findPayeeOption(payeeOptionId(p));
+  const hourlyRate = payeeOption && payeeOption.hourly_rate != null ? Number(payeeOption.hourly_rate) : null;
   const totalSessions = rows.length + manualCount;
   const calculatedAmount = hourlyRate != null ? hourlyRate * totalSessions : null;
   const tableRows = rows.length
@@ -439,13 +465,18 @@ async function computeAndRenderReceipt(){
       `).join('')
     : '';
 
+  const receiptNumber = 'REC-' + String(p.id).replace(/-/g, '').slice(0, 8).toUpperCase();
+
   doc.innerHTML = `
     <div class="receipt-header">
-      <img class="receipt-logo" src="media/logo.jpg" alt="Edu Flow Academy">
-      <div>
-        <div class="receipt-academy">Edu Flow Academy</div>
-        <div class="receipt-academy-sub">Recu de paiement — Personnel enseignant</div>
+      <div class="receipt-header-brand">
+        <img class="receipt-logo" src="media/logo.jpg" alt="Edu Flow Academy" onerror="this.style.display='none';">
+        <div>
+          <div class="receipt-academy">Edu Flow Academy</div>
+          <div class="receipt-academy-sub">Recu de paiement — Personnel</div>
+        </div>
       </div>
+      <div class="receipt-number">N&deg; ${receiptNumber}<br>${fmtDate(p.paid_at)}</div>
     </div>
     <div class="receipt-title">Recu de paiement</div>
     <div class="receipt-meta">
@@ -482,6 +513,10 @@ async function computeAndRenderReceipt(){
       <div class="receipt-sign"><div class="sig-line">Signature de l'enseignant(e)</div>${staffName}</div>
       <div class="receipt-sign"><div class="sig-line">Signature de la Direction</div>Edu Flow Academy</div>
     </div>
+    <div class="receipt-footer">
+      Edu Flow Academy — Near N355, Daoudiyine Car, Intersection rue du Nil &amp; rue du 10 Mars, Bd 10 Mars, Casablanca<br>
+      Tel : 0521406510 · 0665688128 · 0669313643 — Document genere automatiquement le ${fmtDate(new Date().toISOString())}
+    </div>
   `;
 }
 
@@ -491,7 +526,7 @@ document.getElementById('rPrintBtn').addEventListener('click', () => window.prin
 document.getElementById('receiptBackLink').addEventListener('click', () => showView('list'));
 
 function updateRateHint(){
-  const staff = staffOptions.find(s => s.id === document.getElementById('fStaffInput').value);
+  const staff = findPayeeOption(document.getElementById('fStaffInput').value);
   document.getElementById('fRateHint').textContent = (staff && staff.hourly_rate != null)
     ? 'Taux horaire declare : ' + Number(staff.hourly_rate).toFixed(2) + ' MAD/h'
     : '';
@@ -499,7 +534,7 @@ function updateRateHint(){
 
 document.getElementById('newPaymentBtn').addEventListener('click', () => {
   document.getElementById('fStaffInput').innerHTML = staffOptions.map(s =>
-    `<option value="${s.id}">${s.full_name}</option>`
+    `<option value="${s.id}">${s.full_name} (${s.roleLabel})</option>`
   ).join('') || '<option value="">Aucun personnel actif</option>';
   document.getElementById('fAmountInput').value = '';
   document.getElementById('fDateInput').value = new Date().toISOString().slice(0, 10);
@@ -514,13 +549,15 @@ document.getElementById('formBackLink').addEventListener('click', () => showView
 document.getElementById('cancelFormBtn').addEventListener('click', () => showView('list'));
 
 document.getElementById('savePaymentBtn').addEventListener('click', async () => {
-  const staffId = document.getElementById('fStaffInput').value;
+  const payeeId = document.getElementById('fStaffInput').value;
   const amount = parseFloat(document.getElementById('fAmountInput').value);
-  if (!staffId){ alert('Choisissez un membre du personnel.'); return; }
+  if (!payeeId){ alert('Choisissez un membre du personnel.'); return; }
   if (!amount || amount <= 0){ alert('Montant invalide.'); return; }
+  const payee = findPayeeOption(payeeId);
 
   const payload = {
-    staff_id: staffId,
+    staff_id: payee && payee.payeeType === 'support' ? null : payeeId,
+    support_staff_id: payee && payee.payeeType === 'support' ? payeeId : null,
     amount,
     paid_at: document.getElementById('fDateInput').value || new Date().toISOString().slice(0, 10),
     period: document.getElementById('fPeriodInput').value.trim() || null,
@@ -540,13 +577,21 @@ document.getElementById('savePaymentBtn').addEventListener('click', async () => 
 
 document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
 
+let isReadOnly = true;
+
 (async () => {
-  const result = await eduflowRequireRole(['admin']);
+  const result = await eduflowRequireRole(['admin', 'staff']);
   if (!result) return;
   eduflowShowDeniedBanner();
   currentProfile = result.profile;
+  isReadOnly = currentProfile.role !== 'admin';
   document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
   document.getElementById('dashboardBtn').href = eduflowRoleHome(result.profile.role);
+  if (isReadOnly){
+    document.querySelector('h2').innerHTML = 'Mes paiements <span class="count-badge" id="paymentCount">0</span>';
+    document.querySelector('#listView .lead').textContent = 'Historique de vos paiements. Lecture seule.';
+    document.getElementById('newPaymentBtn').style.display = 'none';
+  }
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   await loadAll();

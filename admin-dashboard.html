@@ -325,6 +325,7 @@
           <a href="timetable.html" class="sidebar-link" data-label="Emploi du temps"><span class="ic ic-blue">🗓️</span><span class="txt">Emploi du temps</span></a>
           <a href="attendance.html" class="sidebar-link" data-label="Presence"><span class="ic ic-blue">✅</span><span class="txt">Presence</span></a>
           <a href="staff-attendance.html" class="sidebar-link" data-label="Presence personnel"><span class="ic ic-blue">🧑‍🏫</span><span class="txt">Presence personnel</span></a>
+          <a href="daily-attendance.html" class="sidebar-link" data-label="Presence reception/entretien"><span class="ic ic-blue">🧹</span><span class="txt">Presence reception/entretien</span></a>
           <a href="workshops.html" class="sidebar-link" data-label="Ateliers"><span class="ic ic-blue">🎪</span><span class="txt">Ateliers</span></a>
         </div>
 
@@ -397,6 +398,7 @@
           <a href="timetable.html" class="btn-sm btn-reset btn-link">Emploi du temps</a>
           <a href="attendance.html" class="btn-sm btn-reset btn-link">Presence</a>
           <a href="staff-attendance.html" class="btn-sm btn-reset btn-link">Presence personnel</a>
+          <a href="daily-attendance.html" class="btn-sm btn-reset btn-link">Presence reception/entretien</a>
           <a href="payments.html" class="btn-sm btn-reset btn-link">Paiements eleves</a>
           <a href="workshops.html" class="btn-sm btn-reset btn-link">Ateliers &amp; formations</a>
         </div>
@@ -493,6 +495,25 @@
         </div>
       </div>
 
+      <div class="card card-blue accounts-compact" id="supportStaff">
+        <h2><span class="card-icon icon-violet">🧹</span> Personnel d'entretien <span class="count-badge" id="supportStaffCount">0</span></h2>
+        <p class="lead">Personnel sans compte de connexion (ex. entretien). Gere ici pour les paiements et la presence.</p>
+        <div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <input type="text" id="supNameInput" placeholder="Nom complet" style="flex:1;min-width:160px;">
+          <input type="number" id="supRateInput" placeholder="Taux horaire (MAD/h)" min="0" step="0.01" style="width:170px;">
+          <button class="btn-sm btn-approve" id="supAddBtn">+ Ajouter</button>
+        </div>
+        <div class="table-scroll">
+          <table class="accounts-table">
+            <thead>
+              <tr><th>Nom</th><th>Taux horaire</th><th>Statut</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="supportStaffBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-msg" id="supportStaffEmpty" style="display:none;">Aucun personnel d'entretien enregistre.</div>
+      </div>
+
     </main>
   </div>
 
@@ -557,6 +578,91 @@ async function refreshProfiles(){
   renderPending();
   renderAccounts();
 }
+
+let allSupportStaff = [];
+
+async function loadSupportStaff(){
+  const { data, error } = await eduflowClient
+    .from('support_staff')
+    .select('*')
+    .order('full_name');
+  if (error){
+    alert('Erreur de chargement du personnel d\'entretien : ' + error.message);
+    return;
+  }
+  allSupportStaff = data || [];
+  renderSupportStaff();
+}
+
+function renderSupportStaff(){
+  const body = document.getElementById('supportStaffBody');
+  body.innerHTML = '';
+  document.getElementById('supportStaffCount').textContent = allSupportStaff.filter(s => s.status === 'active').length;
+  document.getElementById('supportStaffEmpty').style.display = allSupportStaff.length ? 'none' : 'block';
+
+  allSupportStaff.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.full_name}</td>
+      <td><input type="number" class="sup-rate-input" data-id="${s.id}" value="${s.hourly_rate != null ? s.hourly_rate : ''}" min="0" step="0.01" placeholder="MAD/h" style="width:90px;"></td>
+      <td><span class="status-pill ${s.status==='active'?'status-active':'status-disabled'}">${s.status==='active'?'Actif':'Desactive'}</span></td>
+      <td class="row-actions"></td>
+    `;
+    const actions = tr.querySelector('.row-actions');
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn-sm ' + (s.status === 'active' ? 'btn-reject' : 'btn-approve');
+    toggleBtn.textContent = s.status === 'active' ? 'Desactiver' : 'Reactiver';
+    toggleBtn.addEventListener('click', async () => {
+      const { error } = await eduflowClient
+        .from('support_staff')
+        .update({ status: s.status === 'active' ? 'disabled' : 'active' })
+        .eq('id', s.id);
+      if (error){ alert('Erreur : ' + error.message); return; }
+      await loadSupportStaff();
+    });
+    actions.appendChild(toggleBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-sm btn-reject';
+    deleteBtn.style.marginLeft = '6px';
+    deleteBtn.textContent = 'Supprimer';
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm(`Supprimer definitivement "${s.full_name}" ? Cette action est irreversible.`)) return;
+      const { error } = await eduflowClient.from('support_staff').delete().eq('id', s.id);
+      if (error){ alert('Erreur : ' + error.message); return; }
+      await loadSupportStaff();
+    });
+    actions.appendChild(deleteBtn);
+
+    body.appendChild(tr);
+  });
+
+  body.querySelectorAll('.sup-rate-input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const id = input.dataset.id;
+      const val = input.value.trim() === '' ? null : parseFloat(input.value);
+      const { error } = await eduflowClient.from('support_staff').update({ hourly_rate: val }).eq('id', id);
+      if (error){ alert('Erreur : ' + error.message); }
+      await loadSupportStaff();
+    });
+  });
+}
+
+document.getElementById('supAddBtn').addEventListener('click', async () => {
+  const name = document.getElementById('supNameInput').value.trim();
+  const rateVal = document.getElementById('supRateInput').value.trim();
+  if (!name){ alert('Indiquez un nom.'); return; }
+  const payload = { full_name: name, hourly_rate: rateVal === '' ? null : parseFloat(rateVal), created_by: currentAdminId };
+  const btn = document.getElementById('supAddBtn');
+  btn.disabled = true;
+  const { error } = await eduflowClient.from('support_staff').insert(payload);
+  btn.disabled = false;
+  if (error){ alert('Erreur : ' + error.message); return; }
+  document.getElementById('supNameInput').value = '';
+  document.getElementById('supRateInput').value = '';
+  await loadSupportStaff();
+});
 
 function renderPending(){
   const pending = allProfiles.filter(p => p.role === 'pending' && p.status === 'active');
@@ -657,7 +763,7 @@ function renderAccounts(){
           <option value="admin" ${p.role==='admin'?'selected':''}>Administration</option>
         </select>
       </td>
-      <td>${p.role === 'staff'
+      <td>${(p.role === 'staff' || p.role === 'receptionist')
         ? `<input type="number" class="rate-input" data-id="${p.id}" value="${p.hourly_rate != null ? p.hourly_rate : ''}" min="0" step="0.01" placeholder="MAD/h" style="width:90px;">`
         : '—'}</td>
       <td><span class="status-pill ${p.status==='active'?'status-active':'status-disabled'}">${p.status==='active'?'Actif':'Desactive'}</span></td>
@@ -907,6 +1013,7 @@ document.getElementById('openResultsBtnCard').addEventListener('click', openResu
   document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   await refreshProfiles();
+  await loadSupportStaff();
   await loadSentMessages();
 
   const [{ count: studentsCount }, { count: classesCount }] = await Promise.all([
