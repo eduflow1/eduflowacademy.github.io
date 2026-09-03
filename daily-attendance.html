@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Presence reception &amp; entretien</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:820px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:26px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+  input[type=date]{
+    padding:9px 11px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);
+  }
+  input:focus{outline:none;border-color:var(--blue);}
+
+  .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:8px 0;}
+
+  .person-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .person-row:last-child{border-bottom:none;}
+  .person-info{flex:1;min-width:180px;}
+  .person-name{font-weight:600;}
+  .person-role{font-size:0.76rem;color:#9A9B9C;}
+  .status-btns{display:flex;gap:6px;}
+  .status-btn{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.8rem;
+    border:1.5px solid var(--line);border-radius:8px;padding:7px 14px;cursor:pointer;background:#fff;color:#9A9B9C;
+  }
+  .status-btn:disabled{opacity:0.45;cursor:not-allowed;}
+  .status-btn.present.selected{background:var(--green);border-color:var(--green);color:#fff;}
+  .status-btn.absent.selected{background:var(--danger);border-color:var(--danger);color:#fff;}
+  .person-note{font-size:0.74rem;color:#B8BCBA;width:100%;margin-top:4px;}
+
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+
+  .section-label{font-size:0.78rem;text-transform:uppercase;letter-spacing:.04em;color:#9A9B9C;font-weight:700;margin:18px 0 4px;}
+  .section-label:first-child{margin-top:0;}
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Presence reception &amp; entretien</div>
+    <div class="who" id="whoLabel"></div>
+    <div class="topbar-actions">
+      <a href="#" class="btn-home" id="dashboardBtn">📊 Tableau de bord</a>
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Presence du jour</h2>
+    <p class="lead" id="lead">Choisissez une date, puis marquez present ou absent pour chaque personne.</p>
+    <div class="toolbar">
+      <input type="date" id="datePicker">
+    </div>
+
+    <div class="section-label">Reception</div>
+    <div id="receptionList"></div>
+    <div class="empty-msg" id="receptionEmpty" style="display:none;">Aucun compte reception actif.</div>
+
+    <div class="section-label">Personnel d'entretien</div>
+    <div id="supportList"></div>
+    <div class="empty-msg" id="supportEmpty" style="display:none;">Aucun personnel d'entretien actif.</div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+let currentProfile = null;
+let receptionOptions = [];
+let supportOptions = [];
+let attendanceByKey = {}; // 'profile:<id>' or 'support:<id>' -> row
+
+function canMarkReceptionist(){ return currentProfile.role === 'admin'; }
+function canMarkSupport(){ return currentProfile.role === 'admin' || currentProfile.role === 'receptionist'; }
+
+async function loadPeople(){
+  const [{ data: recs, error: rErr }, { data: sup, error: sErr }] = await Promise.all([
+    eduflowClient.from('profiles').select('id, full_name').eq('role', 'receptionist').eq('status', 'active').order('full_name'),
+    eduflowClient.from('support_staff').select('id, full_name, role_label').eq('status', 'active').order('full_name')
+  ]);
+  if (rErr){ alert('Erreur : ' + rErr.message); return; }
+  if (sErr){ alert('Erreur : ' + sErr.message); return; }
+  receptionOptions = recs || [];
+  supportOptions = sup || [];
+}
+
+async function loadAttendanceForDate(date){
+  attendanceByKey = {};
+  const profileIds = receptionOptions.map(r => r.id);
+  const supportIds = supportOptions.map(s => s.id);
+
+  const queries = [];
+  if (profileIds.length){
+    queries.push(
+      eduflowClient.from('daily_attendance').select('*').eq('attendance_date', date).in('profile_id', profileIds)
+    );
+  }
+  if (supportIds.length){
+    queries.push(
+      eduflowClient.from('daily_attendance').select('*').eq('attendance_date', date).in('support_staff_id', supportIds)
+    );
+  }
+  const results = await Promise.all(queries);
+  results.forEach(({ data, error }) => {
+    if (error){ alert('Erreur : ' + error.message); return; }
+    (data || []).forEach(row => {
+      const key = row.profile_id ? 'profile:' + row.profile_id : 'support:' + row.support_staff_id;
+      attendanceByKey[key] = row;
+    });
+  });
+}
+
+async function markAttendance(key, status){
+  const [type, id] = key.split(':');
+  const payload = {
+    attendance_date: document.getElementById('datePicker').value,
+    status,
+    marked_by: currentProfile.id
+  };
+  if (type === 'profile'){
+    payload.profile_id = id;
+    var conflictCols = 'profile_id,attendance_date';
+  } else {
+    payload.support_staff_id = id;
+    var conflictCols = 'support_staff_id,attendance_date';
+  }
+  const { data, error } = await eduflowClient
+    .from('daily_attendance')
+    .upsert(payload, { onConflict: conflictCols })
+    .select('*')
+    .single();
+  if (error){ alert('Erreur : ' + error.message); return; }
+  attendanceByKey[key] = data;
+  renderLists();
+}
+
+function personRow(key, name, roleLabel, canMark){
+  const row = attendanceByKey[key];
+  const div = document.createElement('div');
+  div.className = 'person-row';
+  div.innerHTML = `
+    <div class="person-info">
+      <div class="person-name">${name}</div>
+      <div class="person-role">${roleLabel}</div>
+      ${!canMark ? '<div class="person-note">Reserve a l\'administration.</div>' : ''}
+    </div>
+    <div class="status-btns">
+      <button type="button" class="status-btn present ${row && row.status==='present' ? 'selected':''}" ${canMark ? '' : 'disabled'}>Present</button>
+      <button type="button" class="status-btn absent ${row && row.status==='absent' ? 'selected':''}" ${canMark ? '' : 'disabled'}>Absent</button>
+    </div>
+  `;
+  if (canMark){
+    const [presentBtn, absentBtn] = div.querySelectorAll('.status-btn');
+    presentBtn.addEventListener('click', () => markAttendance(key, 'present'));
+    absentBtn.addEventListener('click', () => markAttendance(key, 'absent'));
+  }
+  return div;
+}
+
+function renderLists(){
+  const receptionList = document.getElementById('receptionList');
+  receptionList.innerHTML = '';
+  document.getElementById('receptionEmpty').style.display = receptionOptions.length ? 'none' : 'block';
+  receptionOptions.forEach(r => {
+    receptionList.appendChild(personRow('profile:' + r.id, r.full_name, 'Reception', canMarkReceptionist()));
+  });
+
+  const supportList = document.getElementById('supportList');
+  supportList.innerHTML = '';
+  document.getElementById('supportEmpty').style.display = supportOptions.length ? 'none' : 'block';
+  supportOptions.forEach(s => {
+    supportList.appendChild(personRow('support:' + s.id, s.full_name, s.role_label || 'Entretien', canMarkSupport()));
+  });
+}
+
+document.getElementById('datePicker').addEventListener('change', async () => {
+  await loadAttendanceForDate(document.getElementById('datePicker').value);
+  renderLists();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['admin', 'receptionist']);
+  if (!result) return;
+  eduflowShowDeniedBanner();
+  currentProfile = result.profile;
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('dashboardBtn').href = eduflowRoleHome(result.profile.role);
+  if (currentProfile.role === 'receptionist'){
+    document.getElementById('lead').textContent = "Vous pouvez marquer la presence du personnel d'entretien. La presence de la reception est reservee a l'administration.";
+  }
+  document.getElementById('datePicker').value = new Date().toISOString().slice(0, 10);
+  await loadPeople();
+  await loadAttendanceForDate(document.getElementById('datePicker').value);
+  renderLists();
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+})();
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>
