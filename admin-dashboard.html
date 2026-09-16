@@ -559,7 +559,7 @@
 let currentAdminId = null;
 let allProfiles = [];
 
-const ROLE_LABELS = { admin:'Administration', staff:'Personnel enseignant', receptionist:'Reception', pending:'En attente' };
+const ROLE_LABELS = { admin:'Administration', staff:'Personnel enseignant', receptionist:'Reception', student:'Etudiant en ligne', pending:'En attente' };
 
 function fmtDate(iso){
   if (!iso) return '—';
@@ -688,6 +688,7 @@ function renderPending(){
         <select data-id="${p.id}" class="approve-role-select">
           <option value="staff" ${p.requested_role==='staff'?'selected':''}>Personnel enseignant</option>
           <option value="receptionist" ${p.requested_role==='receptionist'?'selected':''}>Reception</option>
+          <option value="student" ${p.requested_role==='student'?'selected':''}>Etudiant en ligne</option>
           <option value="admin">Administration</option>
         </select>
         <button class="btn-sm btn-approve" data-id="${p.id}">Approuver</button>
@@ -762,6 +763,7 @@ function renderAccounts(){
           <option value="pending" ${p.role==='pending'?'selected':''}>En attente</option>
           <option value="staff" ${p.role==='staff'?'selected':''}>Personnel enseignant</option>
           <option value="receptionist" ${p.role==='receptionist'?'selected':''}>Reception</option>
+          <option value="student" ${p.role==='student'?'selected':''}>Etudiant en ligne</option>
           <option value="admin" ${p.role==='admin'?'selected':''}>Administration</option>
         </select>
       </td>

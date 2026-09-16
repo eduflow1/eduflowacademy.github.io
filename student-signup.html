@@ -95,12 +95,12 @@
       <a class="back-link" href="student-login.html" id="loginLink">J'ai deja un compte — se connecter</a>
     </div>
 
-    <div id="stepConfirmEmail" style="display:none;">
-      <div class="success-icon">📩</div>
+    <div id="stepDone" style="display:none;">
+      <div class="success-icon">✅</div>
       <div class="brand-name">Edu Flow Academy</div>
-      <h2>Confirmez votre email</h2>
-      <p class="gate-lead">Un email de confirmation vous a ete envoye. Cliquez sur le lien qu'il contient, puis connectez-vous.</p>
-      <a class="back-link" href="student-login.html">← Aller a la connexion</a>
+      <h2>Compte cree</h2>
+      <p class="gate-lead">Votre compte a bien ete cree et est <strong>en attente de validation</strong> par l'administration. Vous recevrez l'acces des qu'un administrateur aura confirme votre compte.</p>
+      <a class="back-link" href="student-login.html">← Retour a la page de connexion</a>
     </div>
 
   </div>
@@ -162,14 +162,17 @@ document.getElementById('createAccountBtn').addEventListener('click', async () =
     return;
   }
 
+  // Same approval flow as staff/reception: every new account lands as
+  // 'pending' regardless of whether Supabase logged them in right
+  // away, so always show the "awaiting approval" screen rather than
+  // redirecting into pages that eduflowRequireRole would just bounce
+  // them back out of.
   if (data.session){
-    // Email confirmation disabled on this project: we're logged in immediately.
-    window.location.replace(next);
-    return;
+    await eduflowClient.auth.signOut();
   }
 
   document.getElementById('stepForm').style.display = 'none';
-  document.getElementById('stepConfirmEmail').style.display = 'block';
+  document.getElementById('stepDone').style.display = 'block';
 });
 </script>
   <script src="animations.js" defer></script>

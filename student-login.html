@@ -106,6 +106,9 @@ const notice = document.getElementById('notice');
 if (reason === 'disabled'){
   notice.textContent = 'Ce compte a ete desactive. Contactez l\'administration.';
   notice.style.display = 'block';
+} else if (reason === 'pending'){
+  notice.textContent = 'Votre compte est en attente de validation par l\'administration. Vous recevrez l\'acces des qu\'un administrateur l\'aura confirme.';
+  notice.style.display = 'block';
 } else if (reason === 'wrong-space'){
   notice.textContent = "Ce compte n'est pas un compte etudiant.";
   notice.style.display = 'block';
@@ -148,6 +151,14 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   if (!profile || profile.status !== 'active'){
     await eduflowClient.auth.signOut();
     errLogin.textContent = 'Ce compte a ete desactive. Contactez l\'administration.';
+    errLogin.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Se connecter';
+    return;
+  }
+  if (profile.role === 'pending'){
+    await eduflowClient.auth.signOut();
+    errLogin.textContent = "Votre compte est en attente de validation par l'administration. Vous recevrez l'acces des qu'un administrateur l'aura confirme.";
     errLogin.style.display = 'block';
     btn.disabled = false;
     btn.textContent = 'Se connecter';
