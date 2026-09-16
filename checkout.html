@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Paiement</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:28px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:480px;}
+  .home-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:14px;}
+  .home-link:hover{color:var(--blue-dark);}
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:30px 28px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+  }
+  .card h2{margin:0 0 4px;font-size:1.25rem;text-align:center;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;text-align:center;margin:0 0 22px;}
+  .order-row{display:flex;gap:14px;align-items:center;padding:14px;border:1.5px solid var(--line);border-radius:14px;margin-bottom:18px;}
+  .order-cover{width:64px;height:64px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,var(--blue),var(--green));flex:none;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;}
+  .order-info h3{margin:0 0 4px;font-size:0.98rem;}
+  .order-info span{color:#7A7B7D;font-size:0.82rem;}
+  .price-row{display:flex;justify-content:space-between;align-items:center;font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.15rem;padding:14px 0;border-top:1px solid var(--line);margin-bottom:18px;}
+  button{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;
+    border:none;border-radius:14px;padding:14px 26px;cursor:pointer;width:100%;
+    background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
+    box-shadow:0 8px 20px rgba(63,174,221,0.30);
+  }
+  button:disabled{opacity:0.6;cursor:not-allowed;}
+  .error-msg{color:var(--danger);font-size:0.85rem;margin-top:14px;display:none;text-align:center;}
+  .secure-note{color:#9A9B9C;font-size:0.76rem;text-align:center;margin-top:14px;}
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div class="wrap">
+  <a href="online-courses.html" class="home-link">← Retour aux cours</a>
+  <div class="card" id="app" style="display:none;">
+    <h2>Finaliser l'inscription</h2>
+    <p class="lead">Verifiez les details avant de payer.</p>
+    <div class="order-row">
+      <div class="order-cover" id="orderCover">🖥️</div>
+      <div class="order-info">
+        <h3 id="orderTitle"></h3>
+        <span id="orderMeta"></span>
+      </div>
+    </div>
+    <div class="price-row">
+      <span>Total</span>
+      <span id="orderPrice"></span>
+    </div>
+    <button id="payBtn">💳 Payer par carte</button>
+    <div class="error-msg" id="errMsg"></div>
+    <p class="secure-note">Paiement securise traite par Stripe. Vous serez redirige(e) vers une page de paiement.</p>
+  </div>
+  <div class="loading-msg" id="loadingMsg">Chargement...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script src="eduflow-courses.js"></script>
+<script>
+const courseId = new URLSearchParams(window.location.search).get('course');
+
+(async () => {
+  if (!courseId){
+    window.location.replace('online-courses.html');
+    return;
+  }
+  const next = 'checkout.html?course=' + encodeURIComponent(courseId);
+  const result = await eduflowRequireRole(['student'], 'student-login.html?next=' + encodeURIComponent(next));
+  if (!result) return;
+
+  const { data: course, error } = await eduflowClient
+    .from('online_courses')
+    .select('id, title, subject, level, price, currency, cover_path, status')
+    .eq('id', courseId)
+    .single();
+
+  if (error || !course || course.status !== 'published'){
+    document.getElementById('loadingMsg').textContent = 'Ce cours est introuvable ou indisponible.';
+    return;
+  }
+
+  const { data: existing } = await eduflowClient
+    .from('course_enrollments')
+    .select('id')
+    .eq('course_id', courseId)
+    .eq('student_id', result.session.user.id)
+    .eq('status', 'active')
+    .maybeSingle();
+  if (existing){
+    window.location.replace('course-player.html?course=' + courseId);
+    return;
+  }
+
+  document.getElementById('orderTitle').textContent = course.title;
+  document.getElementById('orderMeta').textContent = [
+    course.subject ? (EDUFLOW_SUBJECT_LABELS[course.subject] || course.subject) : null,
+    course.level
+  ].filter(Boolean).join(' — ');
+  document.getElementById('orderPrice').textContent = eduflowFormatPrice(course.price, course.currency);
+  const cover = eduflowCourseCoverUrl(course.cover_path);
+  if (cover){
+    document.getElementById('orderCover').style.backgroundImage = `url('${cover}')`;
+    document.getElementById('orderCover').style.backgroundSize = 'cover';
+    document.getElementById('orderCover').style.backgroundPosition = 'center';
+    document.getElementById('orderCover').textContent = '';
+  }
+
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  const payBtn = document.getElementById('payBtn');
+
+  if (Number(course.price) <= 0){
+    payBtn.textContent = "S'inscrire gratuitement";
+  }
+
+  payBtn.addEventListener('click', async () => {
+    const errMsg = document.getElementById('errMsg');
+    errMsg.style.display = 'none';
+    payBtn.disabled = true;
+    payBtn.textContent = 'Traitement...';
+
+    if (Number(course.price) <= 0){
+      const { error: enrollErr } = await eduflowClient.from('course_enrollments').insert({
+        course_id: course.id,
+        student_id: result.session.user.id,
+        source: 'manual',
+        status: 'active'
+      });
+      if (enrollErr){
+        errMsg.textContent = 'Erreur : ' + enrollErr.message;
+        errMsg.style.display = 'block';
+        payBtn.disabled = false;
+        payBtn.textContent = "S'inscrire gratuitement";
+        return;
+      }
+      window.location.replace('course-player.html?course=' + course.id);
+      return;
+    }
+
+    const origin = window.location.origin + window.location.pathname.replace('checkout.html', '');
+    const { data, error: fnError } = await eduflowClient.functions.invoke('create-checkout-session', {
+      body: {
+        courseId: course.id,
+        successUrl: origin + 'checkout-success.html?course=' + course.id,
+        cancelUrl: origin + 'checkout.html?course=' + course.id + '&cancelled=1'
+      }
+    });
+
+    if (fnError || !data || data.error){
+      errMsg.textContent = 'Erreur : ' + (data && data.error ? data.error : (fnError ? fnError.message : 'inconnue'));
+      errMsg.style.display = 'block';
+      payBtn.disabled = false;
+      payBtn.textContent = '💳 Payer par carte';
+      return;
+    }
+
+    window.location.href = data.url;
+  });
+
+  if (new URLSearchParams(window.location.search).get('cancelled') === '1'){
+    const errMsg = document.getElementById('errMsg');
+    errMsg.textContent = 'Paiement annule. Vous pouvez reessayer quand vous le souhaitez.';
+    errMsg.style.display = 'block';
+  }
+})();
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>

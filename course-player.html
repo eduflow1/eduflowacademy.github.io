@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Lecture du cours</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    padding:14px 22px;background:#fff;border-bottom:1.5px solid var(--line);position:sticky;top:0;z-index:20;
+  }
+  .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
+  .btn-back{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;text-decoration:none;
+    color:var(--ink);border:1.5px solid var(--line);padding:8px 14px;border-radius:11px;flex:none;
+  }
+  .btn-back:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .course-title{font-weight:700;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .topbar-progress{display:flex;align-items:center;gap:10px;flex:none;}
+  .progress-track{background:#EEF1F0;border-radius:999px;height:8px;width:140px;overflow:hidden;}
+  .progress-fill{background:linear-gradient(135deg,var(--blue),var(--green));height:100%;border-radius:999px;}
+  .progress-pct{font-size:0.8rem;color:#7A7B7D;font-weight:600;flex:none;}
+
+  .layout{display:flex;min-height:calc(100vh - 62px);}
+  .sidebar{
+    width:320px;flex:none;background:#fff;border-right:1.5px solid var(--line);
+    overflow-y:auto;max-height:calc(100vh - 62px);
+  }
+  .module-block{border-bottom:1px solid var(--line);}
+  .module-title{padding:14px 18px 8px;font-size:0.82rem;font-weight:700;color:var(--blue-dark);text-transform:uppercase;letter-spacing:.03em;}
+  .lesson-item{
+    display:flex;align-items:center;gap:10px;padding:11px 18px;cursor:pointer;font-size:0.86rem;
+    border-left:3px solid transparent;
+  }
+  .lesson-item:hover{background:#F6F8F7;}
+  .lesson-item.active{background:rgba(63,174,221,0.08);border-left-color:var(--blue);color:var(--blue-dark);font-weight:600;}
+  .lesson-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-size:0.7rem;}
+  .lesson-check.done{background:var(--green);border-color:var(--green);color:#fff;}
+  .lesson-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lesson-dur{color:#B8BCBA;font-size:0.74rem;flex:none;}
+
+  .main-area{flex:1;padding:26px 30px;max-width:900px;}
+  .video-frame{background:#000;border-radius:16px;overflow:hidden;margin-bottom:20px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;}
+  .video-frame video{width:100%;height:100%;display:block;}
+  .video-placeholder{color:#8A8B8D;font-size:0.9rem;text-align:center;padding:20px;}
+  .lesson-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px;flex-wrap:wrap;}
+  .lesson-header h2{margin:0;font-size:1.2rem;}
+  .btn-complete{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;border:none;border-radius:12px;
+    padding:10px 18px;cursor:pointer;background:var(--green);color:#fff;flex:none;
+  }
+  .btn-complete:hover{background:var(--green-dark);}
+  .btn-complete.is-done{background:#fff;color:var(--green-dark);border:1.5px solid var(--green);}
+  .lesson-desc{color:#6B6C6E;font-size:0.92rem;line-height:1.6;margin:0 0 20px;}
+
+  .resources{margin-bottom:24px;}
+  .resources h4{font-size:0.88rem;margin:0 0 10px;}
+  .resource-link{
+    display:flex;align-items:center;gap:8px;padding:9px 14px;border:1.5px solid var(--line);border-radius:10px;
+    margin-bottom:8px;font-size:0.84rem;color:var(--blue-dark);text-decoration:none;background:#fff;cursor:pointer;width:fit-content;
+  }
+  .resource-link:hover{border-color:var(--blue);}
+
+  .nav-row{display:flex;justify-content:space-between;gap:10px;margin-top:10px;}
+  .btn-nav{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;text-decoration:none;
+    border:1.5px solid var(--line);border-radius:12px;padding:10px 16px;color:var(--ink);background:#fff;cursor:pointer;
+  }
+  .btn-nav:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .btn-nav:disabled{opacity:0.4;cursor:not-allowed;}
+
+  .loading-msg{text-align:center;color:#9A9B9C;padding:80px 0;}
+  @media (max-width:860px){
+    .layout{flex-direction:column;}
+    .sidebar{width:100%;max-height:280px;}
+    .main-area{max-width:100%;}
+  }
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div id="loadingMsg" class="loading-msg">Chargement du cours...</div>
+
+<div id="app" style="display:none;">
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="student-dashboard.html" class="btn-back">← Mes cours</a>
+      <div class="course-title" id="courseTitle"></div>
+    </div>
+    <div class="topbar-progress">
+      <div class="progress-track"><div class="progress-fill" id="overallProgressFill" style="width:0%;"></div></div>
+      <span class="progress-pct" id="overallProgressPct">0%</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="main-area">
+      <div class="video-frame" id="videoFrame">
+        <div class="video-placeholder">Selectionnez une lecon</div>
+      </div>
+      <div class="lesson-header">
+        <h2 id="lessonTitle"></h2>
+        <button class="btn-complete" id="completeBtn">✔ Marquer comme terminee</button>
+      </div>
+      <p class="lesson-desc" id="lessonDesc"></p>
+      <div class="resources" id="resourcesBlock" style="display:none;">
+        <h4>📎 Ressources telechargeables</h4>
+        <div id="resourcesList"></div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-nav" id="prevBtn">← Lecon precedente</button>
+        <button class="btn-nav" id="nextBtn">Lecon suivante →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script src="eduflow-courses.js"></script>
+<script>
+const courseId = new URLSearchParams(window.location.search).get('course');
+let enrollment = null;
+let course = null;
+let flatLessons = []; // [{lesson, moduleTitle}]
+let progressByLesson = {}; // lesson_id -> {completed}
+let currentLessonId = null;
+
+(async () => {
+  if (!courseId){ window.location.replace('student-dashboard.html'); return; }
+  const next = 'course-player.html?course=' + encodeURIComponent(courseId);
+  const result = await eduflowRequireRole(['student'], 'student-login.html?next=' + encodeURIComponent(next));
+  if (!result) return;
+  const studentId = result.session.user.id;
+
+  const { data: enr } = await eduflowClient
+    .from('course_enrollments')
+    .select('id')
+    .eq('course_id', courseId)
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (!enr){
+    window.location.replace('checkout.html?course=' + courseId);
+    return;
+  }
+  enrollment = enr;
+
+  const { data: c, error } = await eduflowClient
+    .from('online_courses')
+    .select('id, title, course_modules(id, title, position, course_lessons(id, title, description, video_path, duration_seconds, position, course_lesson_resources(id, label, file_path)))')
+    .eq('id', courseId)
+    .single();
+
+  if (error || !c){
+    document.getElementById('loadingMsg').textContent = 'Cours introuvable.';
+    return;
+  }
+  course = c;
+  course.course_modules = (course.course_modules || []).sort((a,b) => a.position - b.position);
+  course.course_modules.forEach(m => m.course_lessons = (m.course_lessons || []).sort((a,b) => a.position - b.position));
+
+  flatLessons = [];
+  course.course_modules.forEach(m => m.course_lessons.forEach(l => flatLessons.push({ lesson: l, moduleTitle: m.title })));
+
+  const { data: progress } = await eduflowClient
+    .from('lesson_progress')
+    .select('lesson_id, completed')
+    .eq('enrollment_id', enrollment.id);
+  (progress || []).forEach(p => { progressByLesson[p.lesson_id] = p.completed; });
+
+  document.getElementById('courseTitle').textContent = course.title;
+  renderSidebar();
+  updateOverallProgress();
+
+  const firstIncomplete = flatLessons.find(f => !progressByLesson[f.lesson.id]) || flatLessons[0];
+  if (firstIncomplete) selectLesson(firstIncomplete.lesson.id);
+
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+})();
+
+function renderSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = course.course_modules.map(m => `
+    <div class="module-block">
+      <div class="module-title">${m.title}</div>
+      ${m.course_lessons.map(l => `
+        <div class="lesson-item" data-lesson="${l.id}" onclick="selectLesson('${l.id}')">
+          <span class="lesson-check ${progressByLesson[l.id] ? 'done' : ''}" id="check-${l.id}">${progressByLesson[l.id] ? '✔' : ''}</span>
+          <span class="lesson-name">${l.title}</span>
+          ${l.duration_seconds ? `<span class="lesson-dur">${Math.round(l.duration_seconds/60)} min</span>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function updateOverallProgress(){
+  const total = flatLessons.length;
+  const completed = flatLessons.filter(f => progressByLesson[f.lesson.id]).length;
+  const pct = eduflowProgressPct(total, completed);
+  document.getElementById('overallProgressFill').style.width = pct + '%';
+  document.getElementById('overallProgressPct').textContent = pct + '%';
+}
+
+async function selectLesson(lessonId){
+  currentLessonId = lessonId;
+  document.querySelectorAll('.lesson-item').forEach(el => el.classList.toggle('active', el.dataset.lesson === lessonId));
+
+  const entry = flatLessons.find(f => f.lesson.id === lessonId);
+  if (!entry) return;
+  const l = entry.lesson;
+
+  document.getElementById('lessonTitle').textContent = l.title;
+  document.getElementById('lessonDesc').textContent = l.description || '';
+
+  const completeBtn = document.getElementById('completeBtn');
+  const isDone = !!progressByLesson[l.id];
+  completeBtn.textContent = isDone ? '✔ Terminee' : '✔ Marquer comme terminee';
+  completeBtn.classList.toggle('is-done', isDone);
+
+  const resourcesBlock = document.getElementById('resourcesBlock');
+  const resources = l.course_lesson_resources || [];
+  if (resources.length){
+    resourcesBlock.style.display = 'block';
+    document.getElementById('resourcesList').innerHTML = resources.map(r => `
+      <a class="resource-link" onclick="downloadResource(event, '${r.file_path}')">📄 ${r.label}</a>
+    `).join('');
+  } else {
+    resourcesBlock.style.display = 'none';
+  }
+
+  const idx = flatLessons.findIndex(f => f.lesson.id === lessonId);
+  document.getElementById('prevBtn').disabled = idx <= 0;
+  document.getElementById('nextBtn').disabled = idx >= flatLessons.length - 1;
+
+  const videoFrame = document.getElementById('videoFrame');
+  if (l.video_path){
+    videoFrame.innerHTML = '<div class="video-placeholder">Chargement de la video...</div>';
+    const url = await eduflowSignedUrl('course-videos', l.video_path, 3600);
+    videoFrame.innerHTML = url
+      ? `<video controls preload="metadata" src="${url}"></video>`
+      : '<div class="video-placeholder">Impossible de charger la video.</div>';
+  } else {
+    videoFrame.innerHTML = '<div class="video-placeholder">🎬 Video bientot disponible</div>';
+  }
+}
+
+async function downloadResource(e, path){
+  e.preventDefault();
+  const url = await eduflowSignedUrl('course-materials', path, 300);
+  if (url) window.open(url, '_blank');
+}
+
+document.getElementById('completeBtn').addEventListener('click', async () => {
+  if (!currentLessonId) return;
+  const nowDone = !progressByLesson[currentLessonId];
+  const { error } = await eduflowClient.from('lesson_progress').upsert({
+    enrollment_id: enrollment.id,
+    lesson_id: currentLessonId,
+    completed: nowDone,
+    completed_at: nowDone ? new Date().toISOString() : null
+  }, { onConflict: 'enrollment_id,lesson_id' });
+
+  if (!error){
+    progressByLesson[currentLessonId] = nowDone;
+    document.getElementById(`check-${currentLessonId}`).classList.toggle('done', nowDone);
+    document.getElementById(`check-${currentLessonId}`).textContent = nowDone ? '✔' : '';
+    updateOverallProgress();
+    const completeBtn = document.getElementById('completeBtn');
+    completeBtn.textContent = nowDone ? '✔ Terminee' : '✔ Marquer comme terminee';
+    completeBtn.classList.toggle('is-done', nowDone);
+  }
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  const idx = flatLessons.findIndex(f => f.lesson.id === currentLessonId);
+  if (idx > 0) selectLesson(flatLessons[idx - 1].lesson.id);
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  const idx = flatLessons.findIndex(f => f.lesson.id === currentLessonId);
+  if (idx < flatLessons.length - 1) selectLesson(flatLessons[idx + 1].lesson.id);
+});
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>

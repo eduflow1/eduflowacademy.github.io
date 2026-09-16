@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Mes cours en ligne</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:1000px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:26px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:10px;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
+
+  .my-courses-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+  @media (max-width:700px){.my-courses-grid{grid-template-columns:1fr;}}
+  .my-course-card{border:1.5px solid var(--line);border-radius:16px;padding:16px;display:flex;gap:14px;}
+  .my-course-cover{
+    width:64px;height:64px;border-radius:10px;flex:none;object-fit:cover;background-size:cover;background-position:center;
+    background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;
+  }
+  .my-course-body{flex:1;min-width:0;}
+  .my-course-body h3{margin:0 0 4px;font-size:0.96rem;}
+  .my-course-body .meta{color:#9A9B9C;font-size:0.78rem;margin-bottom:8px;}
+  .progress-track{background:#EEF1F0;border-radius:999px;height:8px;overflow:hidden;margin-bottom:8px;}
+  .progress-fill{background:linear-gradient(135deg,var(--blue),var(--green));height:100%;border-radius:999px;}
+  .progress-label{font-size:0.76rem;color:#7A7B7D;margin-bottom:10px;}
+  .btn-continue{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;text-decoration:none;
+    background:var(--blue);color:#fff;padding:7px 14px;border-radius:10px;display:inline-block;
+  }
+  .btn-continue:hover{background:var(--blue-dark);}
+
+  table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);}
+  th{color:#9A9B9C;font-weight:600;font-size:0.76rem;text-transform:uppercase;letter-spacing:.03em;}
+  .status-pill{font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:999px;}
+  .status-paid{background:rgba(123,196,107,0.14);color:var(--green-dark);}
+  .status-pending{background:rgba(217,164,65,0.14);color:#9A7420;}
+  .status-failed,.status-refunded{background:rgba(224,101,79,0.12);color:var(--danger);}
+
+  .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:20px 0;text-align:center;}
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Espace Etudiant</div>
+    <div class="who" id="whoLabel"></div>
+    <div class="topbar-actions">
+      <a href="online-courses.html" class="btn-home">🖥️ Catalogue</a>
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎓 Mes cours</h2>
+    <p class="lead">Reprenez la ou vous en etiez.</p>
+    <div class="my-courses-grid" id="myCoursesGrid"></div>
+    <div class="empty-msg" id="myCoursesEmpty" style="display:none;">
+      Vous n'etes inscrit(e) a aucun cours pour le moment.
+      <br><a href="online-courses.html" class="btn-continue" style="margin-top:10px;">Voir le catalogue</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💳 Historique des paiements</h2>
+    <p class="lead">Vos commandes passees sur la plateforme.</p>
+    <table id="ordersTable" style="display:none;">
+      <thead><tr><th>Cours</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
+      <tbody id="ordersBody"></tbody>
+    </table>
+    <div class="empty-msg" id="ordersEmpty" style="display:none;">Aucune commande pour le moment.</div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script src="eduflow-courses.js"></script>
+<script>
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['student'], 'student-login.html');
+  if (!result) return;
+  const studentId = result.session.user.id;
+
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (result.profile.full_name || result.profile.email);
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  const { data: enrollments, error } = await eduflowClient
+    .from('course_enrollments')
+    .select('id, enrolled_at, online_courses(id, title, subject, level, cover_path, course_modules(id, course_lessons(id)))')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('enrolled_at', { ascending: false });
+
+  const grid = document.getElementById('myCoursesGrid');
+  const empty = document.getElementById('myCoursesEmpty');
+
+  if (error || !enrollments || !enrollments.length){
+    empty.style.display = 'block';
+  } else {
+    const enrollmentIds = enrollments.map(e => e.id);
+    const { data: progress } = await eduflowClient
+      .from('lesson_progress')
+      .select('enrollment_id, completed')
+      .in('enrollment_id', enrollmentIds)
+      .eq('completed', true);
+
+    const completedByEnrollment = {};
+    (progress || []).forEach(p => {
+      completedByEnrollment[p.enrollment_id] = (completedByEnrollment[p.enrollment_id] || 0) + 1;
+    });
+
+    grid.innerHTML = enrollments.map(e => {
+      const c = e.online_courses;
+      if (!c) return '';
+      const totalLessons = (c.course_modules || []).reduce((n, m) => n + (m.course_lessons || []).length, 0);
+      const completed = completedByEnrollment[e.id] || 0;
+      const pct = eduflowProgressPct(totalLessons, completed);
+      const cover = eduflowCourseCoverUrl(c.cover_path);
+      return `
+        <div class="my-course-card">
+          <div class="my-course-cover" style="${cover ? `background-image:url('${cover}');` : ''}">${cover ? '' : '🖥️'}</div>
+          <div class="my-course-body">
+            <h3>${c.title}</h3>
+            <div class="meta">${[c.subject ? (EDUFLOW_SUBJECT_LABELS[c.subject] || c.subject) : null, c.level].filter(Boolean).join(' — ')}</div>
+            <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+            <div class="progress-label">${completed}/${totalLessons} lecons terminees (${pct}%)</div>
+            <a class="btn-continue" href="course-player.html?course=${c.id}">${pct > 0 ? 'Continuer' : 'Commencer'} →</a>
+          </div>
+        </div>
+      `;
+    }).join('');
+    if (!grid.innerHTML.trim()) empty.style.display = 'block';
+  }
+
+  const { data: orders } = await eduflowClient
+    .from('course_orders')
+    .select('id, amount, currency, status, created_at, online_courses(title)')
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false });
+
+  if (orders && orders.length){
+    document.getElementById('ordersTable').style.display = 'table';
+    document.getElementById('ordersBody').innerHTML = orders.map(o => `
+      <tr>
+        <td>${o.online_courses ? o.online_courses.title : '—'}</td>
+        <td>${eduflowFormatPrice(o.amount, o.currency)}</td>
+        <td><span class="status-pill status-${o.status}">${{paid:'Paye',pending:'En attente',failed:'Echoue',refunded:'Rembourse'}[o.status] || o.status}</span></td>
+        <td>${new Date(o.created_at).toLocaleDateString('fr-FR')}</td>
+      </tr>
+    `).join('');
+  } else {
+    document.getElementById('ordersEmpty').style.display = 'block';
+  }
+})();
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>

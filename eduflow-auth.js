@@ -87,26 +87,31 @@ function eduflowRoleHome(role){
   if (role === 'admin') return 'admin-dashboard.html';
   if (role === 'staff') return 'staff-dashboard.html';
   if (role === 'receptionist') return 'reception-dashboard.html';
+  if (role === 'student') return 'student-dashboard.html';
   return 'login.html';
 }
 
 // Call at the top of every protected page. Redirects away and returns null
 // if the visitor isn't logged in, isn't approved yet, is disabled, or has
 // the wrong role for this page. Returns {session, profile} otherwise.
-async function eduflowRequireRole(allowedRoles){
+// `loginPage` lets student-facing pages bounce to student-login.html
+// instead of the staff login.html (defaults to the staff page for every
+// existing caller that doesn't pass it).
+async function eduflowRequireRole(allowedRoles, loginPage){
+  loginPage = loginPage || 'login.html';
   const { session, profile } = await eduflowGetProfile();
   if (!session){
-    window.location.replace('login.html');
+    window.location.replace(loginPage);
     return null;
   }
   if (!profile || profile.status !== 'active'){
     await eduflowClient.auth.signOut();
-    window.location.replace('login.html?reason=disabled');
+    window.location.replace(loginPage + '?reason=disabled');
     return null;
   }
   if (profile.role === 'pending'){
     await eduflowClient.auth.signOut();
-    window.location.replace('login.html?reason=pending');
+    window.location.replace(loginPage + '?reason=pending');
     return null;
   }
   if (!allowedRoles.includes(profile.role)){

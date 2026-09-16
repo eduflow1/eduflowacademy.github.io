@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Creer mon compte etudiant</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:28px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  body::before{
+    content:'';position:fixed;inset:0;
+    background:url('media/logo.jpg') center/560px no-repeat;
+    opacity:0.14;pointer-events:none;z-index:0;
+  }
+  .gate-screen{width:100%;max-width:440px;position:relative;z-index:1;}
+  .gate-card{background:var(--card);border-radius:var(--radius);padding:36px 30px;box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);text-align:center;width:100%;}
+  .gate-lock{font-size:2.4rem;margin-bottom:6px;}
+  .brand-name{font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:2px;}
+  .gate-card h2{margin:14px 0 10px;font-size:1.3rem;}
+  .gate-lead{color:#7A7B7D;font-size:0.92rem;line-height:1.5;margin-bottom:22px;}
+  label{display:block;font-weight:600;font-size:0.85rem;margin-bottom:6px;color:var(--ink);text-align:left;}
+  input[type=text],input[type=email],input[type=password]{
+    width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:1rem;font-family:'Inter',sans-serif;margin-bottom:16px;background:#FAFBFB;
+  }
+  input:focus{outline:none;border-color:var(--blue);}
+  .error-msg{color:var(--danger);font-size:0.85rem;margin:-8px 0 14px;display:none;text-align:left;}
+  .hint-msg{color:#8A8B8D;font-size:0.78rem;margin:-8px 0 14px;text-align:left;}
+  button{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;
+    border:none;border-radius:14px;padding:14px 26px;cursor:pointer;width:100%;
+    background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
+    box-shadow:0 8px 20px rgba(63,174,221,0.30);
+  }
+  button:disabled{opacity:0.6;cursor:not-allowed;}
+  .back-link{display:block;margin-top:16px;font-size:0.82rem;color:#9A9B9C;text-decoration:none;}
+  .back-link:hover{color:var(--blue-dark);text-decoration:underline;}
+  .success-icon{font-size:2.6rem;margin-bottom:10px;}
+  .pwd-field{position:relative;}
+  .pwd-field input{padding-right:44px;}
+  .pwd-toggle{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-size:1.05rem;padding:6px 8px;
+    line-height:1;border-radius:8px;width:auto;box-shadow:none;
+  }
+  .pwd-toggle:hover{background:#F0F3F2;}
+  .home-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:14px;}
+  .home-link:hover{color:var(--blue-dark);}
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div class="gate-screen">
+  <a href="online-courses.html" class="home-link">🖥️ Cours en ligne</a>
+  <div class="gate-card">
+
+    <div id="stepForm">
+      <div class="gate-lock">🎓</div>
+      <div class="brand-name">Edu Flow Academy</div>
+      <h2>Creer mon compte etudiant</h2>
+      <p class="gate-lead">Creez votre compte pour vous inscrire aux cours en ligne et suivre votre progression.</p>
+      <label for="nameInput">Nom complet</label>
+      <input type="text" id="nameInput" placeholder="Ex. : Sara El Amrani">
+      <div class="error-msg" id="errName">Merci d'indiquer votre nom.</div>
+      <label for="emailInput">Adresse email</label>
+      <input type="email" id="emailInput" placeholder="Ex. : sara@example.com">
+      <div class="error-msg" id="errEmail">Merci d'indiquer une adresse email valide.</div>
+      <label for="phoneInput">Numero de telephone</label>
+      <input type="tel" id="phoneInput" placeholder="Ex. : 0612345678">
+      <div class="error-msg" id="errPhone">Merci d'indiquer un numero de telephone.</div>
+      <label for="passwordInput">Mot de passe</label>
+      <div class="pwd-field">
+        <input type="password" id="passwordInput" placeholder="8 caracteres minimum">
+        <button type="button" class="pwd-toggle" id="passwordToggle" aria-label="Afficher/masquer le mot de passe">👁️</button>
+      </div>
+      <div class="hint-msg">8 caracteres minimum.</div>
+      <div class="error-msg" id="errPassword">Le mot de passe doit contenir au moins 8 caracteres.</div>
+      <div class="error-msg" id="errSubmit"></div>
+      <button id="createAccountBtn">Creer mon compte</button>
+      <a class="back-link" href="student-login.html" id="loginLink">J'ai deja un compte — se connecter</a>
+    </div>
+
+    <div id="stepConfirmEmail" style="display:none;">
+      <div class="success-icon">📩</div>
+      <div class="brand-name">Edu Flow Academy</div>
+      <h2>Confirmez votre email</h2>
+      <p class="gate-lead">Un email de confirmation vous a ete envoye. Cliquez sur le lien qu'il contient, puis connectez-vous.</p>
+      <a class="back-link" href="student-login.html">← Aller a la connexion</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const next = params.get('next') || 'student-dashboard.html';
+document.getElementById('loginLink').href = 'student-login.html?next=' + encodeURIComponent(next);
+
+document.getElementById('passwordToggle').addEventListener('click', () => {
+  const input = document.getElementById('passwordInput');
+  const btn = document.getElementById('passwordToggle');
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.textContent = showing ? '👁️' : '🙈';
+});
+
+document.getElementById('createAccountBtn').addEventListener('click', async () => {
+  const name = document.getElementById('nameInput').value.trim();
+  const email = document.getElementById('emailInput').value.trim();
+  const phone = document.getElementById('phoneInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  const errName = document.getElementById('errName');
+  const errEmail = document.getElementById('errEmail');
+  const errPhone = document.getElementById('errPhone');
+  const errPassword = document.getElementById('errPassword');
+  const errSubmit = document.getElementById('errSubmit');
+  errSubmit.style.display = 'none';
+
+  const nameOk = !!name;
+  const emailOk = /.+@.+\..+/.test(email);
+  const phoneOk = phone.length >= 6;
+  const passwordOk = password.length >= 8;
+  errName.style.display = nameOk ? 'none' : 'block';
+  errEmail.style.display = emailOk ? 'none' : 'block';
+  errPhone.style.display = phoneOk ? 'none' : 'block';
+  errPassword.style.display = passwordOk ? 'none' : 'block';
+  if (!nameOk || !emailOk || !phoneOk || !passwordOk) return;
+
+  const btn = document.getElementById('createAccountBtn');
+  btn.disabled = true;
+  btn.textContent = 'Creation en cours...';
+
+  const { data, error } = await eduflowClient.auth.signUp({
+    email, password,
+    options: { data: { full_name: name, requested_role: 'student', phone } }
+  });
+
+  if (error){
+    errSubmit.textContent = error.message === 'User already registered'
+      ? 'Un compte existe deja avec cet email. Essayez de vous connecter.'
+      : 'Erreur : ' + error.message;
+    errSubmit.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Creer mon compte';
+    return;
+  }
+
+  if (data.session){
+    // Email confirmation disabled on this project: we're logged in immediately.
+    window.location.replace(next);
+    return;
+  }
+
+  document.getElementById('stepForm').style.display = 'none';
+  document.getElementById('stepConfirmEmail').style.display = 'block';
+});
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>

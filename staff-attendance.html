@@ -140,9 +140,9 @@ let currentSession = null;
 let currentClass = null;
 
 function canMark(){
-  return currentProfile.role === 'admin'
-    || currentProfile.role === 'receptionist'
-    || (currentProfile.role === 'staff' && currentClass && currentClass.teacher_id === currentProfile.id);
+  // Staff can view their own presence but not self-declare it — only
+  // admin or reception can mark it, same policy as receptionist attendance.
+  return currentProfile.role === 'admin' || currentProfile.role === 'receptionist';
 }
 
 async function loadClasses(){

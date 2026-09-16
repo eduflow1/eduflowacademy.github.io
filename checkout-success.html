@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Paiement confirme</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:28px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:440px;}
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:36px 30px;text-align:center;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+  }
+  .icon{font-size:2.6rem;margin-bottom:10px;}
+  .card h2{margin:0 0 8px;font-size:1.3rem;}
+  .card p{color:#7A7B7D;font-size:0.92rem;line-height:1.6;margin:0 0 22px;}
+  .btn-primary{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.95rem;text-decoration:none;
+    background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
+    padding:13px 22px;border-radius:14px;display:inline-block;box-shadow:0 8px 20px rgba(63,174,221,0.30);
+  }
+  .btn-outline{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.9rem;text-decoration:none;
+    color:var(--ink);border:1.5px solid var(--line);padding:11px 18px;border-radius:12px;display:inline-block;margin-top:10px;
+  }
+  .spinner{
+    width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;
+    margin:0 auto 16px;animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card" id="app">
+    <div class="spinner" id="spinner"></div>
+    <div class="icon" id="icon" style="display:none;"></div>
+    <h2 id="title">Confirmation du paiement...</h2>
+    <p id="msg">Merci de patienter pendant que nous activons votre acces au cours.</p>
+    <div id="actions"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+const courseId = new URLSearchParams(window.location.search).get('course');
+
+(async () => {
+  if (!courseId){
+    window.location.replace('student-dashboard.html');
+    return;
+  }
+  const next = 'checkout-success.html?course=' + encodeURIComponent(courseId);
+  const result = await eduflowRequireRole(['student'], 'student-login.html?next=' + encodeURIComponent(next));
+  if (!result) return;
+
+  let found = false;
+  for (let i = 0; i < 10 && !found; i++){
+    const { data } = await eduflowClient
+      .from('course_enrollments')
+      .select('id')
+      .eq('course_id', courseId)
+      .eq('student_id', result.session.user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (data){ found = true; break; }
+    await new Promise(r => setTimeout(r, 1500));
+  }
+
+  document.getElementById('spinner').style.display = 'none';
+  const icon = document.getElementById('icon');
+  icon.style.display = 'block';
+
+  if (found){
+    icon.textContent = '✅';
+    document.getElementById('title').textContent = 'Paiement confirme !';
+    document.getElementById('msg').textContent = 'Votre acces au cours est active. Bon apprentissage !';
+    document.getElementById('actions').innerHTML =
+      `<a class="btn-primary" href="course-player.html?course=${courseId}">Commencer le cours →</a>`;
+  } else {
+    icon.textContent = '⏳';
+    document.getElementById('title').textContent = 'Paiement en cours de traitement';
+    document.getElementById('msg').textContent = "Le paiement a ete recu par Stripe mais l'activation prend un peu plus de temps que prevu. Verifiez « Mes cours » dans quelques instants.";
+    document.getElementById('actions').innerHTML =
+      `<a class="btn-outline" href="student-dashboard.html">Aller a mes cours</a>`;
+  }
+})();
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>

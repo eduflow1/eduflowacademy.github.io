@@ -61,6 +61,42 @@ le tableau de bord administration arriveront dans une phase suivante.
 une seule fois dans l'éditeur SQL du tableau de bord Supabase avant la
 première utilisation (voir `deploy-instructions.md`).
 
+## Cours en ligne (Phase 24-25)
+
+Un espace de formation en ligne complet, distinct des classes en presentiel :
+
+- `online-courses.html` — catalogue public des cours en ligne (recherche,
+  filtre par matiere/niveau, programme detaille avec lecons en apercu
+  gratuit), accessible sans compte.
+- `student-signup.html` / `student-login.html` — compte etudiant en libre
+  service (pas de code d'invitation, activation immediate) distinct des
+  comptes personnel. `eduflow-auth.js` route desormais aussi le role
+  `student`.
+- `checkout.html` / `checkout-success.html` — inscription a un cours payant
+  via Stripe Checkout (ou inscription immediate pour un cours gratuit).
+- `student-dashboard.html` — "Mes cours" : progression par cours, historique
+  des paiements.
+- `course-player.html` — lecture des lecons video (heberge dans un bucket
+  Supabase Storage prive, URL signee a la demande), ressources
+  telechargeables, suivi de progression lecon par lecon.
+- `online-courses-admin.html` — creation/edition des cours, modules et
+  lecons (upload video/ressources), gestion des inscriptions et des
+  paiements. Reserve a l'administration et au personnel enseignant
+  (formateur assigne) ; la reception y gere uniquement les inscriptions
+  manuelles (paiement en especes/sur place).
+- `supabase/functions/create-checkout-session` et
+  `supabase/functions/stripe-webhook` — Edge Functions Supabase qui parlent
+  a Stripe (creation de session de paiement, puis activation de
+  l'inscription a la reception du webhook).
+
+**Mise en place** : voir `deploy-instructions-online-courses.md` pour les
+etapes completes (scripts `supabase-setup-phase24.sql` et
+`supabase-setup-phase25.sql`, secrets Stripe, deploiement des Edge
+Functions) — y compris un avertissement important : Stripe ne prend
+actuellement pas en charge les entreprises basees au Maroc ni le Dirham
+(MAD) comme devise de reglement, a verifier/adapter avant d'activer les
+paiements en ligne.
+
 ## ⚠️ Important : hébergement requis
 
 Pour que la connexion automatique (le nom/âge saisis sur `index.html` soient

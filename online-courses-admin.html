@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Gestion des cours en ligne</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .wrap{width:100%;max-width:1100px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand-name{font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .who{font-size:0.85rem;color:#7A7B7D;}
+  .btn-logout{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .btn-home{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 16px;cursor:pointer;
+    background:#fff;color:var(--ink);text-decoration:none;display:inline-block;
+  }
+  .btn-home:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:18px;}
+  .tab-btn{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.9rem;border:1.5px solid var(--line);
+    background:#fff;color:var(--ink);padding:10px 18px;border-radius:12px;cursor:pointer;
+  }
+  .tab-btn.active{background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;border-color:transparent;}
+
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:26px;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 6px;font-size:1.15rem;display:flex;align-items:center;gap:10px;}
+  .card .lead{color:#7A7B7D;font-size:0.88rem;margin:0 0 16px;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  .toolbar input[type=text]{flex:1;min-width:160px;}
+
+  select, input[type=text], input[type=number], input[type=email], textarea, input[type=file]{
+    padding:9px 11px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);
+  }
+  select:focus, input:focus, textarea:focus{outline:none;border-color:var(--blue);}
+  textarea{width:100%;resize:vertical;min-height:70px;font-family:'Inter',sans-serif;}
+  label.field-label{display:block;font-weight:600;font-size:0.82rem;margin:0 0 5px;color:var(--ink);}
+  .field{margin-bottom:14px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:640px){.field-row{grid-template-columns:1fr;}}
+
+  .btn-sm{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;
+    border:none;border-radius:10px;padding:8px 14px;cursor:pointer;color:#fff;
+  }
+  .btn-primary-sm{background:var(--blue);}
+  .btn-primary-sm:hover{background:var(--blue-dark);}
+  .btn-approve{background:var(--green);}
+  .btn-approve:hover{background:var(--green-dark);}
+  .btn-reject{background:var(--danger);}
+  .btn-reject:hover{opacity:0.88;}
+  .btn-ghost-sm{background:none;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-ghost-sm:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .btn-xs{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.75rem;
+    border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:#fff;background:var(--danger);
+  }
+
+  table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  th{color:#9A9B9C;font-weight:600;font-size:0.76rem;text-transform:uppercase;letter-spacing:.03em;}
+  .tag{font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(63,174,221,0.10);color:var(--blue-dark);}
+  .status-pill{font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:999px;}
+  .status-draft{background:rgba(154,155,156,0.14);color:#6B6C6E;}
+  .status-published{background:rgba(123,196,107,0.14);color:var(--green-dark);}
+  .status-archived{background:rgba(224,101,79,0.12);color:var(--danger);}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+  .back-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:16px;cursor:pointer;background:none;border:none;}
+  .back-link:hover{color:var(--blue-dark);}
+
+  .module-card{border:1.5px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;}
+  .module-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .module-head input[type=text]{flex:1;font-weight:700;font-family:'Quicksand',sans-serif;}
+  .lesson-row{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#FAFBFB;}
+  .lesson-row-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .lesson-row-head input[type=text]{flex:1;}
+  .lesson-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px;font-size:0.8rem;color:#7A7B7D;}
+  .lesson-controls label{display:flex;align-items:center;gap:5px;cursor:pointer;}
+  .video-status{font-size:0.78rem;font-weight:700;padding:3px 9px;border-radius:999px;}
+  .video-ok{background:rgba(123,196,107,0.14);color:var(--green-dark);}
+  .video-missing{background:rgba(217,164,65,0.14);color:#9A7420;}
+  .resource-row{display:flex;align-items:center;gap:8px;font-size:0.82rem;padding:6px 0;}
+  .resource-row span{flex:1;}
+  .add-resource-form{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .add-resource-form input[type=text]{flex:1;min-width:120px;}
+
+  .cover-preview{width:100%;max-width:220px;height:120px;border-radius:12px;background:#F0F3F2;object-fit:cover;display:block;margin-bottom:10px;border:1.5px solid var(--line);}
+  .search-results{border:1.5px solid var(--line);border-radius:10px;margin-top:8px;overflow:hidden;}
+  .search-result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-size:0.85rem;border-bottom:1px solid var(--line);}
+  .search-result-row:last-child{border-bottom:none;}
+
+  .msg-box{font-size:0.85rem;padding:10px 14px;border-radius:10px;margin-bottom:14px;display:none;}
+  .msg-error{background:#FCE9E6;color:#B3261E;}
+  .msg-success{background:#EAF6E7;color:#3E7A32;}
+  .empty-msg{color:#9A9B9C;font-size:0.88rem;padding:20px 0;text-align:center;}
+  .loading-msg{text-align:center;color:#9A9B9C;padding:40px 0;}
+  .stat-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px;}
+  .stat-chip{background:#F6F8F7;border-radius:12px;padding:10px 16px;font-size:0.85rem;}
+  .stat-chip strong{font-family:'Quicksand',sans-serif;font-size:1.05rem;display:block;}
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="topbar">
+    <div class="brand-name">Edu Flow Academy — Cours en ligne</div>
+    <div class="who" id="whoLabel"></div>
+    <div class="topbar-actions">
+      <a href="#" class="btn-home" id="dashboardBtn">📊 Tableau de bord</a>
+      <a href="index.html" class="btn-home">🏠 Accueil</a>
+      <button class="btn-logout" id="logoutBtn">Deconnexion</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabCatalogBtn" onclick="switchTab('catalog')">📚 Catalogue</button>
+    <button class="tab-btn" id="tabEnrollBtn" onclick="switchTab('enroll')">🧑‍🎓 Inscriptions</button>
+  </div>
+
+  <!-- ===================== CATALOG TAB ===================== -->
+  <div id="tabCatalog">
+    <div id="catalogListView">
+      <div class="card">
+        <h2>📚 Catalogue des cours</h2>
+        <p class="lead">Creez et gerez vos formations en ligne.</p>
+        <div class="toolbar">
+          <input type="text" id="catalogSearch" placeholder="Rechercher un cours...">
+          <button class="btn-sm btn-primary-sm" id="newCourseBtn" style="display:none;">+ Nouveau cours</button>
+        </div>
+        <table>
+          <thead><tr><th>Titre</th><th>Matiere / Niveau</th><th>Statut</th><th>Prix</th><th>Formateur</th><th></th></tr></thead>
+          <tbody id="catalogBody"></tbody>
+        </table>
+        <div class="empty-msg" id="catalogEmpty" style="display:none;">Aucun cours pour le moment.</div>
+      </div>
+    </div>
+
+    <div id="catalogEditorView" style="display:none;">
+      <button class="back-link" onclick="closeEditor()">← Retour au catalogue</button>
+      <div class="msg-box" id="editorMsg"></div>
+      <div class="card">
+        <h2 id="editorTitle">Nouveau cours</h2>
+        <img class="cover-preview" id="coverPreview" style="display:none;">
+        <div class="field">
+          <label class="field-label">Titre</label>
+          <input type="text" id="fTitle" style="width:100%;">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Matiere</label>
+            <input type="text" id="fSubject" list="subjectSuggestions" style="width:100%;">
+            <datalist id="subjectSuggestions"></datalist>
+          </div>
+          <div class="field">
+            <label class="field-label">Niveau</label>
+            <select id="fLevel" style="width:100%;"><option value="">—</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Description</label>
+          <textarea id="fDescription"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Prix</label>
+            <input type="number" id="fPrice" min="0" step="0.01" style="width:100%;">
+          </div>
+          <div class="field">
+            <label class="field-label">Devise</label>
+            <input type="text" id="fCurrency" style="width:100%;" value="MAD">
+          </div>
+        </div>
+        <div class="field-row" id="adminOnlyFields">
+          <div class="field">
+            <label class="field-label">Formateur</label>
+            <select id="fInstructor" style="width:100%;"><option value="">—</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Statut</label>
+            <select id="fStatus" style="width:100%;">
+              <option value="draft">Brouillon</option>
+              <option value="published">Publie</option>
+              <option value="archived">Archive</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" id="coverField" style="display:none;">
+          <label class="field-label">Image de couverture</label>
+          <input type="file" id="fCover" accept="image/*">
+        </div>
+        <div class="row-actions" style="margin-top:16px;">
+          <button class="btn-sm btn-primary-sm" id="saveCourseBtn">💾 Enregistrer</button>
+          <button class="btn-sm btn-reject" id="deleteCourseBtn" style="display:none;">🗑️ Supprimer le cours</button>
+        </div>
+      </div>
+
+      <div class="card" id="modulesCard" style="display:none;">
+        <h2>🧩 Contenu du cours</h2>
+        <p class="lead">Organisez vos modules, lecons, videos et ressources.</p>
+        <div id="modulesList"></div>
+        <button class="btn-sm btn-ghost-sm" id="addModuleBtn">+ Ajouter un module</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ENROLLMENTS TAB ===================== -->
+  <div id="tabEnroll" style="display:none;">
+    <div class="card">
+      <h2>🧑‍🎓 Inscriptions</h2>
+      <p class="lead">Suivez les inscriptions et la progression par cours.</p>
+      <div class="toolbar">
+        <select id="enrollCourseSelect" style="min-width:260px;"><option value="">Choisir un cours...</option></select>
+        <button class="btn-sm btn-approve" id="manualEnrollBtn" style="display:none;">+ Inscrire manuellement</button>
+      </div>
+      <div id="manualEnrollForm" style="display:none;margin-bottom:16px;">
+        <div class="toolbar">
+          <input type="text" id="studentSearchInput" placeholder="Rechercher un(e) etudiant(e) par email...">
+          <button class="btn-sm btn-primary-sm" id="studentSearchBtn">Chercher</button>
+        </div>
+        <div class="search-results" id="studentSearchResults" style="display:none;"></div>
+      </div>
+      <div class="stat-row" id="enrollStats" style="display:none;"></div>
+      <table id="enrollTable" style="display:none;">
+        <thead><tr><th>Etudiant(e)</th><th>Inscrit le</th><th>Source</th><th>Progression</th><th>Statut</th><th></th></tr></thead>
+        <tbody id="enrollBody"></tbody>
+      </table>
+      <div class="empty-msg" id="enrollEmpty" style="display:none;">Choisissez un cours pour voir ses inscriptions.</div>
+    </div>
+  </div>
+</div>
+
+<div class="loading-msg" id="loadingMsg">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script src="eduflow-courses.js"></script>
+<script>
+let me = null; // {session, profile}
+let courses = [];
+let editingCourseId = null; // null = creating new
+let editingCourseData = null;
+
+document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+
+(async () => {
+  const result = await eduflowRequireRole(['admin', 'staff', 'receptionist']);
+  if (!result) return;
+  me = result;
+  eduflowShowDeniedBanner();
+
+  document.getElementById('whoLabel').textContent = 'Connecte : ' + (me.profile.full_name || me.profile.email);
+  document.getElementById('dashboardBtn').href = eduflowRoleHome(me.profile.role);
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  Object.keys(EDUFLOW_SUBJECT_LABELS).forEach(code => {
+    const opt = document.createElement('option');
+    opt.value = code; opt.label = EDUFLOW_SUBJECT_LABELS[code];
+    document.getElementById('subjectSuggestions').appendChild(opt);
+  });
+  EDUFLOW_COURSE_LEVELS.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l; opt.textContent = l;
+    document.getElementById('fLevel').appendChild(opt);
+  });
+
+  if (me.profile.role === 'receptionist'){
+    // Reception only manages enrollments (cash payments), not course content.
+    document.getElementById('tabCatalogBtn').style.display = 'none';
+    switchTab('enroll');
+  } else {
+    document.getElementById('newCourseBtn').style.display = me.profile.role === 'admin' ? 'inline-block' : 'none';
+    document.getElementById('manualEnrollBtn').style.display = me.profile.role === 'admin' ? 'inline-block' : 'none';
+    await loadCourses();
+  }
+
+  if (me.profile.role === 'admin'){
+    const { data: instructors } = await eduflowClient
+      .from('profiles').select('id, full_name, email').in('role', ['admin', 'staff']).eq('status', 'active').order('full_name');
+    const sel = document.getElementById('fInstructor');
+    (instructors || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.full_name || p.email;
+      sel.appendChild(opt);
+    });
+  } else {
+    document.getElementById('adminOnlyFields').style.display = 'none';
+  }
+
+  await populateEnrollCourseSelect();
+})();
+
+function switchTab(tab){
+  document.getElementById('tabCatalog').style.display = tab === 'catalog' ? 'block' : 'none';
+  document.getElementById('tabEnroll').style.display = tab === 'enroll' ? 'block' : 'none';
+  document.getElementById('tabCatalogBtn').classList.toggle('active', tab === 'catalog');
+  document.getElementById('tabEnrollBtn').classList.toggle('active', tab === 'enroll');
+}
+
+// ---------------------------------------------------------------
+// CATALOG
+// ---------------------------------------------------------------
+async function loadCourses(){
+  let query = eduflowClient
+    .from('online_courses')
+    .select('id, slug, title, subject, level, status, price, currency, instructor_id, cover_path, instructor:profiles!online_courses_instructor_id_fkey(full_name,email)')
+    .order('created_at', { ascending: false });
+  const { data, error } = await query;
+  courses = data || [];
+  renderCatalog();
+}
+
+function renderCatalog(){
+  const q = document.getElementById('catalogSearch').value.trim().toLowerCase();
+  const filtered = courses.filter(c => !q || c.title.toLowerCase().includes(q));
+  const body = document.getElementById('catalogBody');
+  const empty = document.getElementById('catalogEmpty');
+
+  if (!filtered.length){
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  body.innerHTML = filtered.map(c => `
+    <tr>
+      <td>${c.title}</td>
+      <td>${[c.subject ? (EDUFLOW_SUBJECT_LABELS[c.subject] || c.subject) : null, c.level].filter(Boolean).join(' — ') || '—'}</td>
+      <td><span class="status-pill status-${c.status}">${eduflowCourseStatusLabel(c.status)}</span></td>
+      <td>${eduflowFormatPrice(c.price, c.currency)}</td>
+      <td>${c.instructor ? (c.instructor.full_name || c.instructor.email) : '—'}</td>
+      <td class="row-actions"><button class="btn-sm btn-ghost-sm" onclick="openEditor('${c.id}')">Ouvrir</button></td>
+    </tr>
+  `).join('');
+}
+document.getElementById('catalogSearch').addEventListener('input', renderCatalog);
+document.getElementById('newCourseBtn').addEventListener('click', () => openEditor(null));
+
+function closeEditor(){
+  document.getElementById('catalogEditorView').style.display = 'none';
+  document.getElementById('catalogListView').style.display = 'block';
+  loadCourses();
+}
+
+async function openEditor(courseId){
+  editingCourseId = courseId;
+  document.getElementById('catalogListView').style.display = 'none';
+  document.getElementById('catalogEditorView').style.display = 'block';
+  document.getElementById('editorMsg').style.display = 'none';
+  document.getElementById('modulesCard').style.display = courseId ? 'block' : 'none';
+  document.getElementById('coverField').style.display = courseId ? 'block' : 'none';
+  document.getElementById('deleteCourseBtn').style.display = (courseId && me.profile.role === 'admin') ? 'inline-block' : 'none';
+
+  if (!courseId){
+    editingCourseData = null;
+    document.getElementById('editorTitle').textContent = 'Nouveau cours';
+    document.getElementById('fTitle').value = '';
+    document.getElementById('fSubject').value = '';
+    document.getElementById('fLevel').value = '';
+    document.getElementById('fDescription').value = '';
+    document.getElementById('fPrice').value = 0;
+    document.getElementById('fCurrency').value = 'MAD';
+    document.getElementById('fInstructor').value = '';
+    document.getElementById('fStatus').value = 'draft';
+    document.getElementById('coverPreview').style.display = 'none';
+    return;
+  }
+
+  const { data: c, error } = await eduflowClient
+    .from('online_courses')
+    .select('*')
+    .eq('id', courseId)
+    .single();
+  if (error || !c){
+    showMsg('editorMsg', 'error', "Impossible de charger ce cours.");
+    return;
+  }
+  editingCourseData = c;
+  document.getElementById('editorTitle').textContent = c.title;
+  document.getElementById('fTitle').value = c.title;
+  document.getElementById('fSubject').value = c.subject || '';
+  document.getElementById('fLevel').value = c.level || '';
+  document.getElementById('fDescription').value = c.description || '';
+  document.getElementById('fPrice').value = c.price;
+  document.getElementById('fCurrency').value = c.currency;
+  document.getElementById('fInstructor').value = c.instructor_id || '';
+  document.getElementById('fStatus').value = c.status;
+
+  const cover = eduflowCourseCoverUrl(c.cover_path);
+  const preview = document.getElementById('coverPreview');
+  if (cover){ preview.src = cover; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+
+  await loadModules(courseId);
+}
+
+function showMsg(elId, type, text){
+  const el = document.getElementById(elId);
+  el.className = 'msg-box msg-' + type;
+  el.textContent = text;
+  el.style.display = 'block';
+}
+
+document.getElementById('saveCourseBtn').addEventListener('click', async () => {
+  const title = document.getElementById('fTitle').value.trim();
+  if (!title){ showMsg('editorMsg', 'error', 'Le titre est obligatoire.'); return; }
+
+  const payload = {
+    title,
+    subject: document.getElementById('fSubject').value.trim() || null,
+    level: document.getElementById('fLevel').value || null,
+    description: document.getElementById('fDescription').value.trim() || null,
+    price: Number(document.getElementById('fPrice').value) || 0,
+    currency: document.getElementById('fCurrency').value.trim() || 'MAD'
+  };
+  if (me.profile.role === 'admin'){
+    payload.instructor_id = document.getElementById('fInstructor').value || null;
+    payload.status = document.getElementById('fStatus').value;
+  }
+
+  const btn = document.getElementById('saveCourseBtn');
+  btn.disabled = true;
+
+  if (!editingCourseId){
+    payload.slug = eduflowSlugify(title) + '-' + Date.now().toString(36);
+    payload.created_by = me.session.user.id;
+    if (me.profile.role !== 'admin') payload.instructor_id = me.session.user.id;
+    const { data, error } = await eduflowClient.from('online_courses').insert(payload).select('id').single();
+    btn.disabled = false;
+    if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+    showMsg('editorMsg', 'success', 'Cours cree. Vous pouvez maintenant ajouter des modules et lecons.');
+    await openEditor(data.id);
+    return;
+  }
+
+  const { error } = await eduflowClient.from('online_courses').update(payload).eq('id', editingCourseId);
+  btn.disabled = false;
+  if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+  showMsg('editorMsg', 'success', 'Cours enregistre.');
+});
+
+document.getElementById('deleteCourseBtn').addEventListener('click', async () => {
+  if (!editingCourseId) return;
+  if (!confirm('Supprimer definitivement ce cours et tout son contenu ?')) return;
+  const { error } = await eduflowClient.from('online_courses').delete().eq('id', editingCourseId);
+  if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+  closeEditor();
+});
+
+document.getElementById('fCover').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !editingCourseId) return;
+  const ext = file.name.split('.').pop();
+  const path = `${editingCourseId}/cover-${Date.now()}.${ext}`;
+  const { error: upErr } = await eduflowClient.storage.from('course-covers').upload(path, file, { upsert: true });
+  if (upErr){ showMsg('editorMsg', 'error', "Erreur d'upload : " + upErr.message); return; }
+  const { error } = await eduflowClient.from('online_courses').update({ cover_path: path }).eq('id', editingCourseId);
+  if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+  const preview = document.getElementById('coverPreview');
+  preview.src = eduflowCourseCoverUrl(path);
+  preview.style.display = 'block';
+  showMsg('editorMsg', 'success', 'Image mise a jour.');
+});
+
+// ---------------------------------------------------------------
+// MODULES / LESSONS / RESOURCES
+// ---------------------------------------------------------------
+async function loadModules(courseId){
+  const { data, error } = await eduflowClient
+    .from('course_modules')
+    .select('id, title, position, course_lessons(id, title, description, video_path, duration_seconds, position, is_preview, course_lesson_resources(id, label, file_path))')
+    .eq('course_id', courseId)
+    .order('position');
+  if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+
+  const modules = (data || []).sort((a,b) => a.position - b.position);
+  modules.forEach(m => m.course_lessons = (m.course_lessons || []).sort((a,b) => a.position - b.position));
+  renderModules(modules);
+}
+
+function renderModules(modules){
+  const list = document.getElementById('modulesList');
+  if (!modules.length){
+    list.innerHTML = '<p class="empty-msg">Aucun module. Commencez par en ajouter un.</p>';
+    return;
+  }
+  list.innerHTML = modules.map(m => `
+    <div class="module-card">
+      <div class="module-head">
+        <input type="text" value="${escapeAttr(m.title)}" onblur="updateModuleTitle('${m.id}', this.value)">
+        <button class="btn-xs" onclick="deleteModule('${m.id}')">Supprimer</button>
+      </div>
+      <div id="lessons-${m.id}">
+        ${m.course_lessons.map(l => lessonRowHtml(m.id, l)).join('') || '<p class="empty-msg" style="padding:8px 0;">Aucune lecon.</p>'}
+      </div>
+      <button class="btn-sm btn-ghost-sm" onclick="addLesson('${m.id}')">+ Ajouter une lecon</button>
+    </div>
+  `).join('');
+}
+
+function lessonRowHtml(moduleId, l){
+  const resources = l.course_lesson_resources || [];
+  return `
+    <div class="lesson-row">
+      <div class="lesson-row-head">
+        <input type="text" value="${escapeAttr(l.title)}" onblur="updateLessonField('${l.id}', 'title', this.value)">
+        <button class="btn-xs" onclick="deleteLesson('${l.id}', '${moduleId}')">Supprimer</button>
+      </div>
+      <textarea placeholder="Description de la lecon" onblur="updateLessonField('${l.id}', 'description', this.value)">${escapeHtml(l.description || '')}</textarea>
+      <div class="lesson-controls">
+        <span class="video-status ${l.video_path ? 'video-ok' : 'video-missing'}">${l.video_path ? '✅ Video en ligne' : '⚠️ Pas de video'}</span>
+        <input type="file" accept="video/*" onchange="uploadLessonVideo(event, '${l.id}')" style="max-width:220px;">
+        <label>Duree (min): <input type="number" min="0" style="width:70px;" value="${l.duration_seconds ? Math.round(l.duration_seconds/60) : ''}" onblur="updateLessonField('${l.id}', 'duration_seconds', this.value ? Number(this.value)*60 : null)"></label>
+        <label><input type="checkbox" ${l.is_preview ? 'checked' : ''} onchange="updateLessonField('${l.id}', 'is_preview', this.checked)"> Apercu gratuit</label>
+      </div>
+      <div class="resource-list">
+        ${resources.map(r => `
+          <div class="resource-row"><span>📄 ${r.label}</span><button class="btn-xs" onclick="deleteResource('${r.id}', '${l.id}', '${moduleId}')">✕</button></div>
+        `).join('')}
+      </div>
+      <div class="add-resource-form">
+        <input type="text" id="resLabel-${l.id}" placeholder="Nom de la ressource (ex: Fiche PDF)">
+        <input type="file" id="resFile-${l.id}">
+        <button class="btn-sm btn-ghost-sm" onclick="addResource('${l.id}', '${moduleId}')">+ Ajouter</button>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(s){ return (s || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g, '&quot;'); }
+
+document.getElementById('addModuleBtn').addEventListener('click', async () => {
+  if (!editingCourseId) return;
+  const { data: existing } = await eduflowClient.from('course_modules').select('id').eq('course_id', editingCourseId);
+  const { error } = await eduflowClient.from('course_modules').insert({
+    course_id: editingCourseId, title: 'Nouveau module', position: (existing || []).length
+  });
+  if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+  await loadModules(editingCourseId);
+});
+
+async function updateModuleTitle(moduleId, title){
+  if (!title.trim()) return;
+  await eduflowClient.from('course_modules').update({ title: title.trim() }).eq('id', moduleId);
+}
+
+async function deleteModule(moduleId){
+  if (!confirm('Supprimer ce module et toutes ses lecons ?')) return;
+  await eduflowClient.from('course_modules').delete().eq('id', moduleId);
+  await loadModules(editingCourseId);
+}
+
+async function addLesson(moduleId){
+  const { data: existing } = await eduflowClient.from('course_lessons').select('id').eq('module_id', moduleId);
+  const { error } = await eduflowClient.from('course_lessons').insert({
+    module_id: moduleId, title: 'Nouvelle lecon', position: (existing || []).length
+  });
+  if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+  await loadModules(editingCourseId);
+}
+
+async function updateLessonField(lessonId, field, value){
+  await eduflowClient.from('course_lessons').update({ [field]: value }).eq('id', lessonId);
+}
+
+async function deleteLesson(lessonId, moduleId){
+  if (!confirm('Supprimer cette lecon ?')) return;
+  await eduflowClient.from('course_lessons').delete().eq('id', lessonId);
+  await loadModules(editingCourseId);
+}
+
+async function uploadLessonVideo(e, lessonId){
+  const file = e.target.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop();
+  const path = `${editingCourseId}/${lessonId}/video-${Date.now()}.${ext}`;
+  showMsg('editorMsg', 'success', 'Televersement de la video en cours...');
+  const { error: upErr } = await eduflowClient.storage.from('course-videos').upload(path, file, { upsert: true });
+  if (upErr){ showMsg('editorMsg', 'error', "Erreur d'upload : " + upErr.message); return; }
+  const { error } = await eduflowClient.from('course_lessons').update({ video_path: path }).eq('id', lessonId);
+  if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+  showMsg('editorMsg', 'success', 'Video mise en ligne.');
+  await loadModules(editingCourseId);
+}
+
+async function addResource(lessonId, moduleId){
+  const label = document.getElementById(`resLabel-${lessonId}`).value.trim();
+  const fileInput = document.getElementById(`resFile-${lessonId}`);
+  const file = fileInput.files[0];
+  if (!label || !file){ showMsg('editorMsg', 'error', 'Indiquez un nom et choisissez un fichier.'); return; }
+  const ext = file.name.split('.').pop();
+  const path = `${editingCourseId}/${lessonId}/resource-${Date.now()}.${ext}`;
+  const { error: upErr } = await eduflowClient.storage.from('course-materials').upload(path, file, { upsert: true });
+  if (upErr){ showMsg('editorMsg', 'error', "Erreur d'upload : " + upErr.message); return; }
+  const { error } = await eduflowClient.from('course_lesson_resources').insert({ lesson_id: lessonId, label, file_path: path });
+  if (error){ showMsg('editorMsg', 'error', 'Erreur : ' + error.message); return; }
+  await loadModules(editingCourseId);
+}
+
+async function deleteResource(resourceId, lessonId, moduleId){
+  await eduflowClient.from('course_lesson_resources').delete().eq('id', resourceId);
+  await loadModules(editingCourseId);
+}
+
+// ---------------------------------------------------------------
+// ENROLLMENTS TAB
+// ---------------------------------------------------------------
+async function populateEnrollCourseSelect(){
+  let list = courses;
+  if (me.profile.role === 'receptionist'){
+    const { data } = await eduflowClient.from('online_courses').select('id, title').eq('status', 'published').order('title');
+    list = data || [];
+  }
+  const sel = document.getElementById('enrollCourseSelect');
+  list.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.title;
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById('enrollCourseSelect').addEventListener('change', loadEnrollments);
+document.getElementById('manualEnrollBtn').addEventListener('click', () => {
+  const form = document.getElementById('manualEnrollForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('studentSearchBtn').addEventListener('click', async () => {
+  const q = document.getElementById('studentSearchInput').value.trim();
+  const resultsBox = document.getElementById('studentSearchResults');
+  if (!q){ resultsBox.style.display = 'none'; return; }
+
+  const { data, error } = await eduflowClient
+    .from('profiles')
+    .select('id, full_name, email')
+    .eq('role', 'student')
+    .ilike('email', `%${q}%`)
+    .limit(8);
+
+  if (error || !data || !data.length){
+    resultsBox.innerHTML = '<div class="search-result-row">Aucun resultat.</div>';
+    resultsBox.style.display = 'block';
+    return;
+  }
+  resultsBox.innerHTML = data.map(p => `
+    <div class="search-result-row">
+      <span>${p.full_name || '—'} (${p.email})</span>
+      <button class="btn-xs" style="background:var(--green);" onclick="manualEnroll('${p.id}')">Inscrire</button>
+    </div>
+  `).join('');
+  resultsBox.style.display = 'block';
+});
+
+async function manualEnroll(studentId){
+  const courseId = document.getElementById('enrollCourseSelect').value;
+  if (!courseId){ alert('Choisissez un cours d\'abord.'); return; }
+  const { error } = await eduflowClient.from('course_enrollments').insert({
+    course_id: courseId, student_id: studentId, source: 'manual', status: 'active', enrolled_by: me.session.user.id
+  });
+  if (error){ alert('Erreur : ' + error.message); return; }
+  document.getElementById('manualEnrollForm').style.display = 'none';
+  document.getElementById('studentSearchResults').style.display = 'none';
+  document.getElementById('studentSearchInput').value = '';
+  await loadEnrollments();
+}
+
+async function loadEnrollments(){
+  const courseId = document.getElementById('enrollCourseSelect').value;
+  const table = document.getElementById('enrollTable');
+  const empty = document.getElementById('enrollEmpty');
+  const statsRow = document.getElementById('enrollStats');
+  if (!courseId){
+    table.style.display = 'none'; statsRow.style.display = 'none';
+    empty.style.display = 'block'; empty.textContent = 'Choisissez un cours pour voir ses inscriptions.';
+    return;
+  }
+
+  const [{ data: enrollments, error }, { data: modules }] = await Promise.all([
+    eduflowClient.from('course_enrollments')
+      .select('id, enrolled_at, source, status, student:profiles!course_enrollments_student_id_fkey(full_name, email)')
+      .eq('course_id', courseId)
+      .order('enrolled_at', { ascending: false }),
+    eduflowClient.from('course_modules').select('id, course_lessons(id)').eq('course_id', courseId)
+  ]);
+
+  const totalLessons = (modules || []).reduce((n, m) => n + (m.course_lessons || []).length, 0);
+
+  if (error || !enrollments || !enrollments.length){
+    table.style.display = 'none'; statsRow.style.display = 'none';
+    empty.style.display = 'block'; empty.textContent = 'Aucune inscription pour ce cours.';
+    return;
+  }
+
+  const enrollmentIds = enrollments.map(e => e.id);
+  const { data: progress } = await eduflowClient
+    .from('lesson_progress').select('enrollment_id, completed').in('enrollment_id', enrollmentIds).eq('completed', true);
+  const completedByEnrollment = {};
+  (progress || []).forEach(p => { completedByEnrollment[p.enrollment_id] = (completedByEnrollment[p.enrollment_id] || 0) + 1; });
+
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  if (me.profile.role === 'admin'){
+    statsRow.style.display = 'flex';
+    const activeCount = enrollments.filter(e => e.status === 'active').length;
+    statsRow.innerHTML = `
+      <div class="stat-chip"><strong>${activeCount}</strong>Inscrits actifs</div>
+      <div class="stat-chip"><strong>${totalLessons}</strong>Lecons au total</div>
+    `;
+  } else {
+    statsRow.style.display = 'none';
+  }
+
+  document.getElementById('enrollBody').innerHTML = enrollments.map(e => {
+    const pct = eduflowProgressPct(totalLessons, completedByEnrollment[e.id] || 0);
+    return `
+      <tr>
+        <td>${e.student ? (e.student.full_name || e.student.email) : '—'}</td>
+        <td>${new Date(e.enrolled_at).toLocaleDateString('fr-FR')}</td>
+        <td>${e.source === 'stripe' ? 'Paiement en ligne' : 'Manuel'}</td>
+        <td>${pct}%</td>
+        <td><span class="status-pill ${e.status === 'active' ? 'status-published' : 'status-archived'}">${e.status === 'active' ? 'Actif' : 'Revoque'}</span></td>
+        <td class="row-actions">
+          ${me.profile.role === 'admin' ? `<button class="btn-xs" style="background:${e.status === 'active' ? '#E0654F' : '#7BC46B'};" onclick="toggleEnrollment('${e.id}', '${e.status === 'active' ? 'revoked' : 'active'}')">${e.status === 'active' ? 'Revoquer' : 'Reactiver'}</button>` : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function toggleEnrollment(enrollmentId, newStatus){
+  await eduflowClient.from('course_enrollments').update({ status: newStatus }).eq('id', enrollmentId);
+  await loadEnrollments();
+}
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Cours en ligne</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(63,174,221,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(123,196,107,0.12), transparent 45%);
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; padding:16px 16px 60px;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+  .page-wrap{width:100%;max-width:1200px;}
+
+  .navbar{
+    position:sticky;top:12px;z-index:30;width:100%;
+    background:rgba(255,255,255,0.88);backdrop-filter:blur(10px);
+    border:1px solid var(--line);border-radius:16px;
+    box-shadow:0 8px 24px rgba(30,50,60,0.08);
+    margin-bottom:22px;
+  }
+  .navbar-inner{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;padding:10px 18px;}
+  .navbar-brand{display:flex;align-items:center;gap:10px;flex:none;text-decoration:none;}
+  .navbar-brand img{width:36px;height:36px;border-radius:9px;object-fit:cover;}
+  .navbar-brand-name{font-weight:700;font-size:1rem;color:var(--ink);}
+  .navbar-links{display:flex;align-items:center;gap:4px;flex:1;flex-wrap:wrap;}
+  .navbar-link{color:#6B6C6E;text-decoration:none;font-family:'Quicksand',sans-serif;font-weight:600;font-size:0.86rem;padding:8px 12px;border-radius:10px;}
+  .navbar-link:hover{background:#F0F3F2;color:var(--ink);}
+  .navbar-link.active{color:var(--blue-dark);}
+  .navbar-cta-group{display:flex;align-items:center;gap:10px;flex:none;}
+  .btn-navbar-outline{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.86rem;
+    background:#fff;color:var(--ink);border:1.5px solid var(--line);text-decoration:none;
+    padding:9px 17px;border-radius:12px;
+  }
+  .btn-navbar-outline:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .btn-navbar-cta{
+    flex:none;font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.86rem;
+    background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;text-decoration:none;
+    padding:10px 18px;border-radius:12px;box-shadow:0 6px 16px rgba(63,174,221,0.30);
+  }
+
+  .hero{text-align:center;margin-bottom:26px;}
+  .hero h1{font-size:clamp(1.7rem,3.4vw,2.3rem);margin:0 0 10px;}
+  .hero p{color:#7A7B7D;font-size:0.98rem;max-width:600px;margin:0 auto;}
+
+  .toolbar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:24px;
+    background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;
+  }
+  .toolbar input[type=text]{flex:1;min-width:180px;}
+  select, input[type=text]{
+    padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:0.88rem;background:#FAFBFB;color:var(--ink);
+  }
+  select:focus, input:focus{outline:none;border-color:var(--blue);}
+
+  .courses-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  @media (max-width:960px){.courses-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:640px){.courses-grid{grid-template-columns:1fr;}}
+
+  .course-card{
+    background:var(--card);border-radius:var(--radius);border:1.5px solid var(--line);
+    overflow:hidden;box-shadow:0 8px 20px rgba(30,50,60,0.06);
+    display:flex;flex-direction:column;
+  }
+  .course-cover{
+    height:150px;background:linear-gradient(135deg,var(--blue),var(--green));
+    display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:#fff;
+    background-size:cover;background-position:center;position:relative;
+  }
+  .course-price-badge{
+    position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.94);color:var(--ink);
+    font-weight:700;font-size:0.8rem;padding:5px 11px;border-radius:999px;font-family:'Quicksand',sans-serif;
+  }
+  .course-body{padding:18px 20px;display:flex;flex-direction:column;gap:8px;flex:1;}
+  .course-tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .course-tag{font-size:0.72rem;font-weight:700;background:rgba(63,174,221,0.10);color:var(--blue-dark);padding:3px 9px;border-radius:999px;}
+  .course-body h3{margin:2px 0 0;font-size:1.05rem;}
+  .course-desc{color:#7A7B7D;font-size:0.85rem;line-height:1.5;margin:0;flex:1;}
+  .course-meta{color:#9A9B9C;font-size:0.78rem;display:flex;gap:12px;}
+  .btn-outline-sm{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.84rem;text-decoration:none;
+    background:#fff;color:var(--ink);border:1.5px solid var(--line);padding:9px 14px;border-radius:11px;
+    text-align:center;cursor:pointer;
+  }
+  .btn-outline-sm:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .btn-primary-sm{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.84rem;text-decoration:none;
+    background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;padding:9px 14px;border-radius:11px;
+    text-align:center;cursor:pointer;border:none;
+  }
+  .course-actions{display:flex;gap:8px;margin-top:6px;}
+  .course-actions >*{flex:1;}
+
+  .empty-msg,.loading-msg{text-align:center;color:#9A9B9C;padding:50px 0;grid-column:1/-1;}
+
+  /* ---- Curriculum modal ---- */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(30,40,45,0.55);z-index:100;
+    align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--card);border-radius:20px;max-width:600px;width:100%;padding:28px;
+    box-shadow:0 24px 60px rgba(0,0,0,0.25);position:relative;
+  }
+  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9A9B9C;}
+  .modal-close:hover{color:var(--danger);}
+  .modal-box h2{margin:0 0 6px;font-size:1.25rem;}
+  .modal-sub{color:#7A7B7D;font-size:0.88rem;margin:0 0 18px;}
+  .modal-module{margin-bottom:14px;}
+  .modal-module h4{margin:0 0 8px;font-size:0.92rem;color:var(--blue-dark);}
+  .modal-lesson{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;font-size:0.85rem;
+  }
+  .modal-lesson .lock{color:#B8BCBA;}
+  .modal-lesson .preview-badge{background:rgba(123,196,107,0.14);color:var(--green-dark);font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:999px;}
+  .modal-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
+  .modal-price{font-family:'Quicksand',sans-serif;font-weight:700;font-size:1.3rem;}
+  .modal-msg{font-size:0.85rem;color:var(--danger);margin-top:10px;display:none;}
+
+  .site-footer{width:100%;margin-top:50px;text-align:center;color:#9A9B9C;font-size:0.8rem;}
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div class="page-wrap">
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <img src="media/logo.jpg" alt="Edu Flow Academy" onerror="this.style.display='none';">
+        <span class="navbar-brand-name">Edu Flow Academy</span>
+      </a>
+      <div class="navbar-links">
+        <a href="index.html" class="navbar-link">Accueil</a>
+        <a href="online-courses.html" class="navbar-link active">Cours en ligne</a>
+      </div>
+      <div class="navbar-cta-group" id="navCtaGroup">
+        <a href="student-login.html" class="btn-navbar-outline">Espace etudiant</a>
+        <a href="login.html" class="btn-navbar-outline">Espace personnel</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <h1>🖥️ Nos cours en ligne</h1>
+    <p>Apprenez a votre rythme : videos, ressources telechargeables et suivi de progression, accessibles depuis chez vous.</p>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="Rechercher un cours...">
+    <select id="subjectFilter"><option value="">Toutes les matieres</option></select>
+    <select id="levelFilter">
+      <option value="">Tous niveaux</option>
+    </select>
+  </div>
+
+  <div class="courses-grid" id="coursesGrid">
+    <div class="loading-msg">Chargement des cours...</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">✕</button>
+    <h2 id="modalTitle"></h2>
+    <p class="modal-sub" id="modalSub"></p>
+    <div id="modalCurriculum"></div>
+    <div class="modal-footer">
+      <span class="modal-price" id="modalPrice"></span>
+      <button class="btn-primary-sm" id="modalEnrollBtn" style="flex:none;padding:11px 20px;">S'inscrire</button>
+    </div>
+    <div class="modal-msg" id="modalMsg"></div>
+  </div>
+</div>
+
+<div class="site-footer">Edu Flow Academy — Cours en ligne</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="eduflow-auth.js"></script>
+<script src="eduflow-courses.js"></script>
+<script>
+let allCourses = [];
+let currentStudent = null;
+
+(async () => {
+  const { session, profile } = await eduflowGetProfile();
+  if (session && profile && profile.status === 'active' && profile.role === 'student'){
+    currentStudent = profile;
+    document.getElementById('navCtaGroup').innerHTML =
+      '<a href="student-dashboard.html" class="btn-navbar-outline">📊 Mes cours</a>' +
+      '<button class="btn-navbar-cta" id="logoutBtn" style="border:none;cursor:pointer;">Deconnexion</button>';
+    document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
+  }
+  await loadCourses();
+})();
+
+async function loadCourses(){
+  const grid = document.getElementById('coursesGrid');
+  const { data, error } = await eduflowClient
+    .from('online_courses')
+    .select('id, slug, title, subject, level, description, cover_path, price, currency, course_modules(id, title, position, course_lessons(id, title, position, is_preview, duration_seconds))')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false });
+
+  if (error){
+    grid.innerHTML = '<div class="empty-msg">Erreur de chargement des cours.</div>';
+    console.error(error);
+    return;
+  }
+
+  allCourses = (data || []).map(c => {
+    c.course_modules = (c.course_modules || []).sort((a,b) => a.position - b.position);
+    c.course_modules.forEach(m => m.course_lessons = (m.course_lessons || []).sort((a,b) => a.position - b.position));
+    return c;
+  });
+
+  const subjects = [...new Set(allCourses.map(c => c.subject).filter(Boolean))];
+  const subjectSelect = document.getElementById('subjectFilter');
+  subjects.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = EDUFLOW_SUBJECT_LABELS[s] || s;
+    subjectSelect.appendChild(opt);
+  });
+
+  const levelSelect = document.getElementById('levelFilter');
+  EDUFLOW_COURSE_LEVELS.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l; opt.textContent = l;
+    levelSelect.appendChild(opt);
+  });
+
+  renderCourses();
+}
+
+function renderCourses(){
+  const grid = document.getElementById('coursesGrid');
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const subjectF = document.getElementById('subjectFilter').value;
+  const levelF = document.getElementById('levelFilter').value;
+
+  const filtered = allCourses.filter(c => {
+    if (subjectF && c.subject !== subjectF) return false;
+    if (levelF && c.level !== levelF) return false;
+    if (q && !(c.title.toLowerCase().includes(q) || (c.description||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  if (!filtered.length){
+    grid.innerHTML = '<div class="empty-msg">Aucun cours ne correspond a votre recherche.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(c => {
+    const lessonCount = c.course_modules.reduce((n,m) => n + m.course_lessons.length, 0);
+    const cover = eduflowCourseCoverUrl(c.cover_path);
+    return `
+      <div class="course-card">
+        <div class="course-cover" style="${cover ? `background-image:url('${cover}');` : ''}">
+          ${cover ? '' : '🖥️'}
+          <span class="course-price-badge">${eduflowFormatPrice(c.price, c.currency)}</span>
+        </div>
+        <div class="course-body">
+          <div class="course-tags">
+            ${c.subject ? `<span class="course-tag">${EDUFLOW_SUBJECT_LABELS[c.subject] || c.subject}</span>` : ''}
+            ${c.level ? `<span class="course-tag">${c.level}</span>` : ''}
+          </div>
+          <h3>${c.title}</h3>
+          <p class="course-desc">${(c.description || '').slice(0,120)}</p>
+          <div class="course-meta">
+            <span>📚 ${c.course_modules.length} module(s)</span>
+            <span>🎬 ${lessonCount} lecon(s)</span>
+          </div>
+          <div class="course-actions">
+            <button class="btn-outline-sm" onclick="openCurriculum('${c.id}')">Voir le programme</button>
+            <button class="btn-primary-sm" onclick="enrollCourse('${c.id}')">S'inscrire</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', renderCourses);
+document.getElementById('subjectFilter').addEventListener('change', renderCourses);
+document.getElementById('levelFilter').addEventListener('change', renderCourses);
+
+function openCurriculum(courseId){
+  const c = allCourses.find(x => x.id === courseId);
+  if (!c) return;
+  document.getElementById('modalTitle').textContent = c.title;
+  document.getElementById('modalSub').textContent = c.description || '';
+  document.getElementById('modalPrice').textContent = eduflowFormatPrice(c.price, c.currency);
+  document.getElementById('modalCurriculum').innerHTML = c.course_modules.map(m => `
+    <div class="modal-module">
+      <h4>${m.title}</h4>
+      ${m.course_lessons.map(l => `
+        <div class="modal-lesson">
+          <span>${l.title}</span>
+          ${l.is_preview ? '<span class="preview-badge">Apercu gratuit</span>' : '<span class="lock">🔒</span>'}
+        </div>
+      `).join('')}
+    </div>
+  `).join('') || '<p class="modal-sub">Programme a venir.</p>';
+  document.getElementById('modalMsg').style.display = 'none';
+  const enrollBtn = document.getElementById('modalEnrollBtn');
+  enrollBtn.onclick = () => enrollCourse(c.id);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('modalOverlay').classList.remove('open');
+});
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') document.getElementById('modalOverlay').classList.remove('open');
+});
+
+function enrollCourse(courseId){
+  if (!currentStudent){
+    const next = encodeURIComponent('checkout.html?course=' + courseId);
+    window.location.href = 'student-login.html?next=' + next;
+    return;
+  }
+  window.location.href = 'checkout.html?course=' + courseId;
+}
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>
