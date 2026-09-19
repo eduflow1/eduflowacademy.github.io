@@ -67,6 +67,16 @@
   }
   .btn-continue:hover{background:var(--blue-dark);}
 
+  .live-session-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+  .live-session-info h3{margin:0 0 3px;font-size:0.94rem;}
+  .live-session-info .meta{color:#9A9B9C;font-size:0.78rem;margin:0;}
+  .btn-join-live{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.82rem;text-decoration:none;flex:none;
+    background:var(--danger);color:#fff;padding:8px 16px;border-radius:10px;display:inline-block;
+  }
+  .btn-join-live:hover{opacity:0.88;}
+  .btn-join-live.disabled{background:#B8BCBA;pointer-events:none;}
+
   table{width:100%;border-collapse:collapse;font-size:0.85rem;}
   th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);}
   th{color:#9A9B9C;font-weight:600;font-size:0.76rem;text-transform:uppercase;letter-spacing:.03em;}
@@ -101,6 +111,13 @@
       Vous n'etes inscrit(e) a aucun cours pour le moment.
       <br><a href="online-courses.html" class="btn-continue" style="margin-top:10px;">Voir le catalogue</a>
     </div>
+  </div>
+
+  <div class="card">
+    <h2>🔴 Sessions en direct a venir</h2>
+    <p class="lead">Vos prochains cours en visio en direct.</p>
+    <div id="liveSessionsList"></div>
+    <div class="empty-msg" id="liveSessionsEmpty" style="display:none;">Aucune session en direct programmee pour le moment.</div>
   </div>
 
   <div class="card">
@@ -179,6 +196,8 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
     if (!grid.innerHTML.trim()) empty.style.display = 'block';
   }
 
+  await loadLiveSessions(enrollments || []);
+
   const { data: orders } = await eduflowClient
     .from('course_orders')
     .select('id, amount, currency, status, created_at, online_courses(title)')
@@ -199,6 +218,48 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
     document.getElementById('ordersEmpty').style.display = 'block';
   }
 })();
+
+async function loadLiveSessions(enrollments){
+  const list = document.getElementById('liveSessionsList');
+  const empty = document.getElementById('liveSessionsEmpty');
+  const courseIds = [...new Set(enrollments.map(e => e.online_courses && e.online_courses.id).filter(Boolean))];
+
+  if (!courseIds.length){
+    empty.style.display = 'block';
+    return;
+  }
+
+  const courseTitleById = {};
+  enrollments.forEach(e => { if (e.online_courses) courseTitleById[e.online_courses.id] = e.online_courses.title; });
+
+  const { data: sessions } = await eduflowClient
+    .from('live_sessions')
+    .select('id, course_id, title, scheduled_at, duration_minutes, status')
+    .in('course_id', courseIds)
+    .in('status', ['scheduled', 'live'])
+    .order('scheduled_at', { ascending: true });
+
+  if (!sessions || !sessions.length){
+    empty.style.display = 'block';
+    return;
+  }
+
+  empty.style.display = 'none';
+  const now = Date.now();
+  list.innerHTML = sessions.map(s => {
+    const scheduledMs = new Date(s.scheduled_at).getTime();
+    const joinable = now >= scheduledMs - 10 * 60 * 1000 && now <= scheduledMs + s.duration_minutes * 60 * 1000 + 30 * 60 * 1000;
+    return `
+      <div class="live-session-row">
+        <div class="live-session-info">
+          <h3>🔴 ${s.title}</h3>
+          <p class="meta">${courseTitleById[s.course_id] || ''} — ${new Date(s.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })} (${s.duration_minutes} min)</p>
+        </div>
+        <a class="btn-join-live ${joinable ? '' : 'disabled'}" href="live-session.html?session=${s.id}">${joinable ? 'Rejoindre' : 'Pas encore ouvert'}</a>
+      </div>
+    `;
+  }).join('');
+}
 </script>
   <script src="animations.js" defer></script>
 </body>

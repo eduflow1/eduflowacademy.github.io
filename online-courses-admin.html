@@ -94,7 +94,15 @@
   .status-draft{background:rgba(154,155,156,0.14);color:#6B6C6E;}
   .status-published{background:rgba(123,196,107,0.14);color:var(--green-dark);}
   .status-archived{background:rgba(224,101,79,0.12);color:var(--danger);}
+  .status-scheduled{background:rgba(63,174,221,0.12);color:var(--blue-dark);}
+  .status-live{background:rgba(224,101,79,0.14);color:var(--danger);}
+  .status-ended{background:rgba(154,155,156,0.14);color:#6B6C6E;}
+  .status-cancelled{background:rgba(224,101,79,0.12);color:var(--danger);}
   .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+  .live-session-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+  .live-session-info h4{margin:0 0 3px;font-size:0.92rem;}
+  .live-session-info span{color:#7A7B7D;font-size:0.8rem;}
 
   .back-link{display:inline-flex;align-items:center;gap:6px;color:#9A9B9C;font-size:0.85rem;text-decoration:none;margin-bottom:16px;cursor:pointer;background:none;border:none;}
   .back-link:hover{color:var(--blue-dark);}
@@ -192,7 +200,7 @@
           <label class="field-label">Description</label>
           <textarea id="fDescription"></textarea>
         </div>
-        <div class="field-row">
+        <div class="field-row" id="adminOnlyFields">
           <div class="field">
             <label class="field-label">Prix</label>
             <input type="number" id="fPrice" min="0" step="0.01" style="width:100%;">
@@ -202,7 +210,7 @@
             <input type="text" id="fCurrency" style="width:100%;" value="MAD">
           </div>
         </div>
-        <div class="field-row" id="adminOnlyFields">
+        <div class="field-row" id="adminOnlyFields2">
           <div class="field">
             <label class="field-label">Formateur</label>
             <select id="fInstructor" style="width:100%;"><option value="">—</option></select>
@@ -231,6 +239,35 @@
         <p class="lead">Organisez vos modules, lecons, videos et ressources.</p>
         <div id="modulesList"></div>
         <button class="btn-sm btn-ghost-sm" id="addModuleBtn">+ Ajouter un module</button>
+      </div>
+
+      <div class="card" id="liveSessionsCard" style="display:none;">
+        <h2>🔴 Sessions en direct</h2>
+        <p class="lead">Programmez des cours en visio en direct pour les etudiants inscrits.</p>
+        <div class="msg-box" id="liveMsg"></div>
+        <div id="liveSessionsList"></div>
+        <div class="empty-msg" id="liveSessionsEmpty" style="display:none;">Aucune session programmee.</div>
+        <div class="field-row" style="margin-top:16px;align-items:flex-end;">
+          <div class="field">
+            <label class="field-label">Titre de la session</label>
+            <input type="text" id="liveTitle" style="width:100%;" placeholder="Ex. : Seance de questions/reponses">
+          </div>
+          <div class="field">
+            <label class="field-label">Date et heure</label>
+            <input type="datetime-local" id="liveScheduledAt" style="width:100%;">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Duree (minutes)</label>
+            <input type="number" id="liveDuration" min="10" step="5" value="60" style="width:100%;">
+          </div>
+          <div class="field">
+            <label class="field-label">Description (optionnel)</label>
+            <input type="text" id="liveDescription" style="width:100%;">
+          </div>
+        </div>
+        <button class="btn-sm btn-primary-sm" id="scheduleLiveBtn">📅 Programmer la session</button>
       </div>
     </div>
   </div>
@@ -299,6 +336,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
   if (me.profile.role === 'receptionist'){
     // Reception only manages enrollments (cash payments), not course content.
     document.getElementById('tabCatalogBtn').style.display = 'none';
+    document.getElementById('manualEnrollBtn').style.display = 'inline-block';
     switchTab('enroll');
   } else {
     document.getElementById('newCourseBtn').style.display = me.profile.role === 'admin' ? 'inline-block' : 'none';
@@ -317,6 +355,7 @@ document.getElementById('logoutBtn').addEventListener('click', eduflowLogout);
     });
   } else {
     document.getElementById('adminOnlyFields').style.display = 'none';
+    document.getElementById('adminOnlyFields2').style.display = 'none';
   }
 
   await populateEnrollCourseSelect();
@@ -380,6 +419,7 @@ async function openEditor(courseId){
   document.getElementById('catalogEditorView').style.display = 'block';
   document.getElementById('editorMsg').style.display = 'none';
   document.getElementById('modulesCard').style.display = courseId ? 'block' : 'none';
+  document.getElementById('liveSessionsCard').style.display = courseId ? 'block' : 'none';
   document.getElementById('coverField').style.display = courseId ? 'block' : 'none';
   document.getElementById('deleteCourseBtn').style.display = (courseId && me.profile.role === 'admin') ? 'inline-block' : 'none';
 
@@ -423,6 +463,7 @@ async function openEditor(courseId){
   if (cover){ preview.src = cover; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
 
   await loadModules(courseId);
+  await loadLiveSessions(courseId);
 }
 
 function showMsg(elId, type, text){
@@ -440,11 +481,11 @@ document.getElementById('saveCourseBtn').addEventListener('click', async () => {
     title,
     subject: document.getElementById('fSubject').value.trim() || null,
     level: document.getElementById('fLevel').value || null,
-    description: document.getElementById('fDescription').value.trim() || null,
-    price: Number(document.getElementById('fPrice').value) || 0,
-    currency: document.getElementById('fCurrency').value.trim() || 'MAD'
+    description: document.getElementById('fDescription').value.trim() || null
   };
   if (me.profile.role === 'admin'){
+    payload.price = Number(document.getElementById('fPrice').value) || 0;
+    payload.currency = document.getElementById('fCurrency').value.trim() || 'MAD';
     payload.instructor_id = document.getElementById('fInstructor').value || null;
     payload.status = document.getElementById('fStatus').value;
   }
@@ -632,6 +673,99 @@ async function addResource(lessonId, moduleId){
 async function deleteResource(resourceId, lessonId, moduleId){
   await eduflowClient.from('course_lesson_resources').delete().eq('id', resourceId);
   await loadModules(editingCourseId);
+}
+
+// ---------------------------------------------------------------
+// LIVE SESSIONS (Daily.co video calls)
+// ---------------------------------------------------------------
+const LIVE_STATUS_LABELS = { scheduled: 'Programmee', live: 'En direct', ended: 'Terminee', cancelled: 'Annulee' };
+
+async function loadLiveSessions(courseId){
+  const { data, error } = await eduflowClient
+    .from('live_sessions')
+    .select('id, title, description, scheduled_at, duration_minutes, status')
+    .eq('course_id', courseId)
+    .order('scheduled_at', { ascending: true });
+  if (error){ showMsg('editorMsg', 'error', 'Erreur (sessions en direct) : ' + error.message); return; }
+  renderLiveSessions(data || []);
+}
+
+function renderLiveSessions(sessions){
+  const list = document.getElementById('liveSessionsList');
+  const empty = document.getElementById('liveSessionsEmpty');
+  if (!sessions.length){
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = sessions.map(s => `
+    <div class="live-session-row">
+      <div class="live-session-info">
+        <h4>${s.title}</h4>
+        <span>${new Date(s.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })} — ${s.duration_minutes} min</span>
+      </div>
+      <div class="row-actions" style="align-items:center;">
+        <span class="status-pill status-${s.status}">${LIVE_STATUS_LABELS[s.status] || s.status}</span>
+        ${s.status !== 'cancelled' && s.status !== 'ended' ? `<button class="btn-xs" onclick="cancelLiveSession('${s.id}')">Annuler</button>` : ''}
+        ${s.status !== 'cancelled' ? `<a class="btn-xs" style="background:var(--blue);text-decoration:none;" href="live-session.html?session=${s.id}" target="_blank">Ouvrir</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('scheduleLiveBtn').addEventListener('click', async () => {
+  if (!editingCourseId) return;
+  const title = document.getElementById('liveTitle').value.trim();
+  const scheduledAtRaw = document.getElementById('liveScheduledAt').value;
+  const duration = Number(document.getElementById('liveDuration').value) || 60;
+  const description = document.getElementById('liveDescription').value.trim();
+
+  if (!title || !scheduledAtRaw){
+    showMsg('liveMsg', 'error', 'Indiquez un titre et une date/heure.');
+    return;
+  }
+  const scheduledDate = new Date(scheduledAtRaw);
+  if (Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() < Date.now() - 5 * 60 * 1000){
+    showMsg('liveMsg', 'error', 'Choisissez une date/heure future.');
+    return;
+  }
+
+  const btn = document.getElementById('scheduleLiveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Programmation...';
+
+  const { data, error } = await eduflowClient.functions.invoke('create-live-session', {
+    body: {
+      courseId: editingCourseId,
+      title,
+      description: description || null,
+      scheduledAt: scheduledDate.toISOString(),
+      durationMinutes: duration
+    }
+  });
+
+  btn.disabled = false;
+  btn.textContent = '📅 Programmer la session';
+
+  if (error || !data || data.error){
+    showMsg('liveMsg', 'error', 'Erreur : ' + (data && data.error ? data.error : (error ? error.message : 'inconnue')));
+    return;
+  }
+
+  showMsg('liveMsg', 'success', 'Session programmee.');
+  document.getElementById('liveTitle').value = '';
+  document.getElementById('liveScheduledAt').value = '';
+  document.getElementById('liveDescription').value = '';
+  document.getElementById('liveDuration').value = 60;
+  await loadLiveSessions(editingCourseId);
+});
+
+async function cancelLiveSession(sessionId){
+  if (!confirm('Annuler cette session en direct ?')) return;
+  const { error } = await eduflowClient.from('live_sessions').update({ status: 'cancelled' }).eq('id', sessionId);
+  if (error){ showMsg('liveMsg', 'error', 'Erreur : ' + error.message); return; }
+  await loadLiveSessions(editingCourseId);
 }
 
 // ---------------------------------------------------------------

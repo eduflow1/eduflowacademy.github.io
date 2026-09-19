@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Flow Academy — Session en direct</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --blue:#3FAEDD; --blue-dark:#2E8FBD; --green:#7BC46B; --green-dark:#5FA850;
+    --ink:#4A4B4D; --bg:#EEF1F0; --card:#FFFFFF; --line:#DDE3E1; --danger:#E0654F; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+  }
+  h1,h2,h3,.brand{font-family:'Quicksand',sans-serif;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    padding:14px 22px;background:#fff;border-bottom:1.5px solid var(--line);
+  }
+  .btn-back{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:0.85rem;text-decoration:none;
+    color:var(--ink);border:1.5px solid var(--line);padding:8px 14px;border-radius:11px;flex:none;
+  }
+  .btn-back:hover{border-color:var(--blue);color:var(--blue-dark);}
+  .session-title{font-weight:700;font-size:1rem;}
+
+  .wrap{width:100%;max-width:520px;margin:0 auto;padding:40px 16px 60px;}
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:30px 28px;text-align:center;
+    box-shadow:0 10px 34px rgba(30,50,60,0.08);border:1px solid var(--line);
+  }
+  .icon{font-size:2.4rem;margin-bottom:8px;}
+  .card h2{margin:0 0 6px;font-size:1.25rem;}
+  .course-name{color:#7A7B7D;font-size:0.85rem;margin:0 0 18px;}
+  .session-meta{background:#F6F8F7;border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:0.88rem;text-align:left;}
+  .session-meta div{margin-bottom:4px;}
+  .session-meta div:last-child{margin-bottom:0;}
+  .session-desc{color:#6B6C6E;font-size:0.88rem;line-height:1.55;margin:0 0 18px;text-align:left;}
+  button.btn-join{
+    font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;
+    border:none;border-radius:14px;padding:14px 26px;cursor:pointer;width:100%;
+    background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
+    box-shadow:0 8px 20px rgba(63,174,221,0.30);
+  }
+  button.btn-join:disabled{opacity:0.6;cursor:not-allowed;}
+  .error-msg{color:var(--danger);font-size:0.85rem;margin-top:14px;display:none;text-align:center;}
+  .loading-msg{text-align:center;color:#9A9B9C;padding:80px 0;}
+
+  .video-page{display:none;height:calc(100vh - 62px);}
+  #videoContainer{width:100%;height:100%;}
+</style>
+  <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+
+<div id="loadingMsg" class="loading-msg">Chargement de la session...</div>
+
+<div id="preJoin" style="display:none;">
+  <div class="topbar">
+    <a href="student-dashboard.html" class="btn-back" id="backLink1">← Retour</a>
+    <div class="session-title" id="topbarTitle"></div>
+    <span></span>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <div class="icon">🔴</div>
+      <h2 id="sessionTitle"></h2>
+      <p class="course-name" id="courseName"></p>
+      <div class="session-meta">
+        <div id="sessionWhen"></div>
+        <div id="sessionDuration"></div>
+      </div>
+      <p class="session-desc" id="sessionDesc" style="display:none;"></p>
+      <button class="btn-join" id="joinBtn">🎥 Rejoindre la session</button>
+      <div class="error-msg" id="errMsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="video-page" id="videoPage">
+  <div class="topbar">
+    <a href="student-dashboard.html" class="btn-back" id="backLink2">← Quitter</a>
+    <div class="session-title" id="topbarTitle2"></div>
+    <span></span>
+  </div>
+  <div id="videoContainer"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@daily-co/daily-js@0.66.0/dist/daily-iframe.js"></script>
+<script src="eduflow-auth.js"></script>
+<script>
+const sessionId = new URLSearchParams(window.location.search).get('session');
+let sessionData = null;
+let homePage = 'student-dashboard.html';
+
+(async () => {
+  if (!sessionId){ window.location.replace('student-dashboard.html'); return; }
+  const next = 'live-session.html?session=' + encodeURIComponent(sessionId);
+  const result = await eduflowRequireRole(['student', 'staff', 'admin'], 'student-login.html?next=' + encodeURIComponent(next));
+  if (!result) return;
+
+  // Instructors/admins joining their own class shouldn't be bounced
+  // through the student dashboard on the way in or out.
+  homePage = (result.profile.role === 'student') ? 'student-dashboard.html' : 'online-courses-admin.html';
+  document.getElementById('backLink1').href = homePage;
+  document.getElementById('backLink2').href = homePage;
+
+  const { data: s, error } = await eduflowClient
+    .from('live_sessions')
+    .select('id, title, description, scheduled_at, duration_minutes, status, online_courses(title)')
+    .eq('id', sessionId)
+    .single();
+
+  if (error || !s){
+    document.getElementById('loadingMsg').textContent = 'Session introuvable ou acces non autorise.';
+    return;
+  }
+  sessionData = s;
+
+  document.getElementById('topbarTitle').textContent = s.title;
+  document.getElementById('topbarTitle2').textContent = s.title;
+  document.getElementById('sessionTitle').textContent = s.title;
+  document.getElementById('courseName').textContent = s.online_courses ? s.online_courses.title : '';
+  document.getElementById('sessionWhen').textContent = '🗓️ ' + new Date(s.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' });
+  document.getElementById('sessionDuration').textContent = '⏱️ ' + s.duration_minutes + ' minutes';
+  if (s.description){
+    document.getElementById('sessionDesc').textContent = s.description;
+    document.getElementById('sessionDesc').style.display = 'block';
+  }
+
+  const joinBtn = document.getElementById('joinBtn');
+  if (s.status === 'cancelled'){
+    joinBtn.disabled = true;
+    joinBtn.textContent = 'Session annulee';
+  } else if (s.status === 'ended'){
+    joinBtn.disabled = true;
+    joinBtn.textContent = 'Session terminee';
+  }
+
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('preJoin').style.display = 'block';
+})();
+
+document.getElementById('joinBtn').addEventListener('click', async () => {
+  const errMsg = document.getElementById('errMsg');
+  errMsg.style.display = 'none';
+  const btn = document.getElementById('joinBtn');
+  btn.disabled = true;
+  btn.textContent = 'Connexion...';
+
+  const { data, error } = await eduflowClient.functions.invoke('join-live-session', {
+    body: { sessionId }
+  });
+
+  if (error || !data || data.error){
+    errMsg.textContent = (data && data.error) ? data.error : (error ? error.message : 'Erreur inconnue.');
+    errMsg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '🎥 Rejoindre la session';
+    return;
+  }
+
+  const callFrame = DailyIframe.createFrame(document.getElementById('videoContainer'), {
+    showLeaveButton: true,
+    iframeStyle: { width: '100%', height: '100%', border: '0' }
+  });
+  callFrame.on('left-meeting', () => {
+    window.location.href = homePage;
+  });
+
+  try {
+    await callFrame.join({ url: data.roomUrl, token: data.token });
+    document.getElementById('preJoin').style.display = 'none';
+    document.getElementById('videoPage').style.display = 'block';
+  } catch (joinErr) {
+    callFrame.destroy();
+    errMsg.textContent = 'Impossible de rejoindre la video : ' + (joinErr && joinErr.message ? joinErr.message : 'erreur inconnue.');
+    errMsg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '🎥 Rejoindre la session';
+  }
+});
+</script>
+  <script src="animations.js" defer></script>
+</body>
+</html>
